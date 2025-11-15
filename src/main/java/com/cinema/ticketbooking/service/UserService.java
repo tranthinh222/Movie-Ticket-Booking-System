@@ -14,22 +14,24 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public User getUserById(long id){
+    public User getUserById(long id) {
         return this.userRepository.findById(id).orElse(null);
     }
 
-
-    public List<User> getAllUser(){
+    public List<User> getAllUser() {
         return this.userRepository.findAll();
     }
 
-    public User createUser(User user){
+    public User createUser(User user) {
         return this.userRepository.save(user);
     }
 
-    public User getUserByEmail(String email){
+    public User getUserByEmail(String email) {
         return this.userRepository.findUserByEmail(email);
     }
 
+    public boolean existsByEmail(String email) {
+        return this.userRepository.existsByEmail(email);
+    }
 
 }

@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 public class UserController {
-    private final UserService  userService;
+    private final UserService userService;
     private final PasswordEncoder passwordEncoder;
 
     public UserController(UserService userService, PasswordEncoder passwordEncoder) {
@@ -20,24 +20,22 @@ public class UserController {
     }
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id){
+    public ResponseEntity<User> getUserById(@PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(this.userService.getUserById(id));
     }
 
     @GetMapping("/users")
-    public ResponseEntity<List<User>> getAllUsers(){
+    public ResponseEntity<List<User>> getAllUsers() {
         List<User> allUsers = this.userService.getAllUser();
         return ResponseEntity.status(HttpStatus.OK).body(allUsers);
     }
 
     @PostMapping("/users")
-    public ResponseEntity<User> createUser(@RequestBody User user){
+    public ResponseEntity<User> createUser(@RequestBody User user) {
         String hashPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(hashPassword);
         this.userService.createUser(user);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
-
-
 }

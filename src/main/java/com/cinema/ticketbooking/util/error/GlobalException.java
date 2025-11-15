@@ -14,7 +14,6 @@ import com.cinema.ticketbooking.domain.RestResponse;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @RestControllerAdvice
 public class GlobalException {
     @ExceptionHandler(value = {
@@ -23,16 +22,26 @@ public class GlobalException {
     })
     public ResponseEntity<RestResponse<Object>> handleIdException(Exception ex) {
         RestResponse<Object> restResponse = new RestResponse<Object>();
-        restResponse.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        restResponse.setStatusCode(HttpStatus.UNAUTHORIZED.value());
         restResponse.setError(ex.getMessage());
         restResponse.setMessage("Exception occurs...");
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(restResponse);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(restResponse);
+    }
+
+    @ExceptionHandler(value = { DuplicateEmailException.class })
+    public ResponseEntity<RestResponse<Object>> handleEmailDuplicate(Exception ex) {
+        RestResponse<Object> restResponse = new RestResponse<Object>();
+        restResponse.setStatusCode(HttpStatus.CONFLICT.value());
+        restResponse.setError(ex.getMessage());
+        restResponse.setMessage("Exception occur...");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(restResponse);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<RestResponse<Object>> handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
-        BindingResult result =  exception.getBindingResult();
+    public ResponseEntity<RestResponse<Object>> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException exception) {
+        BindingResult result = exception.getBindingResult();
         final List<FieldError> fieldErrors = exception.getFieldErrors();
 
         RestResponse<Object> res = new RestResponse<Object>();
@@ -45,4 +54,3 @@ public class GlobalException {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }
 }
-
