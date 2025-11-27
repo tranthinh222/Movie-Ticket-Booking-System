@@ -11,7 +11,6 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 import com.cinema.ticketbooking.domain.RestResponse;
 
-import javax.naming.AuthenticationNotSupportedException;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -39,7 +38,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                 .orElse(authException.getMessage());
         res.setError(errorMessage);
 
-        res.setMessage("Token không hợp lệ (hết hạn, không đúng định dạng, hoặc không khớp)");
+        res.setMessage("Token is invalid (expired, incorrect format, or does not match)");
 
         mapper.writeValue(response.getWriter(), res);
     }

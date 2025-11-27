@@ -1,0 +1,61 @@
+package com.cinema.ticketbooking.controller;
+
+import com.cinema.ticketbooking.domain.Film;
+import com.cinema.ticketbooking.domain.dto.ResultPaginationDto;
+import com.cinema.ticketbooking.service.FilmService;
+import com.cinema.ticketbooking.util.annotation.ApiMessage;
+import com.turkraft.springfilter.boot.Filter;
+import jakarta.validation.Valid;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("api/v1")
+public class FilmController {
+    private final FilmService filmService;
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
+    }
+
+    @GetMapping ("/films")
+    @ApiMessage("fetch all films")
+    public ResponseEntity<ResultPaginationDto> getAllFilms(
+            @Filter Specification<Film> spec, Pageable pageable
+    ){
+
+        return ResponseEntity.status(HttpStatus.OK).body(this.filmService.getAllFilms(spec, pageable));
+    }
+
+    @PostMapping("/films")
+    @ApiMessage("create film")
+    public ResponseEntity<Film> createFilm (@Valid @RequestBody Film reqFilm) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.filmService.createFilm(reqFilm));
+
+    }
+
+    @DeleteMapping("/films/{id}")
+    @ApiMessage("delete film")
+    public ResponseEntity<Void> deleteFilm (@PathVariable Long id) throws Exception{
+        Film film = this.filmService.getFilmById(id);
+        if (film == null)
+        {
+            throw new Exception("film with id "+ id +" not found");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
+    @PutMapping("/films")
+    public ResponseEntity<Film> updateFilm (@Valid @RequestBody Film reqFilm) throws Exception{
+        Film newFilm = this.filmService.updateFilm(reqFilm);
+        if (newFilm == null){
+            throw new Exception("Film with id " + newFilm.getId() + " does not exist");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(newFilm);
+    }
+}
