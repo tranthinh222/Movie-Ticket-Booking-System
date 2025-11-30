@@ -1,6 +1,5 @@
-package com.cinema.ticketbooking.domain;
+package com.cinema.ticketbooking.domain.response;
 
-import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

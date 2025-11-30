@@ -1,49 +1,39 @@
 package com.cinema.ticketbooking.domain;
 
 import com.cinema.ticketbooking.util.SecurityUtil;
-import com.cinema.ticketbooking.util.constant.RoleEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
 
 import java.time.Instant;
 import java.util.List;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
-@Table(name = "users")
-public class User {
+@Table(name = "auditoriums")
+@Data
+public class Auditorium {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
-    @OneToMany( mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
+    @OneToMany( mappedBy = "auditorium", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
             orphanRemoval = true)
     @JsonIgnore
-    List<Booking> bookings;
+    List<ShowTime> showTimes;
 
-    @OneToMany( mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
+    @ManyToOne
+    @JoinColumn(name = "theater_id")
+    private Theater theater;
+
+    @OneToMany( mappedBy = "auditorium", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
             orphanRemoval = true)
     @JsonIgnore
-    List<SeatHold> seatHolds;
+    List<Seat> seats;
 
-    private String username;
-    private String email;
-    private String password;
-    private String phone;
-    @Column(columnDefinition = "MEDIUMTEXT")
-    private String refreshToken;
+    private String name;
+    private Long totalSeats;
 
-    @Enumerated(EnumType.STRING)
-    private RoleEnum role;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant createdAt;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")

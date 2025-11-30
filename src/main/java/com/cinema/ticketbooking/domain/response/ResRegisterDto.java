@@ -1,4 +1,4 @@
-package com.cinema.ticketbooking.domain.dto;
+package com.cinema.ticketbooking.domain.response;
 
 import lombok.Data;
 

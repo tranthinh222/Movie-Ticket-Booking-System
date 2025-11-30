@@ -1,5 +1,6 @@
-package com.cinema.ticketbooking.service;
+package com.cinema.ticketbooking.config;
 
+import com.cinema.ticketbooking.service.UserService;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;

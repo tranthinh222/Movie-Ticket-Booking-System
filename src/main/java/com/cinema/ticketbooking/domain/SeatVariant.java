@@ -1,49 +1,35 @@
 package com.cinema.ticketbooking.domain;
 
 import com.cinema.ticketbooking.util.SecurityUtil;
-import com.cinema.ticketbooking.util.constant.RoleEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
 
 import java.time.Instant;
 import java.util.List;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
-@Table(name = "users")
-public class User {
+@Table(name = "seat_variants")
+@Data
+public class SeatVariant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
-    @OneToMany( mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
+    @OneToMany( mappedBy = "seatVariant", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
             orphanRemoval = true)
-    @JsonIgnore
-    List<Booking> bookings;
-
-    @OneToMany( mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
-            orphanRemoval = true)
-    @JsonIgnore
     List<SeatHold> seatHolds;
 
-    private String username;
-    private String email;
-    private String password;
-    private String phone;
-    @Column(columnDefinition = "MEDIUMTEXT")
-    private String refreshToken;
+    @ManyToOne
+    @JoinColumn(name = "seat_id")
+    private Seat seat;
 
-    @Enumerated(EnumType.STRING)
-    private RoleEnum role;
+    @OneToMany( mappedBy = "seatVariant", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    @JsonIgnore
+    List<BookingItem> bookingItems;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant createdAt;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
@@ -64,4 +50,5 @@ public class User {
                 ? SecurityUtil.getCurrentUserLogin().get() : "";
         this.updatedAt = Instant.now();
     }
+
 }

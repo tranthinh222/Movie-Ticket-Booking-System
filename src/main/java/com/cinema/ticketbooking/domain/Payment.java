@@ -1,42 +1,36 @@
 package com.cinema.ticketbooking.domain;
 
 import com.cinema.ticketbooking.util.SecurityUtil;
+import com.cinema.ticketbooking.util.constant.MethodEnum;
+import com.cinema.ticketbooking.util.constant.PaymentStatusEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.util.List;
 
 @Entity
-@Table (name = "films")
+@Table(name = "payments")
 @Data
-public class Film {
+public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany( mappedBy = "film", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
-            orphanRemoval = true)
-    @JsonIgnore
-    List<ShowTime> showTime;
+    @ManyToOne
+    @JoinColumn(name = "booking_id")
+    private Booking booking;
 
-    @Column(unique = true)
-    private String name;
-    private Long duration;
-    private Long price;
+    @ManyToOne
+    @JoinColumn(name = "seat_hold_id")
+    private SeatHold seatHold;
 
-    @Column(columnDefinition = "MEDIUMTEXT")
-    private String description;
-    private String genre;
-    private String language;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
-    private Instant release_date;
-    private Long rating;
+    @Enumerated(EnumType.STRING)
+    private MethodEnum method;
 
+    @Enumerated(EnumType.STRING)
+    private PaymentStatusEnum status;
+    private Instant transaction_time;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant createdAt;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
@@ -45,16 +39,16 @@ public class Film {
     private String updatedBy;
 
     @PrePersist
-    public void handleBeforeCreated(){
+    public void handleBeforeCreate () {
         this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get() : "";
-        this.createdAt = Instant.now();
+        createdAt = Instant.now();
     }
 
     @PreUpdate
-    public void handleBeforeUpdated(){
+    public void handleBeforeUpdate () {
         this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
                 ? SecurityUtil.getCurrentUserLogin().get() : "";
-        this.updatedAt = Instant.now();
+        updatedAt = Instant.now();
     }
 }

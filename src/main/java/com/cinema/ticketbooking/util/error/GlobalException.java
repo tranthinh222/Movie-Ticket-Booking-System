@@ -9,25 +9,35 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import com.cinema.ticketbooking.domain.RestResponse;
+import com.cinema.ticketbooking.domain.response.RestResponse;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalException {
-    @ExceptionHandler(value = {
-            UsernameNotFoundException.class,
-            BadCredentialsException.class
-    })
-    public ResponseEntity<RestResponse<Object>> handleIdException(Exception ex) {
-        RestResponse<Object> restResponse = new RestResponse<Object>();
-        restResponse.setStatusCode(HttpStatus.UNAUTHORIZED.value());
-        restResponse.setError(ex.getMessage());
-        restResponse.setMessage("Exception occurs...");
+    @ExceptionHandler(value = {UsernameNotFoundException.class, IdInvalidException.class})
+    public ResponseEntity<RestResponse<Object>> handleUserNotFoundException(Exception ex) {
+        RestResponse<Object> response = new RestResponse<>();
+        response.setStatusCode(HttpStatus.NOT_FOUND.value());
+        response.setError(ex.getMessage());
+        response.setMessage("Not found");
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(restResponse);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<RestResponse<Object>> handleBadCredentials(BadCredentialsException ex) {
+        RestResponse<Object> response = new RestResponse<>();
+        response.setStatusCode(HttpStatus.UNAUTHORIZED.value());
+        response.setError(ex.getMessage());
+        response.setMessage("Invalid username or password");
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+
+
 
     @ExceptionHandler(value = { DuplicateEmailException.class })
     public ResponseEntity<RestResponse<Object>> handleEmailDuplicate(Exception ex) {
