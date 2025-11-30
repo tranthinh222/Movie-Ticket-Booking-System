@@ -3,6 +3,7 @@ package com.cinema.ticketbooking.domain.request;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import java.time.Instant;
+import java.time.LocalDate;
 
 @Data
 public class ReqCreateFilmDto {
@@ -14,7 +15,7 @@ public class ReqCreateFilmDto {
     private String description;
     private String genre;
     private String language;
-    private Instant release_date;
+    private LocalDate release_date;
     private Long rating;
 
 }

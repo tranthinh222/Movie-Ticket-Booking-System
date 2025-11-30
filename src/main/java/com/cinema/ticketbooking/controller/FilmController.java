@@ -6,6 +6,8 @@ import com.cinema.ticketbooking.domain.request.ReqUpdateFilmDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.service.FilmService;
 import com.cinema.ticketbooking.util.annotation.ApiMessage;
+import com.cinema.ticketbooking.util.error.IdInvalidException;
+import com.cinema.ticketbooking.util.error.ResourceAlreadyExistsException;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Pageable;
@@ -31,12 +33,24 @@ public class FilmController {
         return ResponseEntity.status(HttpStatus.OK).body(this.filmService.getAllFilms(spec, pageable));
     }
 
+    @GetMapping ("/films/{id}")
+    @ApiMessage("fetch a film")
+    public ResponseEntity<Film> getFilm(@PathVariable Long id){
+        Film film = this.filmService.getFilmById(id);
+        if (film == null)
+        {
+            throw new IdInvalidException("film with id " +  id + " not found");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(film);
+    }
+
     @PostMapping("/films")
     @ApiMessage("create a film")
-    public ResponseEntity<Film> createFilm (@Valid @RequestBody ReqCreateFilmDto reqFilm) throws Exception {
+    public ResponseEntity<Film> createFilm (@Valid @RequestBody ReqCreateFilmDto reqFilm) {
         boolean isFilmExisted = this.filmService.isFilmNameDuplicated(reqFilm.getName());
         if (isFilmExisted){
-            throw new Exception("Film with name " + reqFilm.getName() + " already exists");
+            throw new ResourceAlreadyExistsException(
+                    "Film with name " + reqFilm.getName() + " already exists");
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(this.filmService.createFilm(reqFilm));
 
@@ -48,18 +62,19 @@ public class FilmController {
         Film film = this.filmService.getFilmById(id);
         if (film == null)
         {
-            throw new Exception("Film with id "+ id +" not found");
+            throw new IdInvalidException("Film with id "+ id +" not found");
         }
 
-        this.filmService.deleteFilm(film);
+        this.filmService.deleteFilm(id);
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
     @PutMapping("/films")
-    public ResponseEntity<Film> updateFilm (@Valid @RequestBody ReqUpdateFilmDto reqFilm) throws Exception{
+    @ApiMessage("update a film")
+    public ResponseEntity<Film> updateFilm (@Valid @RequestBody ReqUpdateFilmDto reqFilm){
         Film newFilm = this.filmService.updateFilm(reqFilm);
         if (newFilm == null){
-            throw new Exception("Film with id " + newFilm.getId() + " does not exist");
+            throw new IdInvalidException("Film with id " + reqFilm.getId() + " does not exist");
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(newFilm);

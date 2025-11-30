@@ -54,16 +54,18 @@ public class AddressService {
     }
 
     public Address updateAddress(ReqUpdateAddressDto reqAddress) {
-        Address address = findAddressById (reqAddress.getId());
-        if  (address != null) {
+        Address address = findAddressById(reqAddress.getId());
+        if (address == null)
+            return null;
+
+        if (reqAddress.getCity() != null)
             address.setCity(reqAddress.getCity());
+        if (reqAddress.getStreet_name() != null)
             address.setStreet_name(reqAddress.getStreet_name());
+        if (reqAddress.getStreet_number() != null)
             address.setStreet_number(reqAddress.getStreet_number());
-            this.addressRepository.save(address);
+        this.addressRepository.save(address);
 
-            return address;
-        }
-
-        return null;
+        return address;
     }
 }

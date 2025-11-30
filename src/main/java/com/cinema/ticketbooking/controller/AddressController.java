@@ -33,6 +33,17 @@ public class AddressController {
         return ResponseEntity.status(HttpStatus.OK).body(this.addressService.getAllAddresses(spec, pageable));
     }
 
+    @GetMapping ("/addresses/{id}")
+    @ApiMessage("fetch an address")
+    public ResponseEntity<Address> getAllAddresses(@PathVariable Long id){
+        Address address = this.addressService.findAddressById(id);
+        if (address == null)
+        {
+            throw new IdInvalidException("Address with id " + id + " not found");
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(address);
+    }
+
     @PostMapping("/addresses")
     @ApiMessage("create an address")
     public ResponseEntity<Address> createAddress (@Valid @RequestBody ReqCreateAddressDto reqAddress) {

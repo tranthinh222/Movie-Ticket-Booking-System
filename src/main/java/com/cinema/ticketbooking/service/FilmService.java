@@ -51,8 +51,8 @@ public class FilmService {
         return this.filmRepository.save(film);
     }
 
-    public void deleteFilm (Film reqFilm){
-        this.filmRepository.delete(reqFilm);
+    public void deleteFilm (Long filmId){
+        this.filmRepository.deleteById(filmId);
     }
 
     public Film updateFilm (ReqUpdateFilmDto reqFilm){

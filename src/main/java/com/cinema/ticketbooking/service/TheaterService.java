@@ -3,9 +3,11 @@ package com.cinema.ticketbooking.service;
 import com.cinema.ticketbooking.domain.Address;
 import com.cinema.ticketbooking.domain.Theater;
 import com.cinema.ticketbooking.domain.request.ReqCreateTheaterDto;
+import com.cinema.ticketbooking.domain.request.ReqUpdateTheaterDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AddressRepository;
 import com.cinema.ticketbooking.repository.TheaterRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -22,7 +24,7 @@ public class TheaterService {
         this.addressRepository = addressRepository;
     }
 
-
+    @Transactional
     public ResultPaginationDto getAllTheaters(Specification<Theater> spec, Pageable pageable) {
         Page<Theater> theaterPage = theaterRepository.findAll(spec, pageable);
         ResultPaginationDto resultPaginationDto = new ResultPaginationDto();
@@ -56,5 +58,15 @@ public class TheaterService {
 
     public void deleteTheater(Long id) {
         this.theaterRepository.deleteById(id);
+    }
+
+    public Theater updateTheater(ReqUpdateTheaterDto reqUpdateTheaterDto){
+        Theater theater = findTheaterById(reqUpdateTheaterDto.getId());
+        if (theater == null){
+            return null;
+        }
+
+        theater.setName(reqUpdateTheaterDto.getName());
+        return this.theaterRepository.save(theater);
     }
 }

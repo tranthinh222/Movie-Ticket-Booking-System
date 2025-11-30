@@ -36,6 +36,17 @@ public class GlobalException {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<RestResponse<Object>> handleResourceAlreadyExists(ResourceAlreadyExistsException ex) {
+        RestResponse<Object> response = new RestResponse<>();
+
+        response.setStatusCode(HttpStatus.CONFLICT.value()); // 409
+        response.setError(ex.getMessage());
+        response.setMessage("Resource already exists");
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
 
 
 
