@@ -1,8 +1,13 @@
 package com.cinema.ticketbooking.domain.request;
 
+import java.time.Instant;
+
 import com.cinema.ticketbooking.util.constant.RoleEnum;
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -26,4 +31,11 @@ public class ReqRegisterDto {
     @Enumerated(EnumType.STRING)
     private RoleEnum role = RoleEnum.CUSTOMER;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
+    private Instant createdAt;
+
+    @PrePersist
+    public void handleBeforeCreated() {
+        this.createdAt = Instant.now();
+    }
 }

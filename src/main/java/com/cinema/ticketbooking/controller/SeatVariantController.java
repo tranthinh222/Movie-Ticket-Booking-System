@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/v1")
 public class SeatVariantController {
     private final SeatVariantService seatVariantService;
+
     public SeatVariantController(SeatVariantService seatVariantService) {
         this.seatVariantService = seatVariantService;
     }
@@ -28,33 +29,35 @@ public class SeatVariantController {
     @GetMapping("/seatvariants")
     @ApiMessage("fetch all seatvariants")
     public ResponseEntity<ResultPaginationDto> getAllSeatVariants(
-            @Filter Specification<SeatVariant> spec, Pageable pageable)
-    {
+            @Filter Specification<SeatVariant> spec, Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(this.seatVariantService.getAllSeatVariants(spec, pageable));
     }
 
-    @GetMapping ("/seatvariants/{id}")
+    @GetMapping("/seatvariants/{id}")
     @ApiMessage("fetch a seat variant")
-    public ResponseEntity<SeatVariant> getSeatVariantById(@PathVariable Long id){
+    public ResponseEntity<SeatVariant> getSeatVariantById(@PathVariable Long id) {
         SeatVariant seat = this.seatVariantService.findSeatVariantById(id);
-        if (seat == null)
-        {
+        if (seat == null) {
             throw new IdInvalidException("Seat variant with id " + id + " not found");
         }
         return ResponseEntity.status(HttpStatus.OK).body(seat);
     }
 
-//    @PostMapping("/seatvariants")
-//    @ApiMessage("create a seat variant")
-//    public ResponseEntity<Seat> createSeat (@Valid @RequestBody ReqCreateSeatDto reqSeat) {
-//        Auditorium auditorium = this.auditoriumService.getAuditoriumById(reqSeat.getAuditoriumId());
-//
-//        if (auditorium == null)
-//        {
-//            throw new IdInvalidException("Auditorium with id " + reqSeat.getAuditoriumId() + " not found");
-//        }
-//        return ResponseEntity.status(HttpStatus.CREATED).body(this.seatService.createSeat(reqSeat));
-//
-//    }
+    // @PostMapping("/seatvariants")
+    // @ApiMessage("create a seat variant")
+    // public ResponseEntity<Seat> createSeat (@Valid @RequestBody ReqCreateSeatDto
+    // reqSeat) {
+    // Auditorium auditorium =
+    // this.auditoriumService.getAuditoriumById(reqSeat.getAuditoriumId());
+    //
+    // if (auditorium == null)
+    // {
+    // throw new IdInvalidException("Auditorium with id " +
+    // reqSeat.getAuditoriumId() + " not found");
+    // }
+    // return
+    // ResponseEntity.status(HttpStatus.CREATED).body(this.seatService.createSeat(reqSeat));
+    //
+    // }
 
 }

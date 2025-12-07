@@ -15,9 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-import java.util.Optional;
-
 @RestController
 @RequestMapping("api/v1")
 public class UserController {
@@ -29,12 +26,11 @@ public class UserController {
         this.passwordEncoder = passwordEncoder;
     }
 
-
     @GetMapping("/users/{id}")
     @ApiMessage("fetch user by id")
     public ResponseEntity<ResUserDto> getUserById(@PathVariable long id) throws IdInvalidException {
         User fetchUser = this.userService.getUserById(id);
-        if (fetchUser == null){
+        if (fetchUser == null) {
             throw new IdInvalidException("User with id " + id + " not found");
         }
 
@@ -44,8 +40,7 @@ public class UserController {
     @GetMapping("/users")
     @ApiMessage("fetch all users")
     public ResponseEntity<ResultPaginationDto> getAllUsers(
-            @Filter Specification<User> spec, Pageable pageable
-    ) {
+            @Filter Specification<User> spec, Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(this.userService.getAllUser(spec, pageable));
     }
 
@@ -53,7 +48,7 @@ public class UserController {
     @ApiMessage("create a user")
     public ResponseEntity<User> createUser(@RequestBody User user) throws Exception {
         boolean isEmailExist = this.userService.existsByEmail(user.getEmail());
-        if (isEmailExist){
+        if (isEmailExist) {
             throw new Exception("User with email " + user.getEmail() + " already exists");
         }
         String hashPassword = passwordEncoder.encode(user.getPassword());
@@ -67,7 +62,7 @@ public class UserController {
     @ApiMessage("update a user")
     public ResponseEntity<ResUpdateUserDto> updateUser(@RequestBody User user) throws Exception {
         boolean isEmailExist = this.userService.existsByEmail(user.getEmail());
-        if (isEmailExist){
+        if (isEmailExist) {
             throw new Exception("User with email " + user.getEmail() + " already exists");
         }
         return ResponseEntity.status(HttpStatus.OK).body(this.userService.updateUser(user));
@@ -75,9 +70,9 @@ public class UserController {
     }
 
     @DeleteMapping("/users")
-    public ResponseEntity<Void> deleteUser(@PathVariable("id") long id) throws Exception{
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") long id) throws Exception {
         User user = this.userService.getUserById(id);
-        if (user == null){
+        if (user == null) {
             throw new Exception("User with id " + id + " already exists");
         }
 

@@ -1,8 +1,6 @@
 package com.cinema.ticketbooking.domain.response;
 
 import com.cinema.ticketbooking.util.constant.RoleEnum;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -4,7 +4,6 @@ import com.cinema.ticketbooking.util.SecurityUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.time.Instant;
@@ -18,8 +17,7 @@ public class Address {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany( mappedBy = "address", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
-            orphanRemoval = true)
+    @OneToMany(mappedBy = "address", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     List<Theater> theaters;
 
@@ -35,16 +33,18 @@ public class Address {
     private String updatedBy;
 
     @PrePersist
-    public void handleBeforeCreated(){
+    public void handleBeforeCreated() {
         this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
         this.createdAt = Instant.now();
     }
 
     @PreUpdate
-    public void handleBeforeUpdated(){
+    public void handleBeforeUpdated() {
         this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
         this.updatedAt = Instant.now();
     }
 }

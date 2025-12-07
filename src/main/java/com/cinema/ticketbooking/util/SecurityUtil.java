@@ -1,8 +1,6 @@
 package com.cinema.ticketbooking.util;
 
-
 import com.cinema.ticketbooking.domain.response.ResLoginDto;
-import com.cinema.ticketbooking.domain.response.ResRegisterDto;
 import com.cinema.ticketbooking.domain.response.ResUserJwtDto;
 import com.nimbusds.jose.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,9 +21,11 @@ import java.util.Optional;
 @Service
 public class SecurityUtil {
     private final JwtEncoder jwtEncoder;
-    public  SecurityUtil(JwtEncoder jwtEncoder) {
+
+    public SecurityUtil(JwtEncoder jwtEncoder) {
         this.jwtEncoder = jwtEncoder;
     }
+
     public static final MacAlgorithm JWT_ALGORITHM = MacAlgorithm.HS512;
     @Value("${ticketbooking.jwt.base64-secret}")
     private String jwtKey;
@@ -36,7 +36,6 @@ public class SecurityUtil {
     @Value("${ticketbooking.jwt.refresh-token-validity-in-seconds}")
     private long refreshTokenExpiration;
 
-
     public String createAccessToken(String email, Object obj) {
         Instant now = Instant.now();
         Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
@@ -45,10 +44,7 @@ public class SecurityUtil {
 
         if (obj instanceof ResLoginDto loginDto) {
             user = loginDto.getUser();
-        } else if (obj instanceof ResRegisterDto registerDto) {
-            user = registerDto.getUser();
         }
-
 
         // @formatter:off
         JwtClaimsSet claims = JwtClaimsSet.builder()
@@ -124,4 +120,3 @@ public class SecurityUtil {
     }
 
 }
-
