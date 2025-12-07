@@ -5,9 +5,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-public class ResLoginDto {
-    private String accessToken;
-    private String refreshToken;
-    private ResUserJwtDto user;
-
+@AllArgsConstructor
+@NoArgsConstructor
+public class ResUserJwtDto {
+    private Long id;
+    private String username;
+    private String email;
 }

@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 
 @Data
 public class ReqCreateTheaterDto {
-    @NotNull
     @NotEmpty (message = "name must be not empty")
     private String name;
     @NotNull (message = "address id is required")

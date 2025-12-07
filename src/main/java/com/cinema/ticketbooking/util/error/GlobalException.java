@@ -6,6 +6,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -48,6 +49,17 @@ public class GlobalException {
     }
 
 
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<RestResponse<Object>> handleApiException(ApiException ex) {
+        RestResponse<Object> response = new RestResponse<>();
+
+        response.setStatusCode(ex.getStatus().value());
+        response.setError(ex.getMessage());
+        response.setMessage("Error occurred");
+        response.setData(null);
+
+        return ResponseEntity.status(ex.getStatus()).body(response);
+    }
 
 
     @ExceptionHandler(value = { DuplicateEmailException.class })

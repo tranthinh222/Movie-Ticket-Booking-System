@@ -35,7 +35,7 @@ public class AddressController {
 
     @GetMapping ("/addresses/{id}")
     @ApiMessage("fetch an address")
-    public ResponseEntity<Address> getAllAddresses(@PathVariable Long id){
+    public ResponseEntity<Address> getAddressById(@PathVariable Long id){
         Address address = this.addressService.findAddressById(id);
         if (address == null)
         {

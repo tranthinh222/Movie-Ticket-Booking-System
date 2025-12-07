@@ -30,6 +30,8 @@ public class SeatVariant {
     @JsonIgnore
     List<BookingItem> bookingItems;
 
+    private double bonus;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant createdAt;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")

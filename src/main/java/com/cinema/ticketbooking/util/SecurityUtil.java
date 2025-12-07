@@ -2,6 +2,9 @@ package com.cinema.ticketbooking.util;
 
 
 import com.cinema.ticketbooking.domain.response.ResLoginDto;
+import com.cinema.ticketbooking.domain.response.ResRegisterDto;
+import com.cinema.ticketbooking.domain.response.ResUserJwtDto;
+import com.nimbusds.jose.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -34,17 +37,25 @@ public class SecurityUtil {
     private long refreshTokenExpiration;
 
 
-    public String createAccessToken(Authentication authentication) {
+    public String createAccessToken(String email, Object obj) {
         Instant now = Instant.now();
         Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
+
+        ResUserJwtDto user = null;
+
+        if (obj instanceof ResLoginDto loginDto) {
+            user = loginDto.getUser();
+        } else if (obj instanceof ResRegisterDto registerDto) {
+            user = registerDto.getUser();
+        }
 
 
         // @formatter:off
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuedAt(now)
                 .expiresAt(validity)
-                .subject(authentication.getName())
-                .claim("ticketbooking", authentication)
+                .subject(email)
+                .claim("user", user)
                 .build();
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
@@ -70,6 +81,22 @@ public class SecurityUtil {
 
     }
 
+    private SecretKey getSecretKey() {
+        byte[] keyBytes = Base64.from(jwtKey).decode();
+        return new SecretKeySpec(keyBytes, 0, keyBytes.length, JWT_ALGORITHM.getName());
+    }
+
+    public Jwt checkValidRefreshToken(String refreshToken) {
+        NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withSecretKey(
+                getSecretKey()).macAlgorithm(SecurityUtil.JWT_ALGORITHM).build();
+        try {
+            return jwtDecoder.decode(refreshToken);
+        } catch (Exception e) {
+            System.out.println(">>> Refresh Token error: " + e.getMessage());
+            throw e;
+        }
+    }
+
     public static Optional<String> getCurrentUserLogin() {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         return Optional.ofNullable(extractPrincipal(securityContext.getAuthentication()));
@@ -87,5 +114,14 @@ public class SecurityUtil {
         }
         return null;
     }
+
+    public static Optional<String> getCurrentUserJWT() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+
+        return Optional.ofNullable(securityContext.getAuthentication())
+                .filter(auth -> auth.getCredentials() instanceof String)
+                .map(auth -> (String) auth.getCredentials());
+    }
+
 }
 

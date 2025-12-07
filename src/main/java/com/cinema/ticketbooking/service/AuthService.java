@@ -1,5 +1,7 @@
 package com.cinema.ticketbooking.service;
 
+import com.cinema.ticketbooking.domain.response.ResUserJwtDto;
+import com.cinema.ticketbooking.util.error.IdInvalidException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -9,6 +11,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 
 import com.cinema.ticketbooking.domain.User;
@@ -41,22 +44,18 @@ public class AuthService {
                 reqLoginDto.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authToken);
 
-        String access_token = securityUtil.createAccessToken(authentication);
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         ResLoginDto response = new ResLoginDto();
         User currentUserDB = this.userService.getUserByEmail(reqLoginDto.getEmail());
+        ResUserJwtDto jwtUser = null;
         if (currentUserDB != null) {
-            ResLoginDto.UserLogin userLogin = new ResLoginDto.UserLogin(
-                    currentUserDB.getId(),
-                    currentUserDB.getUsername(),
-                    currentUserDB.getEmail()
-            );
-
-            response.setUser(userLogin);
+            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail());
+            response.setUser(jwtUser);
         }
 
+        //create access token
+        String access_token = securityUtil.createAccessToken(authentication.getName(), response);
         response.setAccessToken(access_token);
 
         //create refresh token
@@ -92,7 +91,7 @@ public class AuthService {
                 .phone(reqRegisterDto.getPhone())
                 .build();
 
-        userService.createUser(registerUser);
+        this.userService.createUser(registerUser);
 
         // Đăng nhập luôn tăng UX
 
@@ -100,14 +99,81 @@ public class AuthService {
                 reqRegisterDto.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authToken);
 
-        String access_token = securityUtil.createAccessToken(authentication);
+
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         ResRegisterDto response = new ResRegisterDto();
+        User currentUserDB = this.userService.getUserByEmail(reqRegisterDto.getEmail());
+        ResUserJwtDto jwtUser = null;
+
+        if (currentUserDB != null) {
+            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail());
+            response.setUser(jwtUser);
+        }
+
+        String access_token = securityUtil.createAccessToken(authentication.getName(), response);
 
         response.setAccessToken(access_token);
-        response.setEmail(registerUser.getEmail());
         return response;
     }
+
+    public ResUserJwtDto getAccount(){
+        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
+
+        ResUserJwtDto jwtUser = null;
+        User currentUserDB = this.userService.getUserByEmail(email);
+        if (currentUserDB != null) {
+            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail());
+        }
+
+        return jwtUser;
+    }
+
+
+    public ResponseEntity<ResLoginDto> getRefreshToken (String refreshToken)
+    {
+        //check valid
+        Jwt decodedToken = this.securityUtil.checkValidRefreshToken(refreshToken);
+        String email = decodedToken.getSubject();
+
+        //check user by token + email
+        User currentUser = this.userService.getUserByRefreshTokenAndEmail(refreshToken, email);
+
+        if (currentUser == null)
+        {
+            throw new IdInvalidException("Refresh token is invalid");
+        }
+
+        // issue new token/set refresh token as cookies
+        ResLoginDto response = new ResLoginDto();
+        User currentUserDB = this.userService.getUserByEmail(email);
+        ResUserJwtDto jwtUser = null;
+        if (currentUserDB != null) {
+            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail());
+            response.setUser(jwtUser);
+        }
+
+        //create access token
+        String access_token = securityUtil.createAccessToken(email, response);
+        response.setAccessToken(access_token);
+
+        //create refresh token
+        String new_refreshToken = this.securityUtil.createRefreshToken(email, response);
+
+        //update user
+        this.userService.updateUserToken(new_refreshToken, email);
+
+        //set cookies
+        ResponseCookie resCookie = ResponseCookie.from("refresh_token",    refreshToken)
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(refreshTokenExpiration)
+                .build();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, resCookie.toString())
+                .body(response);
+    }
+
 }

@@ -5,9 +5,7 @@ import com.cinema.ticketbooking.util.constant.SeatTypeStatusEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
@@ -29,7 +27,7 @@ public class Seat {
     @JsonIgnore
     List<SeatVariant> seatVariants;
 
-    private String seat_row;
+    private String seatRow;
     private int number;
     @Enumerated(EnumType.STRING)
     private SeatTypeStatusEnum status;
