@@ -5,6 +5,7 @@ import com.cinema.ticketbooking.domain.request.ReqCreateFilmDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateFilmDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.FilmRepository;
+import com.cinema.ticketbooking.util.error.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -55,18 +56,53 @@ public class FilmService {
         this.filmRepository.deleteById(filmId);
     }
 
+    private boolean hasUpdatableField(ReqUpdateFilmDto req) {
+        return (req.getName() != null && !req.getName().trim().isEmpty())
+                || req.getDuration() != null
+                || req.getPrice() != null
+                || (req.getDescription() != null && !req.getDescription().trim().isEmpty())
+                || (req.getGenre() != null && !req.getGenre().trim().isEmpty())
+                || (req.getLanguage() != null && !req.getLanguage().trim().isEmpty())
+                || req.getRelease_date() != null
+                || req.getRating() != null;
+    }
+
     public Film updateFilm (ReqUpdateFilmDto reqFilm){
+        if (!hasUpdatableField(reqFilm)) {
+            throw new BadRequestException("No data provided for update");
+        }
+
         Optional<Film> filmOptional = this.filmRepository.findById(reqFilm.getId());
         if (filmOptional.isPresent()) {
-            Film newFilm =  filmOptional.get();
-            newFilm.setName(reqFilm.getName());
-            newFilm.setDuration(reqFilm.getDuration());
-            newFilm.setPrice(reqFilm.getPrice());
-            newFilm.setDescription(reqFilm.getDescription());
-            newFilm.setGenre(reqFilm.getGenre());
-            newFilm.setLanguage(reqFilm.getLanguage());
-            newFilm.setRelease_date(reqFilm.getRelease_date());
-            newFilm.setRating(reqFilm.getRating());
+            Film newFilm = filmOptional.get();
+
+            Optional.ofNullable(reqFilm.getName())
+                    .filter(name -> !name.trim().isEmpty())
+                    .ifPresent(name -> newFilm.setName(name));
+
+            Optional.ofNullable(reqFilm.getDuration())
+                    .ifPresent(duration -> newFilm.setDuration(duration));
+
+            Optional.ofNullable(reqFilm.getPrice())
+                    .ifPresent(price -> newFilm.setPrice(price));
+
+            Optional.ofNullable(reqFilm.getDescription())
+                    .filter(desc -> !desc.trim().isEmpty())
+                    .ifPresent(desc -> newFilm.setDescription(desc));
+
+            Optional.ofNullable(reqFilm.getGenre())
+                    .filter(genre -> !genre.trim().isEmpty())
+                    .ifPresent(genre -> newFilm.setGenre(genre));
+
+            Optional.ofNullable(reqFilm.getLanguage())
+                    .filter(lang -> !lang.trim().isEmpty())
+                    .ifPresent(lang -> newFilm.setLanguage(lang));
+
+            Optional.ofNullable(reqFilm.getRelease_date())
+                    .ifPresent(date -> newFilm.setRelease_date(date));
+
+            Optional.ofNullable(reqFilm.getRating())
+                    .ifPresent(rating -> newFilm.setRating(rating));
             return this.filmRepository.save(newFilm);
 
         }

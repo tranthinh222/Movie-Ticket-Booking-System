@@ -5,10 +5,13 @@ import com.cinema.ticketbooking.domain.request.ReqCreateAddressDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateAddressDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AddressRepository;
+import com.cinema.ticketbooking.util.error.BadRequestException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class AddressService {
@@ -53,19 +56,36 @@ public class AddressService {
         this.addressRepository.deleteById(id);
     }
 
+    private boolean hasUpdatableField(ReqUpdateAddressDto req) {
+        return (req.getCity() != null && !req.getCity().trim().isEmpty())
+                || (req.getStreet_name() != null && !req.getStreet_name().trim().isEmpty())
+                || (req.getStreet_number() != null && !req.getStreet_number().trim().isEmpty());
+    }
+
+
     public Address updateAddress(ReqUpdateAddressDto reqAddress) {
+        if (!hasUpdatableField(reqAddress)) {
+            throw new BadRequestException("No data provided for update");
+        }
+
+
         Address address = findAddressById(reqAddress.getId());
         if (address == null)
             return null;
 
-        if (reqAddress.getCity() != null)
-            address.setCity(reqAddress.getCity());
-        if (reqAddress.getStreet_name() != null)
-            address.setStreet_name(reqAddress.getStreet_name());
-        if (reqAddress.getStreet_number() != null)
-            address.setStreet_number(reqAddress.getStreet_number());
-        this.addressRepository.save(address);
+        Optional.ofNullable(reqAddress.getCity())
+                .filter(city -> !city.trim().isEmpty())
+                .ifPresent(city -> address.setCity(city));
 
+        Optional.ofNullable(reqAddress.getStreet_name())
+                .filter(name -> !name.trim().isEmpty())
+                .ifPresent(name -> address.setStreet_name(name));
+
+        Optional.ofNullable(reqAddress.getStreet_number())
+                .filter(number -> !number.trim().isEmpty())
+                .ifPresent(number -> address.setStreet_number(number));
+
+        this.addressRepository.save(address);
         return address;
     }
 }

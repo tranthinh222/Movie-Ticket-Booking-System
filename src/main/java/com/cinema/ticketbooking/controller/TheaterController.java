@@ -50,7 +50,7 @@ public class TheaterController {
 
     @PostMapping("/theaters")
     @ApiMessage("create a theater")
-    public ResponseEntity<Theater> createtheater(@RequestBody ReqCreateTheaterDto theater){
+    public ResponseEntity<Theater> createtheater(@Valid @RequestBody ReqCreateTheaterDto theater){
         Address address = this.addressService.findAddressById(theater.getAddressId());
         if (address == null){
             throw new IdInvalidException("Address with id "+ theater.getAddressId() +" not found");

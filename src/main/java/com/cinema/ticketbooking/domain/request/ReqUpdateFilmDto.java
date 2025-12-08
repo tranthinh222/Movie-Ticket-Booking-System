@@ -1,24 +1,26 @@
 package com.cinema.ticketbooking.domain.request;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.Data;
-
-import java.time.Instant;
 import java.time.LocalDate;
 
 @Data
 public class ReqUpdateFilmDto {
     @NotNull (message = "id must not be null")
+    @Positive(message = "id must be greater than 0")
     private Long id;
-    @NotBlank(message = "Film name is required")
     private String name;
+    @Positive(message = "duration must be greater than 0")
     private Long duration;
+    @PositiveOrZero(message = "price must be greater than or equal to 0")
     private Long price;
 
     private String description;
     private String genre;
     private String language;
+    @PastOrPresent(message = "release date cannot be in the future")
     private LocalDate release_date;
+    @Min(value = 1, message = "rating must be at least 1")
+    @Max(value = 10, message = "rating cannot be greater than 10")
     private Long rating;
 }

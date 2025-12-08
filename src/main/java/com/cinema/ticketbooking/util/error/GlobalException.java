@@ -48,6 +48,17 @@ public class GlobalException {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<RestResponse<Object>> handleBadRequest(BadRequestException ex) {
+        RestResponse<Object> response = new RestResponse<>();
+
+        response.setStatusCode(HttpStatus.BAD_REQUEST.value()); // 400
+        response.setError(ex.getMessage());
+        response.setMessage("Bad request");
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<RestResponse<Object>> handleApiException(ApiException ex) {
