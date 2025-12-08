@@ -5,7 +5,11 @@ import com.cinema.ticketbooking.domain.Seat;
 import com.cinema.ticketbooking.domain.SeatVariant;
 import com.cinema.ticketbooking.domain.Theater;
 import com.cinema.ticketbooking.domain.request.ReqCreateSeatDto;
+import com.cinema.ticketbooking.domain.request.ReqCreateSeatVariantDto;
+import com.cinema.ticketbooking.domain.request.ReqUpdateSeatDto;
+import com.cinema.ticketbooking.domain.request.ReqUpdateSeatVariantDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
+import com.cinema.ticketbooking.service.SeatService;
 import com.cinema.ticketbooking.service.SeatVariantService;
 import com.cinema.ticketbooking.util.annotation.ApiMessage;
 import com.cinema.ticketbooking.util.error.IdInvalidException;
@@ -21,40 +25,63 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/v1")
 public class SeatVariantController {
     private final SeatVariantService seatVariantService;
-    public SeatVariantController(SeatVariantService seatVariantService) {
+    private final SeatService seatService;
+    public SeatVariantController(SeatVariantService seatVariantService, SeatService seatService) {
         this.seatVariantService = seatVariantService;
+        this.seatService = seatService;
     }
 
-    @GetMapping("/seatvariants")
+    @GetMapping("/seat-variants")
     @ApiMessage("fetch all seatvariants")
     public ResponseEntity<ResultPaginationDto> getAllSeatVariants(
-            @Filter Specification<SeatVariant> spec, Pageable pageable)
-    {
+            @Filter Specification<SeatVariant> spec, Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(this.seatVariantService.getAllSeatVariants(spec, pageable));
     }
 
-    @GetMapping ("/seatvariants/{id}")
+    @GetMapping ("/seat-variants/{id}")
     @ApiMessage("fetch a seat variant")
     public ResponseEntity<SeatVariant> getSeatVariantById(@PathVariable Long id){
         SeatVariant seat = this.seatVariantService.findSeatVariantById(id);
-        if (seat == null)
-        {
+        if (seat == null) {
             throw new IdInvalidException("Seat variant with id " + id + " not found");
         }
         return ResponseEntity.status(HttpStatus.OK).body(seat);
     }
 
-//    @PostMapping("/seatvariants")
-//    @ApiMessage("create a seat variant")
-//    public ResponseEntity<Seat> createSeat (@Valid @RequestBody ReqCreateSeatDto reqSeat) {
-//        Auditorium auditorium = this.auditoriumService.getAuditoriumById(reqSeat.getAuditoriumId());
-//
-//        if (auditorium == null)
-//        {
-//            throw new IdInvalidException("Auditorium with id " + reqSeat.getAuditoriumId() + " not found");
-//        }
-//        return ResponseEntity.status(HttpStatus.CREATED).body(this.seatService.createSeat(reqSeat));
-//
-//    }
+    @PostMapping("/seat-variants")
+    @ApiMessage("create a seat variant")
+    public ResponseEntity<SeatVariant> createSeatVariant (@Valid @RequestBody ReqCreateSeatVariantDto reqSeat) {
+        Seat seat = this.seatService.findSeatById(reqSeat.getSeatId());
+
+        if (seat == null) {
+            throw new IdInvalidException("Seat with id " + reqSeat.getSeatId() + " not found");
+        }
+        return ResponseEntity.status(HttpStatus.CREATED).body(this.seatVariantService.createSeatVariant(reqSeat));
+
+    }
+
+    @DeleteMapping("/seat-variants/{id}")
+    @ApiMessage("delete a seat variant")
+    public ResponseEntity<Void> deleteSeatVariant (@PathVariable Long id) {
+        SeatVariant seatVariant = this.seatVariantService.findSeatVariantById(id);
+        if (seatVariant == null)
+        {
+            throw new IdInvalidException("seat with id "+ id +" not found");
+        }
+        this.seatService.deleteSeat(id);
+        return ResponseEntity.status(HttpStatus.OK).body(null);
+    }
+
+    @PutMapping("/seat-variants")
+    public ResponseEntity<SeatVariant> updateSeat (@Valid @RequestBody ReqUpdateSeatVariantDto reqSeat) {
+        SeatVariant newSeat = this.seatVariantService.updateSeatVariant(reqSeat);
+        if (newSeat == null){
+            throw new IdInvalidException("Seat variant with id " + newSeat.getId() + " does not exist");
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(newSeat);
+    }
+
+
 
 }

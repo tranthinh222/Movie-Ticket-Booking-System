@@ -1,7 +1,7 @@
 package com.cinema.ticketbooking.domain;
 
 import com.cinema.ticketbooking.util.SecurityUtil;
-import com.cinema.ticketbooking.util.constant.SeatStatusEnum;
+import com.cinema.ticketbooking.util.constant.BookingStatusEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -37,7 +37,7 @@ public class Booking {
     List<BookingItem> bookingItems;
 
     @Enumerated(EnumType.STRING)
-    private SeatStatusEnum status;
+    private BookingStatusEnum status;
     private Long total_price;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")

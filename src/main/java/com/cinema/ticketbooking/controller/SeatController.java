@@ -1,5 +1,6 @@
 package com.cinema.ticketbooking.controller;
 
+import com.cinema.ticketbooking.domain.Address;
 import com.cinema.ticketbooking.domain.Auditorium;
 import com.cinema.ticketbooking.domain.Seat;
 import com.cinema.ticketbooking.domain.request.ReqCreateSeatDto;
@@ -45,6 +46,18 @@ public class SeatController {
             throw new IdInvalidException("Seat with id " + id + " not found");
         }
         return ResponseEntity.status(HttpStatus.OK).body(seat);
+    }
+
+    @DeleteMapping("/seats/{id}")
+    @ApiMessage("delete a seat")
+    public ResponseEntity<Void> deleteSeat (@PathVariable Long id) {
+        Seat seat = this.seatService.findSeatById(id);
+        if (seat == null)
+        {
+            throw new IdInvalidException("seat with id "+ id +" not found");
+        }
+        this.seatService.deleteSeat(id);
+        return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
     @PostMapping("/seats")

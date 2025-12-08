@@ -1,6 +1,8 @@
 package com.cinema.ticketbooking.service;
 
 import com.cinema.ticketbooking.domain.User;
+import com.cinema.ticketbooking.domain.request.ReqCreateUserDto;
+import com.cinema.ticketbooking.domain.request.ReqUpdateUserDto;
 import com.cinema.ticketbooking.domain.response.ResUpdateUserDto;
 import com.cinema.ticketbooking.domain.response.ResUserDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
@@ -54,7 +56,17 @@ public class UserService {
         return rs;
     }
 
-    public User createUser(User user) {
+    public User createUser(ReqCreateUserDto reqUser) {
+        User user = new User();
+        user.setUsername(reqUser.getUsername());
+        user.setEmail(reqUser.getEmail());
+        user.setPhone(reqUser.getPhone());
+        user.setPassword(reqUser.getPassword());
+        user.setRole(reqUser.getRole());
+        return this.userRepository.save(user);
+    }
+
+    public User registerUser(User user){
         return this.userRepository.save(user);
     }
 
@@ -79,7 +91,7 @@ public class UserService {
         return this.userRepository.existsByEmail(email);
     }
 
-    public ResUpdateUserDto updateUser(User reqUser)
+    public ResUpdateUserDto updateUser(ReqUpdateUserDto reqUser)
     {
         Optional<User> userOptional = this.userRepository.findById(reqUser.getId());
         if (userOptional.isPresent()) {

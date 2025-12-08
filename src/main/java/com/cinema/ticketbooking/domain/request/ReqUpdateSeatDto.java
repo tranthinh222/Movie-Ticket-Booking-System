@@ -1,6 +1,6 @@
 package com.cinema.ticketbooking.domain.request;
 
-import com.cinema.ticketbooking.util.constant.SeatTypeStatusEnum;
+import com.cinema.ticketbooking.util.constant.SeatStatusEnum;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -15,5 +15,5 @@ public class ReqUpdateSeatDto {
     @Min(value = 1, message = "seat number must be greater than 0")
     private int number;
     @NotNull (message = "seat type is not null")
-    private SeatTypeStatusEnum status;
+    private SeatStatusEnum status;
 }

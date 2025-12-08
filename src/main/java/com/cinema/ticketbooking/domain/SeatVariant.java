@@ -1,6 +1,7 @@
 package com.cinema.ticketbooking.domain;
 
 import com.cinema.ticketbooking.util.SecurityUtil;
+import com.cinema.ticketbooking.util.constant.SeatTypeEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -30,6 +31,7 @@ public class SeatVariant {
     @JsonIgnore
     List<BookingItem> bookingItems;
 
+    private SeatTypeEnum seatType;
     private double bonus;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")

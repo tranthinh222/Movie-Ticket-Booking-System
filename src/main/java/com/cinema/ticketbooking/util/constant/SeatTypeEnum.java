@@ -1,5 +1,5 @@
 package com.cinema.ticketbooking.util.constant;
 
-public enum SeatTypeStatusEnum {
+public enum SeatTypeEnum {
     REG,VIP
 }

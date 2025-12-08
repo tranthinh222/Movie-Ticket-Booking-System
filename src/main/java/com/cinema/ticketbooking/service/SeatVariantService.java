@@ -2,18 +2,25 @@ package com.cinema.ticketbooking.service;
 
 import com.cinema.ticketbooking.domain.Seat;
 import com.cinema.ticketbooking.domain.SeatVariant;
+import com.cinema.ticketbooking.domain.request.ReqCreateSeatVariantDto;
+import com.cinema.ticketbooking.domain.request.ReqUpdateSeatVariantDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
+import com.cinema.ticketbooking.repository.SeatRepository;
 import com.cinema.ticketbooking.repository.SeatVariantRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class SeatVariantService {
     private final SeatVariantRepository seatVariantRepository;
-    public SeatVariantService(SeatVariantRepository seatVariantRepository) {
+    private final SeatRepository seatRepository;
+    public SeatVariantService(SeatVariantRepository seatVariantRepository,  SeatRepository seatRepository) {
         this.seatVariantRepository = seatVariantRepository;
+        this.seatRepository = seatRepository;
     }
 
     public ResultPaginationDto getAllSeatVariants(Specification<SeatVariant> spec, Pageable pageable) {
@@ -38,6 +45,29 @@ public class SeatVariantService {
 
     public void deleteSeatVariant(Long id) {
         this.seatVariantRepository.deleteById(id);
+    }
+
+    public SeatVariant createSeatVariant(ReqCreateSeatVariantDto reqSeat) {
+        SeatVariant seatVariant = new SeatVariant();
+        Optional<Seat> seat = this.seatRepository.findById(reqSeat.getSeatId());
+        seatVariant.setSeat(seat.orElse(null));
+        seatVariant.setSeatType(reqSeat.getSeatType());
+        seatVariant.setBonus(reqSeat.getBonus());
+
+        this.seatVariantRepository.save(seatVariant);
+        return seatVariant;
+    }
+
+    public SeatVariant updateSeatVariant(ReqUpdateSeatVariantDto reqSeatVariant) {
+        SeatVariant seatVariant = findSeatVariantById(reqSeatVariant.getId());
+        if (seatVariant == null)
+            return null;
+
+        seatVariant.setSeatType(reqSeatVariant.getSeatType());
+        seatVariant.setBonus(reqSeatVariant.getBonus());
+
+        this.seatVariantRepository.save(seatVariant);
+        return seatVariant;
     }
 
 }

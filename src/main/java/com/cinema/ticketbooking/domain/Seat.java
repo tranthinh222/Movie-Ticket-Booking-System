@@ -1,7 +1,7 @@
 package com.cinema.ticketbooking.domain;
 
 import com.cinema.ticketbooking.util.SecurityUtil;
-import com.cinema.ticketbooking.util.constant.SeatTypeStatusEnum;
+import com.cinema.ticketbooking.util.constant.SeatStatusEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -30,7 +30,7 @@ public class Seat {
     private String seatRow;
     private int number;
     @Enumerated(EnumType.STRING)
-    private SeatTypeStatusEnum status;
+    private SeatStatusEnum status;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant createdAt;

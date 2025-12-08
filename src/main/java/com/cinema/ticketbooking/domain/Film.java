@@ -1,10 +1,8 @@
 package com.cinema.ticketbooking.domain;
 
 import com.cinema.ticketbooking.util.SecurityUtil;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.time.Instant;
@@ -12,7 +10,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@Table (name = "films")
+@Table(name = "films")
 @Data
 public class Film {
     @Id

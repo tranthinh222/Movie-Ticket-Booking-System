@@ -1,8 +1,6 @@
 package com.cinema.ticketbooking.util;
 
-
 import com.cinema.ticketbooking.domain.response.ResLoginDto;
-import com.cinema.ticketbooking.domain.response.ResRegisterDto;
 import com.cinema.ticketbooking.domain.response.ResUserJwtDto;
 import com.nimbusds.jose.util.Base64;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,17 +35,9 @@ public class SecurityUtil {
     private long refreshTokenExpiration;
 
 
-    public String createAccessToken(String email, Object obj) {
+    public String createAccessToken(String email, ResLoginDto dto) {
         Instant now = Instant.now();
         Instant validity = now.plus(this.accessTokenExpiration, ChronoUnit.SECONDS);
-
-        ResUserJwtDto user = null;
-
-        if (obj instanceof ResLoginDto loginDto) {
-            user = loginDto.getUser();
-        } else if (obj instanceof ResRegisterDto registerDto) {
-            user = registerDto.getUser();
-        }
 
 
         // @formatter:off
@@ -55,7 +45,7 @@ public class SecurityUtil {
                 .issuedAt(now)
                 .expiresAt(validity)
                 .subject(email)
-                .claim("user", user)
+                .claim("user", dto.getUser())
                 .build();
 
         JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
