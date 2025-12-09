@@ -13,32 +13,30 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("api/v1")
 public class AddressController {
     private final AddressService addressService;
+
     public AddressController(AddressService addressService) {
         this.addressService = addressService;
     }
 
-    @GetMapping ("/addresses")
+    @GetMapping("/addresses")
     @ApiMessage("fetch all addresses")
     public ResponseEntity<ResultPaginationDto> getAllAddresses(
-            @Filter Specification<Address> spec, Pageable pageable
-    ){
+            @Filter Specification<Address> spec, Pageable pageable) {
 
         return ResponseEntity.status(HttpStatus.OK).body(this.addressService.getAllAddresses(spec, pageable));
     }
 
-    @GetMapping ("/addresses/{id}")
+    @GetMapping("/addresses/{id}")
     @ApiMessage("fetch an address")
-    public ResponseEntity<Address> getAddressById(@PathVariable Long id){
+    public ResponseEntity<Address> getAddressById(@PathVariable Long id) {
         Address address = this.addressService.findAddressById(id);
-        if (address == null)
-        {
+        if (address == null) {
             throw new IdInvalidException("Address with id " + id + " not found");
         }
         return ResponseEntity.status(HttpStatus.OK).body(address);
@@ -46,27 +44,26 @@ public class AddressController {
 
     @PostMapping("/addresses")
     @ApiMessage("create an address")
-    public ResponseEntity<Address> createAddress (@Valid @RequestBody ReqCreateAddressDto reqAddress) {
+    public ResponseEntity<Address> createAddress(@Valid @RequestBody ReqCreateAddressDto reqAddress) {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.addressService.createAddress(reqAddress));
 
     }
 
     @DeleteMapping("/addresses/{id}")
     @ApiMessage("delete an address")
-    public ResponseEntity<Void> deleteAddress (@PathVariable Long id) {
+    public ResponseEntity<Void> deleteAddress(@PathVariable Long id) {
         Address address = this.addressService.findAddressById(id);
-        if (address == null)
-        {
-            throw new IdInvalidException("address with id "+ id +" not found");
+        if (address == null) {
+            throw new IdInvalidException("address with id " + id + " not found");
         }
         this.addressService.deleteAddress(id);
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
     @PutMapping("/addresses")
-    public ResponseEntity<Address> updateAddress (@Valid @RequestBody ReqUpdateAddressDto reqAddress) {
+    public ResponseEntity<Address> updateAddress(@Valid @RequestBody ReqUpdateAddressDto reqAddress) {
         Address newAddress = this.addressService.updateAddress(reqAddress);
-        if (newAddress == null){
+        if (newAddress == null) {
             throw new IdInvalidException("Address with id " + reqAddress.getId() + " does not exist");
         }
 

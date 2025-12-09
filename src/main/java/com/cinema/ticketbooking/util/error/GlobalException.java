@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalException {
-    @ExceptionHandler(value = {UsernameNotFoundException.class, IdInvalidException.class})
+    @ExceptionHandler(value = { UsernameNotFoundException.class, IdInvalidException.class })
     public ResponseEntity<RestResponse<Object>> handleUserNotFoundException(Exception ex) {
         RestResponse<Object> response = new RestResponse<>();
         response.setStatusCode(HttpStatus.NOT_FOUND.value());
@@ -37,13 +37,13 @@ public class GlobalException {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
-    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    @ExceptionHandler(value = { ResourceAlreadyExistsException.class, UnavailableResourceException.class })
     public ResponseEntity<RestResponse<Object>> handleResourceAlreadyExists(ResourceAlreadyExistsException ex) {
         RestResponse<Object> response = new RestResponse<>();
 
         response.setStatusCode(HttpStatus.CONFLICT.value()); // 409
         response.setError(ex.getMessage());
-        response.setMessage("Resource already exists");
+        response.setMessage("Resource unavailable");
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
@@ -59,7 +59,6 @@ public class GlobalException {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<RestResponse<Object>> handleApiException(ApiException ex) {
         RestResponse<Object> response = new RestResponse<>();
@@ -71,7 +70,6 @@ public class GlobalException {
 
         return ResponseEntity.status(ex.getStatus()).body(response);
     }
-
 
     @ExceptionHandler(value = { DuplicateEmailException.class })
     public ResponseEntity<RestResponse<Object>> handleEmailDuplicate(Exception ex) {

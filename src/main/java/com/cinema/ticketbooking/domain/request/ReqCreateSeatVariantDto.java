@@ -1,7 +1,5 @@
 package com.cinema.ticketbooking.domain.request;
 
-import java.math.BigDecimal;
-
 import com.cinema.ticketbooking.util.constant.SeatTypeEnum;
 
 import jakarta.validation.constraints.Min;

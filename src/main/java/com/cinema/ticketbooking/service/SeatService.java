@@ -3,7 +3,6 @@ package com.cinema.ticketbooking.service;
 import com.cinema.ticketbooking.domain.Seat;
 import com.cinema.ticketbooking.domain.SeatVariant;
 import com.cinema.ticketbooking.domain.Auditorium;
-import com.cinema.ticketbooking.domain.Seat;
 import com.cinema.ticketbooking.domain.request.ReqCreateSeatDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateSeatDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;

@@ -11,7 +11,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.Optional;
 
 @Service
@@ -23,7 +22,7 @@ public class FilmService {
     }
 
     public ResultPaginationDto getAllFilms(Specification<Film> spec, Pageable pageable) {
-        Page<Film> pageFilm =  this.filmRepository.findAll(spec, pageable);
+        Page<Film> pageFilm = this.filmRepository.findAll(spec, pageable);
         ResultPaginationDto resultPaginationDto = new ResultPaginationDto();
         ResultPaginationDto.Meta mt = new ResultPaginationDto.Meta();
 
@@ -38,7 +37,7 @@ public class FilmService {
         return resultPaginationDto;
     }
 
-    public Film createFilm (ReqCreateFilmDto reqFilm){
+    public Film createFilm(ReqCreateFilmDto reqFilm) {
         Film film = new Film();
         film.setName(reqFilm.getName());
         film.setDuration(reqFilm.getDuration());
@@ -52,7 +51,7 @@ public class FilmService {
         return this.filmRepository.save(film);
     }
 
-    public void deleteFilm (Long filmId){
+    public void deleteFilm(Long filmId) {
         this.filmRepository.deleteById(filmId);
     }
 
@@ -67,7 +66,7 @@ public class FilmService {
                 || req.getRating() != null;
     }
 
-    public Film updateFilm (ReqUpdateFilmDto reqFilm){
+    public Film updateFilm(ReqUpdateFilmDto reqFilm) {
         if (!hasUpdatableField(reqFilm)) {
             throw new BadRequestException("No data provided for update");
         }
@@ -109,7 +108,7 @@ public class FilmService {
         return null;
     }
 
-    public Film getFilmById (Long id){
+    public Film getFilmById(Long id) {
         Optional<Film> film = this.filmRepository.findById(id);
         if (film.isPresent()) {
             return film.get();
@@ -117,7 +116,7 @@ public class FilmService {
         return null;
     }
 
-    public boolean isFilmNameDuplicated (String filmName){
+    public boolean isFilmNameDuplicated(String filmName) {
         return this.filmRepository.existsByName(filmName);
     }
 
