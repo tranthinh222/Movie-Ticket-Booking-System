@@ -17,8 +17,7 @@ public class SeatHold {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany( mappedBy = "seatHold", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
-            orphanRemoval = true)
+    @OneToMany(mappedBy = "seatHold", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     List<Payment> payments;
 
@@ -31,8 +30,8 @@ public class SeatHold {
     private ShowTime showTime;
 
     @ManyToOne
-    @JoinColumn(name = "seat_variant_id")
-    private SeatVariant seatVariant;
+    @JoinColumn(name = "seat_id")
+    private Seat seat;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant expiresAt;
@@ -44,16 +43,18 @@ public class SeatHold {
     private String updatedBy;
 
     @PrePersist
-    public void handleBeforeCreated(){
+    public void handleBeforeCreated() {
         this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
         this.createdAt = Instant.now();
     }
 
     @PreUpdate
-    public void handleBeforeUpdated(){
+    public void handleBeforeUpdated() {
         this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
         this.updatedAt = Instant.now();
     }
 }

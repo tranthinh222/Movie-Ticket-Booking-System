@@ -11,9 +11,10 @@ import java.time.Instant;
 import java.util.List;
 
 @Entity
-@Table (name = "seats")
+@Table(name = "seats")
 @Data
 public class Seat {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -22,34 +23,38 @@ public class Seat {
     @JoinColumn(name = "auditorium_id")
     private Auditorium auditorium;
 
-    @OneToMany( mappedBy = "seat", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
-            orphanRemoval = true)
+    @ManyToOne
+    @JoinColumn(name = "seat_variant_id")
+    private SeatVariant seatVariant;
+
+    @OneToMany(mappedBy = "seat", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
-    List<SeatVariant> seatVariants;
+    List<SeatHold> seatHolds;
 
     private String seatRow;
     private int number;
+
     @Enumerated(EnumType.STRING)
     private SeatStatusEnum status;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant createdAt;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant updatedAt;
+
     private String createdBy;
     private String updatedBy;
 
     @PrePersist
-    public void handleBeforeCreated(){
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
+    public void handleBeforeCreated() {
+        this.createdBy = SecurityUtil.getCurrentUserLogin().orElse("");
         this.createdAt = Instant.now();
     }
 
     @PreUpdate
-    public void handleBeforeUpdated(){
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
+    public void handleBeforeUpdated() {
+        this.updatedBy = SecurityUtil.getCurrentUserLogin().orElse("");
         this.updatedAt = Instant.now();
     }
 }

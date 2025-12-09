@@ -1,6 +1,7 @@
 package com.cinema.ticketbooking.service;
 
 import com.cinema.ticketbooking.domain.Seat;
+import com.cinema.ticketbooking.domain.SeatVariant;
 import com.cinema.ticketbooking.domain.Auditorium;
 import com.cinema.ticketbooking.domain.Seat;
 import com.cinema.ticketbooking.domain.request.ReqCreateSeatDto;
@@ -8,6 +9,8 @@ import com.cinema.ticketbooking.domain.request.ReqUpdateSeatDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AuditoriumRepository;
 import com.cinema.ticketbooking.repository.SeatRepository;
+import com.cinema.ticketbooking.repository.SeatVariantRepository;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -19,13 +22,17 @@ import java.util.Optional;
 public class SeatService {
     private final SeatRepository seatRepository;
     private final AuditoriumRepository auditoriumRepository;
-    public SeatService(SeatRepository seatRepository, AuditoriumRepository auditoriumRepository){
+    private final SeatVariantRepository seatVariantRepository;
+
+    public SeatService(SeatRepository seatRepository, AuditoriumRepository auditoriumRepository,
+            SeatVariantRepository seatVariantRepository) {
         this.seatRepository = seatRepository;
         this.auditoriumRepository = auditoriumRepository;
+        this.seatVariantRepository = seatVariantRepository;
     }
 
     public ResultPaginationDto getAllSeats(Specification<Seat> spec, Pageable pageable) {
-        Page<Seat> pageSeat =  this.seatRepository.findAll(spec, pageable);
+        Page<Seat> pageSeat = this.seatRepository.findAll(spec, pageable);
         ResultPaginationDto resultPaginationDto = new ResultPaginationDto();
         ResultPaginationDto.Meta mt = new ResultPaginationDto.Meta();
 
@@ -52,6 +59,8 @@ public class SeatService {
         Seat seat = new Seat();
         Optional<Auditorium> auditorium = this.auditoriumRepository.findById(reqSeat.getAuditoriumId());
         seat.setAuditorium(auditorium.orElse(null));
+        Optional<SeatVariant> seatVariant = this.seatVariantRepository.findById(reqSeat.getSeatVariantId());
+        seat.setSeatVariant(seatVariant.orElse(null));
         seat.setSeatRow(reqSeat.getSeatRow());
         seat.setNumber(reqSeat.getNumber());
         seat.setStatus(reqSeat.getStatus());

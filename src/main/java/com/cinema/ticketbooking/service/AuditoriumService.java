@@ -18,13 +18,14 @@ import java.util.Optional;
 public class AuditoriumService {
     private final AuditoriumRepository auditoriumRepository;
     private final TheaterRepository theaterRepository;
+
     public AuditoriumService(AuditoriumRepository auditoriumRepository, TheaterRepository theaterRepository) {
         this.auditoriumRepository = auditoriumRepository;
         this.theaterRepository = theaterRepository;
     }
 
-    public ResultPaginationDto getAllAuditoriums (Specification<Auditorium> spec, Pageable pageable){
-        Page<Auditorium> pageAuditorium =  this.auditoriumRepository.findAll(spec, pageable);
+    public ResultPaginationDto getAllAuditoriums(Specification<Auditorium> spec, Pageable pageable) {
+        Page<Auditorium> pageAuditorium = this.auditoriumRepository.findAll(spec, pageable);
         ResultPaginationDto resultPaginationDto = new ResultPaginationDto();
         ResultPaginationDto.Meta mt = new ResultPaginationDto.Meta();
 
@@ -39,10 +40,9 @@ public class AuditoriumService {
         return resultPaginationDto;
     }
 
-    public Auditorium createAuditorium(ReqCreateAuditoriumDto reqAuditorium)
-    {
+    public Auditorium createAuditorium(ReqCreateAuditoriumDto reqAuditorium) {
         Auditorium auditorium = new Auditorium();
-        auditorium.setName(reqAuditorium.getName());
+        auditorium.setNumber(reqAuditorium.getNumber());
         auditorium.setTotalSeats(reqAuditorium.getTotalSeats());
         Optional<Theater> theater = this.theaterRepository.findById(reqAuditorium.getTheaterId());
         auditorium.setTheater(theater.orElse(null));
@@ -51,20 +51,17 @@ public class AuditoriumService {
         return auditorium;
     }
 
-    public Auditorium getAuditoriumById(Long auditoriumId)
-    {
-        return  this.auditoriumRepository.findById(auditoriumId).orElse(null);
+    public Auditorium getAuditoriumById(Long auditoriumId) {
+        return this.auditoriumRepository.findById(auditoriumId).orElse(null);
     }
 
-    public void deleteAuditorium (Long auditoriumId)
-    {
+    public void deleteAuditorium(Long auditoriumId) {
         this.auditoriumRepository.deleteById(auditoriumId);
     }
 
-    public Auditorium updateAuditorium (ReqUpdateAuditoriumDto reqUpdateAuditorium)
-    {
+    public Auditorium updateAuditorium(ReqUpdateAuditoriumDto reqUpdateAuditorium) {
         Auditorium auditorium = new Auditorium();
-        auditorium.setName(reqUpdateAuditorium.getName());
+        auditorium.setNumber(reqUpdateAuditorium.getNumber());
         auditorium.setTotalSeats(reqUpdateAuditorium.getTotalSeat());
         return auditoriumRepository.save(auditorium);
     }

@@ -18,13 +18,14 @@ import java.util.Optional;
 public class SeatVariantService {
     private final SeatVariantRepository seatVariantRepository;
     private final SeatRepository seatRepository;
-    public SeatVariantService(SeatVariantRepository seatVariantRepository,  SeatRepository seatRepository) {
+
+    public SeatVariantService(SeatVariantRepository seatVariantRepository, SeatRepository seatRepository) {
         this.seatVariantRepository = seatVariantRepository;
         this.seatRepository = seatRepository;
     }
 
     public ResultPaginationDto getAllSeatVariants(Specification<SeatVariant> spec, Pageable pageable) {
-        Page<SeatVariant> pageSeatVariant =  this.seatVariantRepository.findAll(spec, pageable);
+        Page<SeatVariant> pageSeatVariant = this.seatVariantRepository.findAll(spec, pageable);
         ResultPaginationDto resultPaginationDto = new ResultPaginationDto();
         ResultPaginationDto.Meta mt = new ResultPaginationDto.Meta();
 
@@ -49,8 +50,7 @@ public class SeatVariantService {
 
     public SeatVariant createSeatVariant(ReqCreateSeatVariantDto reqSeat) {
         SeatVariant seatVariant = new SeatVariant();
-        Optional<Seat> seat = this.seatRepository.findById(reqSeat.getSeatId());
-        seatVariant.setSeat(seat.orElse(null));
+        seatVariant.setBasePrice(reqSeat.getBasePrice());
         seatVariant.setSeatType(reqSeat.getSeatType());
         seatVariant.setBonus(reqSeat.getBonus());
 

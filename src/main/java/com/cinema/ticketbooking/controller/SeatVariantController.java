@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class SeatVariantController {
     private final SeatVariantService seatVariantService;
     private final SeatService seatService;
+
     public SeatVariantController(SeatVariantService seatVariantService, SeatService seatService) {
         this.seatVariantService = seatVariantService;
         this.seatService = seatService;
@@ -38,9 +39,9 @@ public class SeatVariantController {
         return ResponseEntity.status(HttpStatus.OK).body(this.seatVariantService.getAllSeatVariants(spec, pageable));
     }
 
-    @GetMapping ("/seat-variants/{id}")
+    @GetMapping("/seat-variants/{id}")
     @ApiMessage("fetch a seat variant")
-    public ResponseEntity<SeatVariant> getSeatVariantById(@PathVariable Long id){
+    public ResponseEntity<SeatVariant> getSeatVariantById(@PathVariable Long id) {
         SeatVariant seat = this.seatVariantService.findSeatVariantById(id);
         if (seat == null) {
             throw new IdInvalidException("Seat variant with id " + id + " not found");
@@ -50,38 +51,30 @@ public class SeatVariantController {
 
     @PostMapping("/seat-variants")
     @ApiMessage("create a seat variant")
-    public ResponseEntity<SeatVariant> createSeatVariant (@Valid @RequestBody ReqCreateSeatVariantDto reqSeat) {
-        Seat seat = this.seatService.findSeatById(reqSeat.getSeatId());
-
-        if (seat == null) {
-            throw new IdInvalidException("Seat with id " + reqSeat.getSeatId() + " not found");
-        }
+    public ResponseEntity<SeatVariant> createSeatVariant(@Valid @RequestBody ReqCreateSeatVariantDto reqSeat) {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.seatVariantService.createSeatVariant(reqSeat));
 
     }
 
     @DeleteMapping("/seat-variants/{id}")
     @ApiMessage("delete a seat variant")
-    public ResponseEntity<Void> deleteSeatVariant (@PathVariable Long id) {
+    public ResponseEntity<Void> deleteSeatVariant(@PathVariable Long id) {
         SeatVariant seatVariant = this.seatVariantService.findSeatVariantById(id);
-        if (seatVariant == null)
-        {
-            throw new IdInvalidException("seat with id "+ id +" not found");
+        if (seatVariant == null) {
+            throw new IdInvalidException("seat with id " + id + " not found");
         }
-        this.seatService.deleteSeat(id);
+        this.seatVariantService.deleteSeatVariant(id);
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
     @PutMapping("/seat-variants")
-    public ResponseEntity<SeatVariant> updateSeat (@Valid @RequestBody ReqUpdateSeatVariantDto reqSeat) {
+    public ResponseEntity<SeatVariant> updateSeat(@Valid @RequestBody ReqUpdateSeatVariantDto reqSeat) {
         SeatVariant newSeat = this.seatVariantService.updateSeatVariant(reqSeat);
-        if (newSeat == null){
+        if (newSeat == null) {
             throw new IdInvalidException("Seat variant with id " + newSeat.getId() + " does not exist");
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(newSeat);
     }
-
-
 
 }
