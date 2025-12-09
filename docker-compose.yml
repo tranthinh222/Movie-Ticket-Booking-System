@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  cinema-app:
+    build: .
+    container_name: cinema-api
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ticketbooking
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: 123456
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8
+    container_name: cinema-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: ticketbooking
+    ports:
+      - "3306:3306"
