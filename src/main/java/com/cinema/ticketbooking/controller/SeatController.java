@@ -1,6 +1,5 @@
 package com.cinema.ticketbooking.controller;
 
-import com.cinema.ticketbooking.domain.Address;
 import com.cinema.ticketbooking.domain.Auditorium;
 import com.cinema.ticketbooking.domain.Seat;
 import com.cinema.ticketbooking.domain.SeatVariant;

@@ -2,7 +2,6 @@ package com.cinema.ticketbooking.domain.request;
 
 import jakarta.validation.constraints.*;
 import lombok.Data;
-import java.time.Instant;
 import java.time.LocalDate;
 
 @Data
@@ -36,4 +35,3 @@ public class ReqCreateFilmDto {
     @Max(value = 10, message = "Rating must be <= 10")
     private Long rating;
 }
-

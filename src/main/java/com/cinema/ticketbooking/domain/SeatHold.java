@@ -3,6 +3,7 @@ package com.cinema.ticketbooking.domain;
 import com.cinema.ticketbooking.util.SecurityUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -21,15 +22,15 @@ public class SeatHold {
     @JsonIgnore
     List<Payment> payments;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "show_time_id")
     private ShowTime showTime;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seat_id")
     private Seat seat;
 
@@ -57,4 +58,5 @@ public class SeatHold {
                 : "";
         this.updatedAt = Instant.now();
     }
+
 }

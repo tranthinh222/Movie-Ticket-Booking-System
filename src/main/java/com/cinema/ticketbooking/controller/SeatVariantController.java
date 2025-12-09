@@ -1,15 +1,9 @@
 package com.cinema.ticketbooking.controller;
 
-import com.cinema.ticketbooking.domain.Auditorium;
-import com.cinema.ticketbooking.domain.Seat;
 import com.cinema.ticketbooking.domain.SeatVariant;
-import com.cinema.ticketbooking.domain.Theater;
-import com.cinema.ticketbooking.domain.request.ReqCreateSeatDto;
 import com.cinema.ticketbooking.domain.request.ReqCreateSeatVariantDto;
-import com.cinema.ticketbooking.domain.request.ReqUpdateSeatDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateSeatVariantDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
-import com.cinema.ticketbooking.service.SeatService;
 import com.cinema.ticketbooking.service.SeatVariantService;
 import com.cinema.ticketbooking.util.annotation.ApiMessage;
 import com.cinema.ticketbooking.util.error.IdInvalidException;
@@ -25,11 +19,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/v1")
 public class SeatVariantController {
     private final SeatVariantService seatVariantService;
-    private final SeatService seatService;
 
-    public SeatVariantController(SeatVariantService seatVariantService, SeatService seatService) {
+    public SeatVariantController(SeatVariantService seatVariantService) {
         this.seatVariantService = seatVariantService;
-        this.seatService = seatService;
     }
 
     @GetMapping("/seat-variants")

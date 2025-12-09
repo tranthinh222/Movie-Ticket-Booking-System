@@ -2,7 +2,6 @@ package com.cinema.ticketbooking.service;
 
 import com.cinema.ticketbooking.domain.ShowTime;
 import com.cinema.ticketbooking.domain.Film;
-import com.cinema.ticketbooking.domain.ShowTime;
 import com.cinema.ticketbooking.domain.Auditorium;
 import com.cinema.ticketbooking.domain.request.ReqCreateShowTimeDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateShowTimeDto;
@@ -17,20 +16,21 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-
 @Service
 public class ShowTimeService {
     private final ShowTimeRepository showTimeRepository;
     private final FilmRepository filmRepository;
     private final AuditoriumRepository auditoriumRepository;
-    public ShowTimeService (ShowTimeRepository showTimeRepository,  FilmRepository filmRepository, AuditoriumRepository auditoriumRepository) {
+
+    public ShowTimeService(ShowTimeRepository showTimeRepository, FilmRepository filmRepository,
+            AuditoriumRepository auditoriumRepository) {
         this.showTimeRepository = showTimeRepository;
         this.filmRepository = filmRepository;
         this.auditoriumRepository = auditoriumRepository;
     }
 
     public ResultPaginationDto getAllShowTimes(Specification<ShowTime> spec, Pageable pageable) {
-        Page<ShowTime> pageShowTime =  this.showTimeRepository.findAll(spec, pageable);
+        Page<ShowTime> pageShowTime = this.showTimeRepository.findAll(spec, pageable);
         ResultPaginationDto resultPaginationDto = new ResultPaginationDto();
         ResultPaginationDto.Meta mt = new ResultPaginationDto.Meta();
 
@@ -81,6 +81,5 @@ public class ShowTimeService {
 
         return this.showTimeRepository.save(showTime);
     }
-
 
 }

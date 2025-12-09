@@ -16,52 +16,53 @@ import java.util.List;
 @Table(name = "showtimes")
 @Data
 public class ShowTime {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "film_id")
-    private Film film;
+        @ManyToOne
+        @JoinColumn(name = "film_id")
+        private Film film;
 
-    @ManyToOne
-    @JoinColumn(name = "auditorium")
-    private Auditorium auditorium;
+        @ManyToOne
+        @JoinColumn(name = "auditorium")
+        private Auditorium auditorium;
 
-    @OneToMany( mappedBy = "showTime", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
-            orphanRemoval = true)
-    @JsonIgnore
-    List<Booking> bookings;
+        @OneToMany(mappedBy = "showTime", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+        @JsonIgnore
+        List<Booking> bookings;
 
-    @OneToMany( mappedBy = "showTime", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
-            orphanRemoval = true)
-    List<SeatHold> seatHolds;
+        @OneToMany(mappedBy = "showTime", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+        @JsonIgnore
+        List<SeatHold> seatHolds;
 
-    private LocalDate date;
-    private LocalTime startTime;
-    private LocalTime endTime;
+        private LocalDate date;
+        private LocalTime startTime;
+        private LocalTime endTime;
 
-    @Enumerated(EnumType.STRING)
-    private ShowTimeStatusEnum status;
+        @Enumerated(EnumType.STRING)
+        private ShowTimeStatusEnum status;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
-    private Instant createdAt;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
-    private Instant updatedAt;
-    private String createdBy;
-    private String updatedBy;
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
+        private Instant createdAt;
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
+        private Instant updatedAt;
+        private String createdBy;
+        private String updatedBy;
 
-    @PrePersist
-    public void handleBeforeCreated(){
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
-        this.createdAt = Instant.now();
-    }
+        @PrePersist
+        public void handleBeforeCreated() {
+                this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
+                                ? SecurityUtil.getCurrentUserLogin().get()
+                                : "";
+                this.createdAt = Instant.now();
+        }
 
-    @PreUpdate
-    public void handleBeforeUpdated(){
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
-        this.updatedAt = Instant.now();
-    }
+        @PreUpdate
+        public void handleBeforeUpdated() {
+                this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
+                                ? SecurityUtil.getCurrentUserLogin().get()
+                                : "";
+                this.updatedAt = Instant.now();
+        }
 }
