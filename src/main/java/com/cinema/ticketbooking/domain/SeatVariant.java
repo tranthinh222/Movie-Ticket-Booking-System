@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -14,45 +15,46 @@ import java.util.List;
 @Table(name = "seat_variants")
 @Data
 public class SeatVariant {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
-    @OneToMany( mappedBy = "seatVariant", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
-            orphanRemoval = true)
-    List<SeatHold> seatHolds;
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "seat_id")
-    private Seat seat;
+        @OneToMany(mappedBy = "seatVariant", fetch = FetchType.LAZY)
+        @JsonIgnore
+        private List<Seat> seats;
 
-    @OneToMany( mappedBy = "seatVariant", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
-            orphanRemoval = true)
-    @JsonIgnore
-    List<BookingItem> bookingItems;
+        @OneToMany(mappedBy = "seatVariant", fetch = FetchType.LAZY)
+        @JsonIgnore
+        List<BookingItem> bookingItems;
 
-    private SeatTypeEnum seatType;
-    private double bonus;
+        @Enumerated(EnumType.STRING)
+        private SeatTypeEnum seatType;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
-    private Instant createdAt;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
-    private Instant updatedAt;
-    private String createdBy;
-    private String updatedBy;
+        @Column(nullable = false)
+        private double basePrice;
 
-    @PrePersist
-    public void handleBeforeCreated(){
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
-        this.createdAt = Instant.now();
-    }
+        @Column(nullable = false)
+        private double bonus;
 
-    @PreUpdate
-    public void handleBeforeUpdated(){
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
-        this.updatedAt = Instant.now();
-    }
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
+        private Instant createdAt;
 
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
+        private Instant updatedAt;
+
+        private String createdBy;
+        private String updatedBy;
+
+        @PrePersist
+        public void handleBeforeCreated() {
+                this.createdBy = SecurityUtil.getCurrentUserLogin().orElse("");
+                this.createdAt = Instant.now();
+        }
+
+        @PreUpdate
+        public void handleBeforeUpdated() {
+                this.updatedBy = SecurityUtil.getCurrentUserLogin().orElse("");
+                this.updatedAt = Instant.now();
+        }
 }

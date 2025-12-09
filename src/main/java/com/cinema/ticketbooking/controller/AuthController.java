@@ -25,7 +25,7 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
 
-    public AuthController(AuthService authService,  UserService userService) {
+    public AuthController(AuthService authService, UserService userService) {
         this.authService = authService;
         this.userService = userService;
     }
@@ -63,7 +63,7 @@ public class AuthController {
     @ApiMessage("Get new refresh token")
     public ResponseEntity<ResLoginDto> getRefreshToken(
             @CookieValue(name = "refresh_token", required = false) String refreshToken) {
-        if (refreshToken == null){
+        if (refreshToken == null) {
             throw new ApiException("Missing refresh token", HttpStatus.UNAUTHORIZED);
         }
         return this.authService.getRefreshToken(refreshToken);
@@ -71,17 +71,17 @@ public class AuthController {
 
     @PostMapping("/logout")
     @ApiMessage("Logout User")
-    public ResponseEntity<Void> logout(){
-        String email =  SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
+    public ResponseEntity<Void> logout() {
+        String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
 
-        if (email.equals("")){
+        if (email.equals("")) {
             throw new IdInvalidException("Access Token is invalid");
         }
 
-        //update refresh token = null
+        // update refresh token = null
         this.userService.updateUserToken(null, email);
 
-        //remove refresh token cookie
+        // remove refresh token cookie
         ResponseCookie deleteSpringCookie = ResponseCookie
                 .from("refresh_token", null)
                 .httpOnly(true)
@@ -93,6 +93,5 @@ public class AuthController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, deleteSpringCookie.toString()).build();
     }
-
 
 }

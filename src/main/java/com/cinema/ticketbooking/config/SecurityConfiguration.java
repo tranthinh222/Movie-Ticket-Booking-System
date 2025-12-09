@@ -27,7 +27,6 @@ import com.cinema.ticketbooking.util.SecurityUtil;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
-
 @Configuration
 @EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfiguration {
@@ -57,7 +56,6 @@ public class SecurityConfiguration {
         };
     }
 
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
             CustomAuthenticationEntryPoint customAuthenticationEntryPoint) throws Exception {
@@ -65,7 +63,10 @@ public class SecurityConfiguration {
                 .csrf(c -> c.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(
-                        authz -> authz.requestMatchers("/", "api/v1/auth/login", "api/v1/register", "api/v1/users", "api/v1/auth/refresh").permitAll().anyRequest()
+                        authz -> authz
+                                .requestMatchers("/", "/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/users",
+                                        "/api/v1/auth/refresh")
+                                .permitAll().anyRequest()
                                 .authenticated()
 
                 )
