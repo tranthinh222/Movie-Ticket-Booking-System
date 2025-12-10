@@ -1,17 +1,22 @@
 package com.cinema.ticketbooking.service;
 
 import com.cinema.ticketbooking.domain.Address;
+import com.cinema.ticketbooking.domain.Theater;
 import com.cinema.ticketbooking.domain.request.ReqCreateAddressDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateAddressDto;
+import com.cinema.ticketbooking.domain.response.ResAuditoriumDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AddressRepository;
 import com.cinema.ticketbooking.util.error.BadRequestException;
+import com.cinema.ticketbooking.util.error.NotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AddressService {
@@ -87,5 +92,13 @@ public class AddressService {
 
         this.addressRepository.save(address);
         return address;
+    }
+
+
+    public List<Theater> getTheatersByAddressId(Long addressId) {
+        Address addr = addressRepository.findById(addressId)
+                .orElseThrow(() -> new NotFoundException("Address with id " + addressId + " not found"));
+
+        return addr.getTheaters();
     }
 }

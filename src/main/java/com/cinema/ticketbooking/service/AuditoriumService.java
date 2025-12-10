@@ -1,9 +1,12 @@
 package com.cinema.ticketbooking.service;
 
 import com.cinema.ticketbooking.domain.Auditorium;
+import com.cinema.ticketbooking.domain.Seat;
+import com.cinema.ticketbooking.domain.SeatVariant;
 import com.cinema.ticketbooking.domain.Theater;
 import com.cinema.ticketbooking.domain.request.ReqCreateAuditoriumDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateAuditoriumDto;
+import com.cinema.ticketbooking.domain.response.ResSeatDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AuditoriumRepository;
 import com.cinema.ticketbooking.repository.TheaterRepository;
@@ -65,5 +68,16 @@ public class AuditoriumService {
         auditorium.setTotalSeats(reqUpdateAuditorium.getTotalSeat());
         return auditoriumRepository.save(auditorium);
     }
+
+    public ResSeatDto convertToSeatDto(Seat seat) {
+        ResSeatDto dto = new ResSeatDto();
+        dto.setId(seat.getId());
+        dto.setSeatRow(seat.getSeatRow());
+        dto.setNumber(seat.getNumber());
+        dto.setStatus(seat.getStatus().name());
+        dto.setSeatVariantName(seat.getSeatVariant() != null ? seat.getSeatVariant().getSeatType().name() : null);
+        return dto;
+    }
+
 
 }

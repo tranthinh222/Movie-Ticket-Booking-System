@@ -8,7 +8,5 @@ import lombok.Data;
 public class ReqUpdateTheaterDto {
     @NotNull (message = "id must not be null")
     private Long id;
-    @NotBlank(message = "name must be blank")
     private String name;
-
 }

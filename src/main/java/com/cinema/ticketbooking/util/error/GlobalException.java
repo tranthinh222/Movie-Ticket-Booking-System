@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalException {
-    @ExceptionHandler(value = { UsernameNotFoundException.class, IdInvalidException.class })
-    public ResponseEntity<RestResponse<Object>> handleUserNotFoundException(Exception ex) {
+    @ExceptionHandler(value = { UsernameNotFoundException.class, IdInvalidException.class, NotFoundException.class })
+    public ResponseEntity<RestResponse<Object>> handleNotFoundException(Exception ex) {
         RestResponse<Object> response = new RestResponse<>();
         response.setStatusCode(HttpStatus.NOT_FOUND.value());
         response.setError(ex.getMessage());

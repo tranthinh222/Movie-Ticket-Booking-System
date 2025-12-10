@@ -1,9 +1,11 @@
 package com.cinema.ticketbooking.controller;
 
 import com.cinema.ticketbooking.domain.Address;
+import com.cinema.ticketbooking.domain.Auditorium;
 import com.cinema.ticketbooking.domain.Theater;
 import com.cinema.ticketbooking.domain.request.ReqCreateTheaterDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateTheaterDto;
+import com.cinema.ticketbooking.domain.response.ResAuditoriumDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.service.AddressService;
 import com.cinema.ticketbooking.service.TheaterService;
@@ -17,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 
 
 @RestController
@@ -35,6 +38,12 @@ public class TheaterController {
             @Filter Specification<Theater> spec, Pageable pageable)
     {
         return ResponseEntity.status(HttpStatus.OK).body(this.theaterService.getAllTheaters(spec, pageable));
+    }
+
+    @GetMapping("/theaters/{id}/auditoriums")
+    @ApiMessage("fetch auditoriums by theater")
+    public ResponseEntity<List<ResAuditoriumDto>> getAuditoriumsByTheaterId(@PathVariable Long id){
+        return ResponseEntity.status(HttpStatus.OK).body(this.theaterService.getAuditoriumsByTheaterId(id));
     }
 
     @GetMapping("/theaters/{id}")

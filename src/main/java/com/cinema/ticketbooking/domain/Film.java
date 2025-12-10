@@ -17,8 +17,7 @@ public class Film {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany( mappedBy = "film", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
-            orphanRemoval = true)
+    @OneToMany(mappedBy = "film", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     List<ShowTime> showTime;
 
@@ -31,7 +30,8 @@ public class Film {
     private String description;
     private String genre;
     private String language;
-    private LocalDate release_date;
+    @Column(name = "release_date")
+    private LocalDate releaseDate;
     private Long rating;
 
     private Instant createdAt;

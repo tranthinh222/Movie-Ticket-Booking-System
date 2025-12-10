@@ -6,6 +6,7 @@ import com.cinema.ticketbooking.domain.request.ReqUpdateFilmDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.FilmRepository;
 import com.cinema.ticketbooking.util.error.BadRequestException;
+import com.cinema.ticketbooking.util.error.ResourceAlreadyExistsException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -46,7 +47,7 @@ public class FilmService {
         film.setGenre(reqFilm.getGenre());
         film.setLanguage(reqFilm.getLanguage());
         film.setRating(reqFilm.getRating());
-        film.setRelease_date(reqFilm.getRelease_date());
+        film.setReleaseDate(reqFilm.getRelease_date());
 
         return this.filmRepository.save(film);
     }
@@ -71,9 +72,16 @@ public class FilmService {
             throw new BadRequestException("No data provided for update");
         }
 
+
         Optional<Film> filmOptional = this.filmRepository.findById(reqFilm.getId());
         if (filmOptional.isPresent()) {
             Film newFilm = filmOptional.get();
+
+            boolean isFilmExisted = isFilmNameDuplicated(reqFilm.getName());
+            if (isFilmExisted){
+                throw new ResourceAlreadyExistsException(
+                        "Film with name " + reqFilm.getName() + " already exists");
+            }
 
             Optional.ofNullable(reqFilm.getName())
                     .filter(name -> !name.trim().isEmpty())
@@ -98,7 +106,7 @@ public class FilmService {
                     .ifPresent(lang -> newFilm.setLanguage(lang));
 
             Optional.ofNullable(reqFilm.getRelease_date())
-                    .ifPresent(date -> newFilm.setRelease_date(date));
+                    .ifPresent(date -> newFilm.setReleaseDate(date));
 
             Optional.ofNullable(reqFilm.getRating())
                     .ifPresent(rating -> newFilm.setRating(rating));
