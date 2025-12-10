@@ -48,7 +48,7 @@ public class GlobalException {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
-    @ExceptionHandler(BadRequestException.class)
+    @ExceptionHandler(value = { BadRequestException.class, NoResourceException.class })
     public ResponseEntity<RestResponse<Object>> handleBadRequest(BadRequestException ex) {
         RestResponse<Object> response = new RestResponse<>();
 

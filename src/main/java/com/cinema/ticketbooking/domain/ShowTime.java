@@ -28,9 +28,10 @@ public class ShowTime {
         @JoinColumn(name = "auditorium")
         private Auditorium auditorium;
 
-        @OneToMany(mappedBy = "showTime", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-        @JsonIgnore
-        List<Booking> bookings;
+        // @OneToMany(mappedBy = "showTime", fetch = FetchType.LAZY, cascade =
+        // CascadeType.ALL, orphanRemoval = true)
+        // @JsonIgnore
+        // List<Booking> bookings;
 
         @OneToMany(mappedBy = "showTime", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
         @JsonIgnore

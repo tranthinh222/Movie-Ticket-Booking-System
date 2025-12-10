@@ -14,51 +14,50 @@ import java.util.List;
 @Table(name = "bookings")
 @Data
 public class Booking {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "showtime_id")
-    private ShowTime showTime;
+        // @ManyToOne
+        // @JoinColumn(name = "showtime_id")
+        // private ShowTime showTime;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+        @ManyToOne
+        @JoinColumn(name = "user_id")
+        private User user;
 
-    @OneToMany( mappedBy = "booking", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
-            orphanRemoval = true)
-    @JsonIgnore
-    List<Payment> payments;
+        @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+        @JsonIgnore
+        List<Payment> payments;
 
-    @OneToMany( mappedBy = "booking", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
-            orphanRemoval = true)
-    @JsonIgnore
-    List<BookingItem> bookingItems;
+        @OneToMany(mappedBy = "booking", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+        @JsonIgnore
+        List<BookingItem> bookingItems;
 
-    @Enumerated(EnumType.STRING)
-    private BookingStatusEnum status;
-    private Long total_price;
+        @Enumerated(EnumType.STRING)
+        private BookingStatusEnum status;
+        private Double total_price;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
-    private Instant createdAt;
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
-    private Instant updatedAt;
-    private String createdBy;
-    private String updatedBy;
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
+        private Instant createdAt;
+        @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
+        private Instant updatedAt;
+        private String createdBy;
+        private String updatedBy;
 
-    @PrePersist
-    public void handleBeforeCreated(){
-        this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
-        this.createdAt = Instant.now();
-    }
+        @PrePersist
+        public void handleBeforeCreated() {
+                this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
+                                ? SecurityUtil.getCurrentUserLogin().get()
+                                : "";
+                this.createdAt = Instant.now();
+        }
 
-    @PreUpdate
-    public void handleBeforeUpdated(){
-        this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
-        this.updatedAt = Instant.now();
-    }
+        @PreUpdate
+        public void handleBeforeUpdated() {
+                this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
+                                ? SecurityUtil.getCurrentUserLogin().get()
+                                : "";
+                this.updatedAt = Instant.now();
+        }
 }
-
