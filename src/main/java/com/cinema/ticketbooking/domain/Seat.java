@@ -37,6 +37,10 @@ public class Seat {
     @Enumerated(EnumType.STRING)
     private SeatStatusEnum status;
 
+    @OneToMany(mappedBy = "seat", fetch = FetchType.LAZY)
+    @JsonIgnore
+    List<BookingItem> bookingItems;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant createdAt;
 

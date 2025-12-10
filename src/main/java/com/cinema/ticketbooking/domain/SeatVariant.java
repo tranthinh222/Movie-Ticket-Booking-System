@@ -22,10 +22,6 @@ public class SeatVariant {
         @JsonIgnore
         private List<Seat> seats;
 
-        @OneToMany(mappedBy = "seatVariant", fetch = FetchType.LAZY)
-        @JsonIgnore
-        List<BookingItem> bookingItems;
-
         @Enumerated(EnumType.STRING)
         private SeatTypeEnum seatType;
 
