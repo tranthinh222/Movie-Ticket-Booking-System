@@ -17,8 +17,7 @@ public class Film {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany( mappedBy = "film", fetch = FetchType.LAZY, cascade = CascadeType.ALL,
-            orphanRemoval = true)
+    @OneToMany(mappedBy = "film", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     List<ShowTime> showTime;
 
@@ -31,7 +30,10 @@ public class Film {
     private String description;
     private String genre;
     private String language;
-    private LocalDate release_date;
+
+    @Column(name = "release_date")
+    private LocalDate releaseDate;
+
     private Long rating;
 
     private Instant createdAt;
@@ -40,16 +42,18 @@ public class Film {
     private String updatedBy;
 
     @PrePersist
-    public void handleBeforeCreated(){
+    public void handleBeforeCreated() {
         this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
         this.createdAt = Instant.now();
     }
 
     @PreUpdate
-    public void handleBeforeUpdated(){
+    public void handleBeforeUpdated() {
         this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
         this.updatedAt = Instant.now();
     }
 }

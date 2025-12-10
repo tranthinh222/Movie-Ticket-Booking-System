@@ -46,7 +46,7 @@ public class FilmService {
         film.setGenre(reqFilm.getGenre());
         film.setLanguage(reqFilm.getLanguage());
         film.setRating(reqFilm.getRating());
-        film.setRelease_date(reqFilm.getRelease_date());
+        film.setReleaseDate(reqFilm.getRelease_date());
 
         return this.filmRepository.save(film);
     }
@@ -98,7 +98,7 @@ public class FilmService {
                     .ifPresent(lang -> newFilm.setLanguage(lang));
 
             Optional.ofNullable(reqFilm.getRelease_date())
-                    .ifPresent(date -> newFilm.setRelease_date(date));
+                    .ifPresent(date -> newFilm.setReleaseDate(date));
 
             Optional.ofNullable(reqFilm.getRating())
                     .ifPresent(rating -> newFilm.setRating(rating));

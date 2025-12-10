@@ -25,7 +25,7 @@ public class Auditorium {
         @JoinColumn(name = "theater_id")
         private Theater theater;
 
-        @OneToMany(mappedBy = "auditorium", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+        @OneToMany(mappedBy = "auditorium", cascade = CascadeType.ALL, orphanRemoval = true)
         @JsonIgnore
         List<Seat> seats;
 
