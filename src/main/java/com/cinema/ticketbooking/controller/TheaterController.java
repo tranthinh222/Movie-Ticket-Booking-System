@@ -46,6 +46,14 @@ public class TheaterController {
         return ResponseEntity.status(HttpStatus.OK).body(this.theaterService.getAuditoriumsByTheaterId(id));
     }
 
+
+//    @GetMapping("/theaters/{id}")
+//    @ApiMessage("fetch theaters by address")
+//    public ResponseEntity<List<Theater>> getTheatersByAddressId(@PathVariable Long id){
+//        return ResponseEntity.status(HttpStatus.OK).body(this.addressService.getTheatersByAddressId(id));
+//    }
+
+
     @GetMapping("/theaters/{id}")
     @ApiMessage("fetch a theater")
     public ResponseEntity<Theater> getTheater(@PathVariable Long id)

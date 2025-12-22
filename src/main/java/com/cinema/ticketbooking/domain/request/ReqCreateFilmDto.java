@@ -27,8 +27,6 @@ public class ReqCreateFilmDto {
     @NotBlank(message = "Language is required")
     private String language;
 
-    @NotNull(message = "Release date is required")
-    @PastOrPresent(message = "Release date cannot be in the future")
     private LocalDate release_date;
 
     @Min(value = 1, message = "Rating must be >= 1")

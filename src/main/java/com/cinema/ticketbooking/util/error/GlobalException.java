@@ -76,7 +76,7 @@ public class GlobalException {
         RestResponse<Object> restResponse = new RestResponse<Object>();
         restResponse.setStatusCode(HttpStatus.CONFLICT.value());
         restResponse.setError(ex.getMessage());
-        restResponse.setMessage("Exception occur...");
+        restResponse.setMessage("Duplicate email in system");
         return ResponseEntity.status(HttpStatus.CONFLICT).body(restResponse);
     }
 

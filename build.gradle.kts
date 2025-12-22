@@ -43,6 +43,7 @@ dependencies {
 	testImplementation("org.springframework.security:spring-security-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation(kotlin("stdlib-jdk8"))
+    implementation("com.cloudinary:cloudinary-http44:1.38.0")
 }
 
 tasks.withType<Test> {

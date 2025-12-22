@@ -47,12 +47,6 @@ public class AddressController {
     }
 
 
-    @GetMapping("/addresses/{id}/theaters")
-    @ApiMessage("fetch theaters by address")
-    public ResponseEntity<List<Theater>> getTheatersByAddressId(@PathVariable Long id){
-        return ResponseEntity.status(HttpStatus.OK).body(this.addressService.getTheatersByAddressId(id));
-    }
-
     @PostMapping("/addresses")
     @ApiMessage("create an address")
     public ResponseEntity<Address> createAddress(@Valid @RequestBody ReqCreateAddressDto reqAddress) {
