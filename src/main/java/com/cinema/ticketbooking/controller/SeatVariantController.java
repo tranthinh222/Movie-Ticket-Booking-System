@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -41,6 +42,7 @@ public class SeatVariantController {
         return ResponseEntity.status(HttpStatus.OK).body(seat);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/seat-variants")
     @ApiMessage("create a seat variant")
     public ResponseEntity<SeatVariant> createSeatVariant(@Valid @RequestBody ReqCreateSeatVariantDto reqSeat) {
@@ -48,6 +50,7 @@ public class SeatVariantController {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/seat-variants/{id}")
     @ApiMessage("delete a seat variant")
     public ResponseEntity<Void> deleteSeatVariant(@PathVariable Long id) {
@@ -59,6 +62,7 @@ public class SeatVariantController {
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/seat-variants")
     public ResponseEntity<SeatVariant> updateSeat(@Valid @RequestBody ReqUpdateSeatVariantDto reqSeat) {
         SeatVariant newSeat = this.seatVariantService.updateSeatVariant(reqSeat);

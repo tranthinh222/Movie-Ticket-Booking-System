@@ -8,6 +8,7 @@ import com.cinema.ticketbooking.service.FilmImageService;
 import com.cinema.ticketbooking.service.FilmService;
 import com.cinema.ticketbooking.util.error.IdInvalidException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,25 +25,13 @@ public class FilmImageController {
         this.filmImageService = filmImageService;
         this.filmService = filmService;
     }
-//    @PostMapping("/film-images/{id}")
-//    public ResponseEntity<?> uploadImage(
-//            @PathVariable Long id,
-//            @RequestParam MultipartFile file
-//    ) throws IOException {
-//
-//        FilmImage image = filmImageService.uploadFilmImage(id, file);
-//
-//        return ResponseEntity.ok(Map.of(
-//                "imageId", image.getId(),
-//                "url", image.getUrl()
-//        ));
-//    }
 
     @GetMapping("/film-images/{id}")
     public ResFilmImage getFilmImage(@PathVariable Long id) {
         return filmImageService.getImageByFilm(id);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/film-images/{filmId}")
     public ResponseEntity<?> uploadOrReplaceImage(
             @PathVariable Long filmId,
@@ -62,6 +51,7 @@ public class FilmImageController {
         ));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/film-images/{filmId}")
     public ResponseEntity<?> deleteFilmImage(@PathVariable Long filmId) {
 

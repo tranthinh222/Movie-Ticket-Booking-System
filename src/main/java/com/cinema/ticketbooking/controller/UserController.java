@@ -8,12 +8,16 @@ import com.cinema.ticketbooking.domain.response.ResUserDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.service.UserService;
 import com.cinema.ticketbooking.util.annotation.ApiMessage;
+import com.cinema.ticketbooking.util.error.BadRequestException;
 import com.cinema.ticketbooking.util.error.IdInvalidException;
 import com.turkraft.springfilter.boot.Filter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -28,7 +32,7 @@ public class UserController {
         this.passwordEncoder = passwordEncoder;
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users/{id}")
     @ApiMessage("fetch user by id")
     public ResponseEntity<ResUserDto> getUserById(@PathVariable long id) throws IdInvalidException {
@@ -40,14 +44,20 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(this.userService.convertToResUserDTO(fetchUser));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users")
     @ApiMessage("fetch all users")
     public ResponseEntity<ResultPaginationDto> getAllUsers(
             @Filter Specification<User> spec, Pageable pageable
     ) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        auth.getAuthorities().forEach(authority -> {
+            System.out.println(authority.getAuthority());
+        });
         return ResponseEntity.status(HttpStatus.OK).body(this.userService.getAllUser(spec, pageable));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/users")
     @ApiMessage("create an user")
     public ResponseEntity<User> createUser(@RequestBody ReqCreateUserDto user) throws Exception {
@@ -61,6 +71,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.createUser(user));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/users")
     @ApiMessage("update an user")
     public ResponseEntity<ResUpdateUserDto> updateUser(@RequestBody ReqUpdateUserDto reqUser) {
@@ -72,6 +83,24 @@ public class UserController {
 
     }
 
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @PutMapping("/users/me/password")
+    @ApiMessage("update an user")
+    public ResponseEntity<String> updateMyPassword(@RequestBody String password) {
+        if (password == null || password.isBlank())
+        {
+            throw new BadRequestException("Password is not blank");
+        }
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String email =  auth.getName();
+        this.userService.updateMyPassword(email, password);
+
+        return ResponseEntity.status(HttpStatus.OK).body("Update password successfully");
+
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/users")
     public ResponseEntity<Void> deleteUser(@PathVariable("id") long id) {
         User user = this.userService.getUserById(id);

@@ -10,6 +10,7 @@ import com.cinema.ticketbooking.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,9 +20,11 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository,  PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public User getUserById(long id) {
@@ -116,6 +119,14 @@ public class UserService {
             currentUser.setRefreshToken(token);
             this.userRepository.save(currentUser);
         }
+    }
+
+    public void updateMyPassword(String email, String password)
+    {
+        User user = this.getUserByEmail(email);
+        String hashPassword = passwordEncoder.encode(password);
+        user.setPassword(hashPassword);
+        this.userRepository.save(user);
     }
 
 

@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -52,6 +53,7 @@ public class ShowTimeController {
         return ResponseEntity.status(HttpStatus.OK).body(showTime);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/showtimes")
     @ApiMessage("create an showtime")
     public ResponseEntity<ShowTime> create (@Valid @RequestBody ReqCreateShowTimeDto reqShowTime) {
@@ -70,6 +72,7 @@ public class ShowTimeController {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/showtimes/{id}")
     @ApiMessage("delete an showtime")
     public ResponseEntity<Void> deleteShowTime (@PathVariable Long id) {
@@ -82,6 +85,7 @@ public class ShowTimeController {
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/showtimes")
     public ResponseEntity<ShowTime> updateShowTime (@Valid @RequestBody ReqUpdateShowTimeDto reqShowTime) {
         ShowTime newShowTime = this.showTimeService.updateShowTime(reqShowTime);

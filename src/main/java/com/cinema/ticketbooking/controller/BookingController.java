@@ -2,6 +2,7 @@ package com.cinema.ticketbooking.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,6 +28,7 @@ public class BookingController {
         this.userService = userService;
     }
 
+    @PreAuthorize("hasRole('CUSTOMER')")
     @PostMapping("/bookings")
     public ResponseEntity<Booking> createBooking(@Valid @RequestBody ReqCreateBookingDto reqBooking) {
         User user = this.userService.getUserById(reqBooking.getUserId());

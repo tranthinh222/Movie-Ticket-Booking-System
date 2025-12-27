@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -44,6 +45,7 @@ public class FilmController {
         return ResponseEntity.status(HttpStatus.OK).body(film);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/films")
     @ApiMessage("create a film")
     public ResponseEntity<Film> createFilm (@Valid @RequestBody ReqCreateFilmDto reqFilm) {
@@ -56,6 +58,7 @@ public class FilmController {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/films/{id}")
     @ApiMessage("delete a film")
     public ResponseEntity<Void> deleteFilm (@PathVariable Long id) throws Exception{
@@ -69,6 +72,7 @@ public class FilmController {
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/films")
     @ApiMessage("update a film")
     public ResponseEntity<Film> updateFilm (@Valid @RequestBody ReqUpdateFilmDto reqFilm){

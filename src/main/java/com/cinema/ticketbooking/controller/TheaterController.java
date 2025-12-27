@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,6 +33,7 @@ public class TheaterController {
         this.addressService = addressService;
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'CUSTOMER')")
     @GetMapping("/theaters")
     @ApiMessage("fetch all theateres")
     public ResponseEntity<ResultPaginationDto> getAllTheaters(
@@ -40,11 +42,12 @@ public class TheaterController {
         return ResponseEntity.status(HttpStatus.OK).body(this.theaterService.getAllTheaters(spec, pageable));
     }
 
-    @GetMapping("/theaters/{id}/auditoriums")
-    @ApiMessage("fetch auditoriums by theater")
-    public ResponseEntity<List<ResAuditoriumDto>> getAuditoriumsByTheaterId(@PathVariable Long id){
-        return ResponseEntity.status(HttpStatus.OK).body(this.theaterService.getAuditoriumsByTheaterId(id));
-    }
+//    @PreAuthorize("hasRole('ADMIN')")
+//    @GetMapping("/theaters/{id}/auditoriums")
+//    @ApiMessage("fetch auditoriums by theater")
+//    public ResponseEntity<List<ResAuditoriumDto>> getAuditoriumsByTheaterId(@PathVariable Long id){
+//        return ResponseEntity.status(HttpStatus.OK).body(this.theaterService.getAuditoriumsByTheaterId(id));
+//    }
 
 
 //    @GetMapping("/theaters/{id}")
@@ -54,6 +57,7 @@ public class TheaterController {
 //    }
 
 
+    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/theaters/{id}")
     @ApiMessage("fetch a theater")
     public ResponseEntity<Theater> getTheater(@PathVariable Long id)
@@ -65,6 +69,7 @@ public class TheaterController {
 ;        return ResponseEntity.status(HttpStatus.OK).body(theater);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/theaters")
     @ApiMessage("create a theater")
     public ResponseEntity<Theater> createtheater(@Valid @RequestBody ReqCreateTheaterDto theater){
@@ -75,6 +80,7 @@ public class TheaterController {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.theaterService.createTheater(theater));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/theaters/{id}")
     @ApiMessage("delete a theater")
     public ResponseEntity<Void> deleteTheater (@PathVariable Long id) {
@@ -87,6 +93,7 @@ public class TheaterController {
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/theaters")
     public ResponseEntity<Theater> updateTheater (@Valid @RequestBody ReqUpdateTheaterDto reqTheater) {
         Theater newTheater = this.theaterService.updateTheater(reqTheater);

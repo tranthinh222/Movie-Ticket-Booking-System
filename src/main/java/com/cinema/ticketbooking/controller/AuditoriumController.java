@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -46,6 +47,7 @@ public class AuditoriumController {
         return ResponseEntity.status(HttpStatus.OK).body(auditorium);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/auditoriums")
     @ApiMessage("create a auditorium")
     public ResponseEntity<Auditorium> createAuditorium (@Valid @RequestBody ReqCreateAuditoriumDto reqAuditorium) throws Exception {
@@ -57,6 +59,7 @@ public class AuditoriumController {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/auditoriums/{id}")
     @ApiMessage("delete a auditorium")
     public ResponseEntity<Void> deleteAuditorium (@PathVariable Long id) throws Exception{
@@ -70,6 +73,7 @@ public class AuditoriumController {
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/auditoriums")
     public ResponseEntity<Auditorium> updateAuditorium (@Valid @RequestBody ReqUpdateAuditoriumDto reqAuditorium) throws Exception{
         Auditorium newAuditorium = this.auditoriumService.updateAuditorium(reqAuditorium);

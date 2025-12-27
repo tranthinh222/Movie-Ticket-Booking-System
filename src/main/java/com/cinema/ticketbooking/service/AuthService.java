@@ -50,7 +50,7 @@ public class AuthService {
         User currentUserDB = this.userService.getUserByEmail(reqLoginDto.getEmail());
         ResUserJwtDto jwtUser = null;
         if (currentUserDB != null) {
-            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail());
+            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(), currentUserDB.getRole());
             response.setUser(jwtUser);
         }
 
@@ -97,7 +97,7 @@ public class AuthService {
         ResUserJwtDto jwtUser = null;
         User currentUserDB = this.userService.getUserByEmail(email);
         if (currentUserDB != null) {
-            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail());
+            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(), currentUserDB.getRole());
         }
 
         return jwtUser;
@@ -122,7 +122,7 @@ public class AuthService {
         User currentUserDB = this.userService.getUserByEmail(email);
         ResUserJwtDto jwtUser = null;
         if (currentUserDB != null) {
-            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail());
+            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(), currentUserDB.getRole());
             response.setUser(jwtUser);
         }
 

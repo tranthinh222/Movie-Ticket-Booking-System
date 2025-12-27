@@ -66,13 +66,13 @@ public class SecurityConfiguration {
                         authz -> authz
                                 .requestMatchers("/", "/api/v1/auth/login", "/api/v1/auth/register", "/api/v1/users",
                                         "/api/v1/auth/refresh")
-                                .permitAll().anyRequest()
-                                .authenticated()
+                                .permitAll()
+                                .anyRequest().authenticated()
 
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .bearerTokenResolver(bearerTokenResolver())
-                        .jwt(Customizer.withDefaults())
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
                         .authenticationEntryPoint(customAuthenticationEntryPoint))
 
                 .formLogin(f -> f.disable())
@@ -84,7 +84,7 @@ public class SecurityConfiguration {
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
         grantedAuthoritiesConverter.setAuthorityPrefix("");
-        grantedAuthoritiesConverter.setAuthoritiesClaimName("user");
+        grantedAuthoritiesConverter.setAuthoritiesClaimName("roles");
 
         JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
         jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);

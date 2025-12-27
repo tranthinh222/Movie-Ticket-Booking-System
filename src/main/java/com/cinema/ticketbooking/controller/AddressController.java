@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,7 +47,7 @@ public class AddressController {
         return ResponseEntity.status(HttpStatus.OK).body(address);
     }
 
-
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/addresses")
     @ApiMessage("create an address")
     public ResponseEntity<Address> createAddress(@Valid @RequestBody ReqCreateAddressDto reqAddress) {
@@ -54,6 +55,7 @@ public class AddressController {
 
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/addresses/{id}")
     @ApiMessage("delete an address")
     public ResponseEntity<Void> deleteAddress(@PathVariable Long id) {
@@ -65,6 +67,7 @@ public class AddressController {
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/addresses")
     public ResponseEntity<Address> updateAddress(@Valid @RequestBody ReqUpdateAddressDto reqAddress) {
         Address newAddress = this.addressService.updateAddress(reqAddress);
@@ -74,4 +77,5 @@ public class AddressController {
 
         return ResponseEntity.status(HttpStatus.OK).body(newAddress);
     }
+
 }
