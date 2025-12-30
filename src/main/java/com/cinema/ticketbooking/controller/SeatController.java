@@ -5,6 +5,7 @@ import com.cinema.ticketbooking.domain.Seat;
 import com.cinema.ticketbooking.domain.SeatVariant;
 import com.cinema.ticketbooking.domain.request.ReqCreateSeatDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateSeatDto;
+import com.cinema.ticketbooking.domain.response.ResAuditoriumDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.service.AuditoriumService;
 import com.cinema.ticketbooking.service.SeatService;
@@ -13,6 +14,9 @@ import com.cinema.ticketbooking.util.annotation.ApiMessage;
 import com.cinema.ticketbooking.util.error.IdInvalidException;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
+
+import java.util.List;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -92,4 +96,5 @@ public class SeatController {
 
         return ResponseEntity.status(HttpStatus.OK).body(newSeat);
     }
+
 }

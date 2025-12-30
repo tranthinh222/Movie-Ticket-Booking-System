@@ -9,6 +9,7 @@ import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AuditoriumRepository;
 import com.cinema.ticketbooking.repository.SeatRepository;
 import com.cinema.ticketbooking.repository.SeatVariantRepository;
+import com.cinema.ticketbooking.util.constant.SeatStatusEnum;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +17,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.List;
+import java.util.ArrayList;
 
 @Service
 public class SeatService {
@@ -66,6 +69,38 @@ public class SeatService {
 
         this.seatRepository.save(seat);
         return seat;
+    }
+
+    public List<Seat> createDefaultSeatsForAuditorium(Auditorium auditorium) {
+
+        SeatVariant normalVariant = seatVariantRepository
+                .findById(2L)
+                .orElseThrow(() -> new RuntimeException("NORMAL variant not found"));
+
+        SeatVariant vipVariant = seatVariantRepository
+                .findById(1L)
+                .orElseThrow(() -> new RuntimeException("VIP variant not found"));
+
+        List<Seat> seats = new ArrayList<>();
+        char[] rows = { 'A', 'B', 'C', 'D', 'E', 'F' };
+
+        for (char row : rows) {
+            for (int number = 1; number <= 8; number++) {
+
+                Seat seat = new Seat();
+                seat.setAuditorium(auditorium);
+                seat.setSeatRow(String.valueOf(row));
+                seat.setNumber(number);
+                seat.setStatus(SeatStatusEnum.AVAILABLE);
+
+                seat.setSeatVariant(row == 'F' ? vipVariant : normalVariant);
+
+                seats.add(seat);
+            }
+        }
+
+        seatRepository.saveAll(seats);
+        return seats;
     }
 
     public Seat updateSeat(ReqUpdateSeatDto reqSeat) {

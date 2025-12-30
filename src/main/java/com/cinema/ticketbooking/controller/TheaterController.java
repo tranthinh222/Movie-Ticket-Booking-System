@@ -22,13 +22,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
 @RestController
 @RequestMapping("api/v1")
 public class TheaterController {
     private final TheaterService theaterService;
     private final AddressService addressService;
-    public TheaterController(TheaterService theaterService,  AddressService addressService) {
+
+    public TheaterController(TheaterService theaterService, AddressService addressService) {
         this.theaterService = theaterService;
         this.addressService = addressService;
     }
@@ -37,45 +37,29 @@ public class TheaterController {
     @GetMapping("/theaters")
     @ApiMessage("fetch all theateres")
     public ResponseEntity<ResultPaginationDto> getAllTheaters(
-            @Filter Specification<Theater> spec, Pageable pageable)
-    {
+            @Filter Specification<Theater> spec, Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(this.theaterService.getAllTheaters(spec, pageable));
     }
-
-//    @PreAuthorize("hasRole('ADMIN')")
-//    @GetMapping("/theaters/{id}/auditoriums")
-//    @ApiMessage("fetch auditoriums by theater")
-//    public ResponseEntity<List<ResAuditoriumDto>> getAuditoriumsByTheaterId(@PathVariable Long id){
-//        return ResponseEntity.status(HttpStatus.OK).body(this.theaterService.getAuditoriumsByTheaterId(id));
-//    }
-
-
-//    @GetMapping("/theaters/{id}")
-//    @ApiMessage("fetch theaters by address")
-//    public ResponseEntity<List<Theater>> getTheatersByAddressId(@PathVariable Long id){
-//        return ResponseEntity.status(HttpStatus.OK).body(this.addressService.getTheatersByAddressId(id));
-//    }
-
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/theaters/{id}")
     @ApiMessage("fetch a theater")
-    public ResponseEntity<Theater> getTheater(@PathVariable Long id)
-    {
+    public ResponseEntity<Theater> getTheater(@PathVariable Long id) {
         Theater theater = this.theaterService.findTheaterById(id);
-        if  (theater == null) {
+        if (theater == null) {
             throw new IdInvalidException("theater with id " + id + " does not exist");
         }
-;        return ResponseEntity.status(HttpStatus.OK).body(theater);
+        ;
+        return ResponseEntity.status(HttpStatus.OK).body(theater);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/theaters")
     @ApiMessage("create a theater")
-    public ResponseEntity<Theater> createtheater(@Valid @RequestBody ReqCreateTheaterDto theater){
+    public ResponseEntity<Theater> createtheater(@Valid @RequestBody ReqCreateTheaterDto theater) {
         Address address = this.addressService.findAddressById(theater.getAddressId());
-        if (address == null){
-            throw new IdInvalidException("Address with id "+ theater.getAddressId() +" not found");
+        if (address == null) {
+            throw new IdInvalidException("Address with id " + theater.getAddressId() + " not found");
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(this.theaterService.createTheater(theater));
     }
@@ -83,11 +67,10 @@ public class TheaterController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/theaters/{id}")
     @ApiMessage("delete a theater")
-    public ResponseEntity<Void> deleteTheater (@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTheater(@PathVariable Long id) {
         Theater theater = this.theaterService.findTheaterById(id);
-        if (theater == null)
-        {
-            throw new IdInvalidException("theater with id "+ id +" not found");
+        if (theater == null) {
+            throw new IdInvalidException("theater with id " + id + " not found");
         }
         this.theaterService.deleteTheater(id);
         return ResponseEntity.status(HttpStatus.OK).body(null);
@@ -95,14 +78,18 @@ public class TheaterController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/theaters")
-    public ResponseEntity<Theater> updateTheater (@Valid @RequestBody ReqUpdateTheaterDto reqTheater) {
+    public ResponseEntity<Theater> updateTheater(@Valid @RequestBody ReqUpdateTheaterDto reqTheater) {
         Theater newTheater = this.theaterService.updateTheater(reqTheater);
-        if (newTheater == null){
+        if (newTheater == null) {
             throw new IdInvalidException("Theater with id " + reqTheater.getId() + " does not exist");
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(newTheater);
     }
 
-
+    @GetMapping("/auditoriums/theater/{id}")
+    @ApiMessage("fetch auditoriums by theater")
+    public ResponseEntity<List<ResAuditoriumDto>> getAuditoriumsByTheaterId(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(this.theaterService.getAuditoriumsByTheaterId(id));
+    }
 }

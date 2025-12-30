@@ -4,6 +4,8 @@ import com.cinema.ticketbooking.domain.Seat;
 
 import jakarta.persistence.LockModeType;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
@@ -16,5 +18,7 @@ public interface SeatRepository extends JpaRepository<Seat, Long>, JpaSpecificat
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT s FROM Seat s WHERE s.id = :seatId")
     Seat lockSeat(@Param("seatId") Long seatId);
+
+    List<Seat> findByAuditoriumId(Long auditoriumId);
 
 }
