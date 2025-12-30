@@ -84,8 +84,8 @@ public class AuthService {
                 .build();
 
         userService.registerUser(registerUser);
-        ResUserDto response = new ResUserDto(registerUser.getId(), registerUser.getEmail(),
-                registerUser.getUsername(), registerUser.getPhone(), registerUser.getRole(),
+        ResUserDto response = new ResUserDto(registerUser.getId(), registerUser.getUsername(),
+                registerUser.getEmail(), registerUser.getPhone(), registerUser.getRole(),
                 registerUser.getCreatedAt(), null);
 
         return response;
