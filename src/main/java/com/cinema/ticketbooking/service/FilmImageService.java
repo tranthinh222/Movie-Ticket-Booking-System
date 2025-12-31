@@ -93,7 +93,7 @@ public class FilmImageService {
     public void deleteByFilmImageId(Long filmId) {
 
         Optional<FilmImage> image = filmImageRepository.findByFilmId(filmId);
-        if  (image == null) {
+        if  (image.isEmpty()) {
             throw new IdInvalidException("film image with id " +  filmId + " not found");
         }
 
