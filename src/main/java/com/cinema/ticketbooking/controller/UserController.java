@@ -37,7 +37,7 @@ public class UserController {
     @ApiMessage("fetch user by id")
     public ResponseEntity<ResUserDto> getUserById(@PathVariable long id) throws IdInvalidException {
         User fetchUser = this.userService.getUserById(id);
-        if (fetchUser == null){
+        if (fetchUser == null) {
             throw new IdInvalidException("User with id " + id + " not found");
         }
 
@@ -48,8 +48,7 @@ public class UserController {
     @GetMapping("/users")
     @ApiMessage("fetch all users")
     public ResponseEntity<ResultPaginationDto> getAllUsers(
-            @Filter Specification<User> spec, Pageable pageable
-    ) {
+            @Filter Specification<User> spec, Pageable pageable) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         auth.getAuthorities().forEach(authority -> {
             System.out.println(authority.getAuthority());
@@ -62,7 +61,7 @@ public class UserController {
     @ApiMessage("create an user")
     public ResponseEntity<User> createUser(@RequestBody ReqCreateUserDto user) throws Exception {
         boolean isEmailExist = this.userService.existsByEmail(user.getEmail());
-        if (isEmailExist){
+        if (isEmailExist) {
             throw new Exception("User with email " + user.getEmail() + " already exists");
         }
         String hashPassword = passwordEncoder.encode(user.getPassword());
@@ -76,7 +75,7 @@ public class UserController {
     @ApiMessage("update an user")
     public ResponseEntity<ResUpdateUserDto> updateUser(@RequestBody ReqUpdateUserDto reqUser) {
         User user = this.userService.getUserById(reqUser.getId());
-        if (user == null){
+        if (user == null) {
             throw new IdInvalidException("User with id " + reqUser.getId() + " does not exist");
         }
         return ResponseEntity.status(HttpStatus.OK).body(this.userService.updateUser(reqUser));
@@ -87,13 +86,12 @@ public class UserController {
     @PutMapping("/users/me/password")
     @ApiMessage("update an user")
     public ResponseEntity<String> updateMyPassword(@RequestBody String password) {
-        if (password == null || password.isBlank())
-        {
+        if (password == null || password.isBlank()) {
             throw new BadRequestException("Password is not blank");
         }
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String email =  auth.getName();
+        String email = auth.getName();
         this.userService.updateMyPassword(email, password);
 
         return ResponseEntity.status(HttpStatus.OK).body("Update password successfully");
@@ -102,9 +100,9 @@ public class UserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/users")
-    public ResponseEntity<Void> deleteUser(@PathVariable("id") long id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
         User user = this.userService.getUserById(id);
-        if (user == null){
+        if (user == null) {
             throw new IdInvalidException("User with id " + id + " does not exist");
         }
 

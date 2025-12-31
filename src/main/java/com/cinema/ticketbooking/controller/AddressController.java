@@ -41,7 +41,7 @@ public class AddressController {
 
     @GetMapping("/addresses/{id}")
     @ApiMessage("fetch an address")
-    public ResponseEntity<Address> getAddressById(@PathVariable Long id) {
+    public ResponseEntity<Address> getAddressById(@PathVariable("id") Long id) {
         Address address = this.addressService.findAddressById(id);
         if (address == null) {
             throw new IdInvalidException("Address with id " + id + " not found");
@@ -60,7 +60,7 @@ public class AddressController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/addresses/{id}")
     @ApiMessage("delete an address")
-    public ResponseEntity<Void> deleteAddress(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteAddress(@PathVariable("id") Long id) {
         Address address = this.addressService.findAddressById(id);
         if (address == null) {
             throw new IdInvalidException("address with id " + id + " not found");
@@ -82,7 +82,7 @@ public class AddressController {
 
     @GetMapping("/theaters/address/{id}")
     @ApiMessage("fetch theaters by address")
-    public ResponseEntity<List<TheaterIdNameProjection>> getTheatersByAddressId(@PathVariable Long id) {
+    public ResponseEntity<List<TheaterIdNameProjection>> getTheatersByAddressId(@PathVariable("id") Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(this.addressService.getTheatersByAddressId(id));
     }
 

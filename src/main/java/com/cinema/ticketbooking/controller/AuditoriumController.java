@@ -44,7 +44,7 @@ public class AuditoriumController {
 
     @GetMapping("/auditoriums/{id}")
     @ApiMessage("fetch an auditorium")
-    public ResponseEntity<Auditorium> getAuditorium(@PathVariable Long id) {
+    public ResponseEntity<Auditorium> getAuditorium(@PathVariable("id") Long id) {
         Auditorium auditorium = this.auditoriumService.getAuditoriumById(id);
         if (auditorium == null) {
             throw new IdInvalidException("Auditorium with id " + id + " not found");
@@ -68,7 +68,7 @@ public class AuditoriumController {
     // @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/auditoriums/{id}")
     @ApiMessage("delete a auditorium")
-    public ResponseEntity<Void> deleteAuditorium(@PathVariable Long id) throws Exception {
+    public ResponseEntity<Void> deleteAuditorium(@PathVariable("id") Long id) throws Exception {
         Auditorium auditorium = this.auditoriumService.getAuditoriumById(id);
         if (auditorium == null) {
             throw new Exception("auditorium with id " + id + " not found");
@@ -92,7 +92,7 @@ public class AuditoriumController {
 
     @GetMapping("/seats/auditorium/{id}")
     @ApiMessage("fetch seat by auditorium")
-    public ResponseEntity<List<ResSeatDto>> getSeatsByAuditoriumId(@PathVariable Long id) {
+    public ResponseEntity<List<ResSeatDto>> getSeatsByAuditoriumId(@PathVariable("id") Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(this.auditoriumService.getSeatByAuditoriumId(id));
     }
 
