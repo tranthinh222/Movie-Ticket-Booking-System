@@ -10,11 +10,15 @@ import com.cinema.ticketbooking.repository.AuditoriumRepository;
 import com.cinema.ticketbooking.repository.SeatRepository;
 import com.cinema.ticketbooking.repository.SeatVariantRepository;
 
+import com.cinema.ticketbooking.util.constant.SeatStatusEnum;
+import com.cinema.ticketbooking.util.constant.SeatTypeEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -78,4 +82,39 @@ public class SeatService {
         this.seatRepository.save(seat);
         return seat;
     }
+
+    public List<Seat> createDefaultSeatsForAuditorium(Auditorium auditorium) {
+
+        Optional<SeatVariant> normalVariant = this.seatVariantRepository.findBySeatType(SeatTypeEnum.REG);
+        if (normalVariant.isPresent()) {
+            throw new IllegalStateException("Seat type REG did not find");
+        }
+
+        Optional<SeatVariant> vipVariant = this.seatVariantRepository.findBySeatType(SeatTypeEnum.VIP);
+        if (vipVariant.isPresent()){
+            throw new IllegalStateException("Seat type VIP did not find");
+        }
+
+        List<Seat> seats = new ArrayList<>();
+        char[] rows = { 'A', 'B', 'C', 'D', 'E', 'F' };
+
+        for (char row : rows) {
+            for (int number = 1; number <= 8; number++) {
+
+                Seat seat = new Seat();
+                seat.setAuditorium(auditorium);
+                seat.setSeatRow(String.valueOf(row));
+                seat.setNumber(number);
+                seat.setStatus(SeatStatusEnum.AVAILABLE);
+
+                seat.setSeatVariant(row == 'F' ? vipVariant.get() : normalVariant.get());
+
+                seats.add(seat);
+            }
+        }
+
+        seatRepository.saveAll(seats);
+        return seats;
+    }
+
 }

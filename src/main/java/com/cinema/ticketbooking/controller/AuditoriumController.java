@@ -4,6 +4,7 @@ import com.cinema.ticketbooking.domain.Auditorium;
 import com.cinema.ticketbooking.domain.Theater;
 import com.cinema.ticketbooking.domain.request.ReqCreateAuditoriumDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateAuditoriumDto;
+import com.cinema.ticketbooking.domain.response.ResSeatDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.service.AuditoriumService;
 import com.cinema.ticketbooking.service.TheaterService;
@@ -18,17 +19,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("api/v1")
 public class AuditoriumController {
     private final AuditoriumService auditoriumService;
     private final TheaterService theaterService;
+
     public AuditoriumController(AuditoriumService auditoriumService,  TheaterService theaterService) {
         this.auditoriumService = auditoriumService;
         this.theaterService = theaterService;
     }
 
-    @GetMapping ("/auditoriums")
+    @GetMapping("/auditoriums")
     @ApiMessage("fetch all auditoriums")
     public ResponseEntity<ResultPaginationDto> getAlls(
             @Filter Specification<Auditorium> spec, Pageable pageable
@@ -37,7 +41,7 @@ public class AuditoriumController {
         return ResponseEntity.status(HttpStatus.OK).body(this.auditoriumService.getAllAuditoriums(spec, pageable));
     }
 
-    @GetMapping ("/auditoriums/{id}")
+    @GetMapping("/auditoriums/{id}")
     @ApiMessage("fetch an auditorium")
     public ResponseEntity<Auditorium> getAuditorium(@PathVariable Long id){
         Auditorium auditorium = this.auditoriumService.getAuditoriumById(id);
@@ -50,10 +54,10 @@ public class AuditoriumController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/auditoriums")
     @ApiMessage("create a auditorium")
-    public ResponseEntity<Auditorium> createAuditorium (@Valid @RequestBody ReqCreateAuditoriumDto reqAuditorium) throws Exception {
+    public ResponseEntity<Auditorium> createAuditorium(@Valid @RequestBody ReqCreateAuditoriumDto reqAuditorium) throws Exception{
         Theater theater = this.theaterService.findTheaterById(reqAuditorium.getTheaterId());
         if (theater == null) {
-            throw new IdInvalidException("theater with id " + reqAuditorium.getTheaterId() +" not found");
+            throw new IdInvalidException("theater with id " + reqAuditorium.getTheaterId() + " not found");
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(this.auditoriumService.createAuditorium(reqAuditorium));
 
@@ -66,7 +70,7 @@ public class AuditoriumController {
         Auditorium auditorium = this.auditoriumService.getAuditoriumById(id);
         if (auditorium == null)
         {
-            throw new Exception("auditorium with id "+ id +" not found");
+            throw new Exception("auditorium with id " + id + " not found");
         }
 
         this.auditoriumService.deleteAuditorium(id);
@@ -77,10 +81,18 @@ public class AuditoriumController {
     @PutMapping("/auditoriums")
     public ResponseEntity<Auditorium> updateAuditorium (@Valid @RequestBody ReqUpdateAuditoriumDto reqAuditorium) throws Exception{
         Auditorium newAuditorium = this.auditoriumService.updateAuditorium(reqAuditorium);
-        if (newAuditorium == null){
+        if (newAuditorium == null) {
             throw new Exception("auditorium with id " + reqAuditorium.getId() + " does not exist");
         }
 
         return ResponseEntity.status(HttpStatus.OK).body(newAuditorium);
     }
+
+
+    @GetMapping("/seats/auditorium/{id}")
+    @ApiMessage("fetch seat by auditorium")
+    public ResponseEntity<List<ResSeatDto>> getSeatsByAuditoriumId(@PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(this.auditoriumService.getSeatByAuditoriumId(id));
+    }
+
 }

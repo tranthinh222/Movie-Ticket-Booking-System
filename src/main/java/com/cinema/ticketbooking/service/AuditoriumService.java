@@ -10,21 +10,27 @@ import com.cinema.ticketbooking.domain.response.ResSeatDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AuditoriumRepository;
 import com.cinema.ticketbooking.repository.TheaterRepository;
+import com.cinema.ticketbooking.util.error.IdInvalidException;
+import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class AuditoriumService {
     private final AuditoriumRepository auditoriumRepository;
     private final TheaterRepository theaterRepository;
+    private final SeatService seatService;
 
-    public AuditoriumService(AuditoriumRepository auditoriumRepository, TheaterRepository theaterRepository) {
+    public AuditoriumService(AuditoriumRepository auditoriumRepository, TheaterRepository theaterRepository, SeatService  seatService) {
         this.auditoriumRepository = auditoriumRepository;
         this.theaterRepository = theaterRepository;
+        this.seatService = seatService;
     }
 
     public ResultPaginationDto getAllAuditoriums(Specification<Auditorium> spec, Pageable pageable) {
@@ -43,14 +49,20 @@ public class AuditoriumService {
         return resultPaginationDto;
     }
 
+    @Transactional
     public Auditorium createAuditorium(ReqCreateAuditoriumDto reqAuditorium) {
+        Theater theater = theaterRepository.findById(reqAuditorium.getTheaterId())
+                .orElseThrow(() -> new RuntimeException("Theater not found"));
+
         Auditorium auditorium = new Auditorium();
         auditorium.setNumber(reqAuditorium.getNumber());
-        auditorium.setTotalSeats(reqAuditorium.getTotalSeats());
-        Optional<Theater> theater = this.theaterRepository.findById(reqAuditorium.getTheaterId());
-        auditorium.setTheater(theater.orElse(null));
+        auditorium.setTheater(theater);
 
-        this.auditoriumRepository.save(auditorium);
+
+        List<Seat> listSeat = this.seatService.createDefaultSeatsForAuditorium(auditorium);
+        auditorium.setTotalSeats((long) listSeat.size());
+        auditorium = auditoriumRepository.save(auditorium);
+
         return auditorium;
     }
 
@@ -80,4 +92,17 @@ public class AuditoriumService {
     }
 
 
+    public List<ResSeatDto> getSeatByAuditoriumId(Long auditoriumId) {
+        Optional<Auditorium> auditorium =  this.auditoriumRepository.findById(auditoriumId);
+        if (!auditorium.isPresent()) {
+            throw new IdInvalidException("Id auditorium with " + auditoriumId + " not found" );
+        }
+
+        Auditorium a =  auditorium.get();
+
+        return a.getSeats()
+                .stream()
+                .map(this::convertToSeatDto)
+                .collect(Collectors.toList());
+    }
 }

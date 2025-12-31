@@ -20,7 +20,7 @@ public class Seat {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "auditorium_id")
+    @JoinColumn(name = "auditorium_id", nullable = false)
     private Auditorium auditorium;
 
     @ManyToOne
@@ -37,7 +37,7 @@ public class Seat {
     @Enumerated(EnumType.STRING)
     private SeatStatusEnum status;
 
-    @OneToMany(mappedBy = "seat", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "seat", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnore
     List<BookingItem> bookingItems;
 

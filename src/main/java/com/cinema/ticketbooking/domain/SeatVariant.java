@@ -28,7 +28,7 @@ public class SeatVariant {
         @Column(nullable = false)
         private double basePrice;
 
-        @Column(nullable = false)
+        @Column(nullable = true)
         private double bonus;
 
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")

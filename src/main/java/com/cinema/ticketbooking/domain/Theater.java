@@ -4,7 +4,10 @@ import com.cinema.ticketbooking.util.SecurityUtil;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
@@ -12,6 +15,9 @@ import java.util.List;
 @Entity
 @Table(name = "theaters")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Theater {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

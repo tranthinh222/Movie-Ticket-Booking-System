@@ -57,7 +57,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(this.userService.getAllUser(spec, pageable));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/users")
     @ApiMessage("create an user")
     public ResponseEntity<User> createUser(@RequestBody ReqCreateUserDto user) throws Exception {
