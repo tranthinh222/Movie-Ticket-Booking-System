@@ -99,7 +99,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/users")
+    @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable("id") Long id) {
         User user = this.userService.getUserById(id);
         if (user == null) {
