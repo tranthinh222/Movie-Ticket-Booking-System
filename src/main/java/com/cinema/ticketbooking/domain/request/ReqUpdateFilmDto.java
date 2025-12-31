@@ -6,7 +6,7 @@ import java.time.LocalDate;
 
 @Data
 public class ReqUpdateFilmDto {
-    @NotNull (message = "id must not be null")
+    @NotNull(message = "id must not be null")
     @Positive(message = "id must be greater than 0")
     private Long id;
     private String name;
@@ -23,4 +23,6 @@ public class ReqUpdateFilmDto {
     @Min(value = 1, message = "rating must be at least 1")
     @Max(value = 10, message = "rating cannot be greater than 10")
     private Long rating;
+
+    private String thumbnail;
 }

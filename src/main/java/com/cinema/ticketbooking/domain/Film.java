@@ -38,6 +38,9 @@ public class Film {
     @Enumerated(EnumType.STRING)
     private FilmStatusEnum status;
 
+    @Column(columnDefinition = "TEXT")
+    private String thumbnail;
+
     private Instant createdAt;
     private Instant updatedAt;
     private String createdBy;

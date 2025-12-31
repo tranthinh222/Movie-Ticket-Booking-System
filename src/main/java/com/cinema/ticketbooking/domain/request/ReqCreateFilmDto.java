@@ -29,8 +29,10 @@ public class ReqCreateFilmDto {
     @NotBlank(message = "Language is required")
     private String language;
 
-    @NotBlank(message = "status is required")
+    @NotNull(message = "status is required")
     private FilmStatusEnum status;
 
     private LocalDate release_date;
+
+    private String thumbnail;
 }

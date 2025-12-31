@@ -48,6 +48,7 @@ public class FilmService {
         film.setLanguage(reqFilm.getLanguage());
         film.setStatus(reqFilm.getStatus());
         film.setReleaseDate(reqFilm.getRelease_date());
+        film.setThumbnail(reqFilm.getThumbnail());
 
         return this.filmRepository.save(film);
     }
@@ -64,7 +65,8 @@ public class FilmService {
                 || (req.getGenre() != null && !req.getGenre().trim().isEmpty())
                 || (req.getLanguage() != null && !req.getLanguage().trim().isEmpty())
                 || req.getRelease_date() != null
-                || req.getRating() != null;
+                || req.getRating() != null
+                || (req.getThumbnail() != null && !req.getThumbnail().trim().isEmpty());
     }
 
     public Film updateFilm(ReqUpdateFilmDto reqFilm) {
@@ -109,6 +111,11 @@ public class FilmService {
 
             Optional.ofNullable(reqFilm.getRating())
                     .ifPresent(rating -> newFilm.setRating(rating));
+
+            Optional.ofNullable(reqFilm.getThumbnail())
+                    .filter(thumbnail -> !thumbnail.trim().isEmpty())
+                    .ifPresent(thumbnail -> newFilm.setThumbnail(thumbnail));
+
             return this.filmRepository.save(newFilm);
 
         }
