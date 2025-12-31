@@ -16,8 +16,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SeatRepository extends JpaRepository<Seat, Long>, JpaSpecificationExecutor<Seat> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT s FROM Seat s WHERE s.id = :seatId")
-    Seat lockSeat(@Param("seatId") Long seatId);
+    @Query("SELECT s FROM Seat s WHERE s.id IN :seatIds")
+    List<Seat> lockSeats(@Param("seatIds") List<Long> seatIds);
 
     List<Seat> findByAuditoriumId(Long auditoriumId);
 

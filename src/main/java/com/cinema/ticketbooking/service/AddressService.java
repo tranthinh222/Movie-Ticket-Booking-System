@@ -7,6 +7,8 @@ import com.cinema.ticketbooking.domain.request.ReqUpdateAddressDto;
 import com.cinema.ticketbooking.domain.response.ResAuditoriumDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AddressRepository;
+import com.cinema.ticketbooking.repository.projection.AddressWithTheatersProjection;
+import com.cinema.ticketbooking.repository.projection.TheaterIdNameProjection;
 import com.cinema.ticketbooking.util.error.BadRequestException;
 import com.cinema.ticketbooking.util.error.NotFoundException;
 import org.springframework.data.domain.Page;
@@ -27,7 +29,7 @@ public class AddressService {
     }
 
     public ResultPaginationDto getAllAddresses(Specification<Address> spec, Pageable pageable) {
-        Page<Address> pageAddress =  this.addressRepository.findAll(spec, pageable);
+        Page<Address> pageAddress = this.addressRepository.findAll(spec, pageable);
         ResultPaginationDto resultPaginationDto = new ResultPaginationDto();
         ResultPaginationDto.Meta mt = new ResultPaginationDto.Meta();
 
@@ -41,7 +43,6 @@ public class AddressService {
 
         return resultPaginationDto;
     }
-
 
     public Address createAddress(ReqCreateAddressDto reqAddress) {
         Address address = new Address();
@@ -67,12 +68,10 @@ public class AddressService {
                 || (req.getStreet_number() != null && !req.getStreet_number().trim().isEmpty());
     }
 
-
     public Address updateAddress(ReqUpdateAddressDto reqAddress) {
         if (!hasUpdatableField(reqAddress)) {
             throw new BadRequestException("No data provided for update");
         }
-
 
         Address address = findAddressById(reqAddress.getId());
         if (address == null)
@@ -94,11 +93,11 @@ public class AddressService {
         return address;
     }
 
-
-    public List<Theater> getTheatersByAddressId(Long addressId) {
-        Address addr = addressRepository.findById(addressId)
+    public List<TheaterIdNameProjection> getTheatersByAddressId(Long addressId) {
+        AddressWithTheatersProjection address = addressRepository
+                .findProjectedById(addressId)
                 .orElseThrow(() -> new NotFoundException("Address with id " + addressId + " not found"));
 
-        return addr.getTheaters();
+        return address.getTheaters();
     }
 }

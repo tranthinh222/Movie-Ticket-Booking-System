@@ -4,6 +4,8 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.time.LocalDate;
 
+import com.cinema.ticketbooking.util.constant.FilmStatusEnum;
+
 @Data
 public class ReqCreateFilmDto {
 
@@ -27,9 +29,8 @@ public class ReqCreateFilmDto {
     @NotBlank(message = "Language is required")
     private String language;
 
-    private LocalDate release_date;
+    @NotBlank(message = "status is required")
+    private FilmStatusEnum status;
 
-    @Min(value = 1, message = "Rating must be >= 1")
-    @Max(value = 10, message = "Rating must be <= 10")
-    private Long rating;
+    private LocalDate release_date;
 }

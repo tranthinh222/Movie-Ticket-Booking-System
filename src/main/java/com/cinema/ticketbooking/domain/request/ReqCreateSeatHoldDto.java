@@ -1,5 +1,7 @@
 package com.cinema.ticketbooking.domain.request;
 
+import java.util.List;
+
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -9,5 +11,5 @@ public class ReqCreateSeatHoldDto {
     private Long showtimeId;
 
     @NotNull(message = "seatId is not null")
-    private Long seatId;
+    private List<Long> seatIds;
 }

@@ -1,11 +1,10 @@
 package com.cinema.ticketbooking.controller;
 
 import com.cinema.ticketbooking.domain.Address;
-import com.cinema.ticketbooking.domain.Theater;
 import com.cinema.ticketbooking.domain.request.ReqCreateAddressDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateAddressDto;
-import com.cinema.ticketbooking.domain.response.ResAuditoriumDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
+import com.cinema.ticketbooking.repository.projection.TheaterIdNameProjection;
 import com.cinema.ticketbooking.service.AddressService;
 import com.cinema.ticketbooking.service.TheaterService;
 import com.cinema.ticketbooking.util.annotation.ApiMessage;
@@ -83,7 +82,7 @@ public class AddressController {
 
     @GetMapping("/theaters/address/{id}")
     @ApiMessage("fetch theaters by address")
-    public ResponseEntity<List<Theater>> getTheatersByAddressId(@PathVariable Long id) {
+    public ResponseEntity<List<TheaterIdNameProjection>> getTheatersByAddressId(@PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(this.addressService.getTheatersByAddressId(id));
     }
 
