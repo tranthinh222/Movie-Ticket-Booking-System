@@ -36,7 +36,7 @@ public class FilmController {
 
     @GetMapping("/films/{id}")
     @ApiMessage("fetch a film")
-    public ResponseEntity<Film> getFilm(@PathVariable Long id) {
+    public ResponseEntity<Film> getFilm(@PathVariable("id") Long id) {
         Film film = this.filmService.getFilmById(id);
         if (film == null) {
             throw new IdInvalidException("film with id " + id + " not found");

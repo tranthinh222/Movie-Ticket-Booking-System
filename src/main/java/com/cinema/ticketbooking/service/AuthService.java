@@ -50,7 +50,9 @@ public class AuthService {
         User currentUserDB = this.userService.getUserByEmail(reqLoginDto.getEmail());
         ResUserJwtDto jwtUser = null;
         if (currentUserDB != null) {
-            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(), currentUserDB.getRole());
+            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(),
+                    currentUserDB.getPhone(), currentUserDB.getGender(), currentUserDB.getAvatar(),
+                    currentUserDB.getRole());
             response.setUser(jwtUser);
         }
 
@@ -85,27 +87,27 @@ public class AuthService {
 
         userService.registerUser(registerUser);
         ResUserDto response = new ResUserDto(registerUser.getId(), registerUser.getEmail(),
-                registerUser.getUsername(), registerUser.getPhone(), registerUser.getRole(),
+                registerUser.getUsername(), registerUser.getPhone(), null, null, registerUser.getRole(),
                 registerUser.getCreatedAt(), null);
 
         return response;
     }
 
-    public ResUserJwtDto getAccount(){
+    public ResUserJwtDto getAccount() {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
 
         ResUserJwtDto jwtUser = null;
         User currentUserDB = this.userService.getUserByEmail(email);
         if (currentUserDB != null) {
-            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(), currentUserDB.getRole());
+            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(),
+                    currentUserDB.getPhone(), currentUserDB.getGender(), currentUserDB.getAvatar(),
+                    currentUserDB.getRole());
         }
 
         return jwtUser;
     }
 
-
-    public ResponseEntity<ResLoginDto> getRefreshToken (String refreshToken)
-    {
+    public ResponseEntity<ResLoginDto> getRefreshToken(String refreshToken) {
         // check valid
         Jwt decodedToken = this.securityUtil.checkValidRefreshToken(refreshToken);
         String email = decodedToken.getSubject();
@@ -122,7 +124,9 @@ public class AuthService {
         User currentUserDB = this.userService.getUserByEmail(email);
         ResUserJwtDto jwtUser = null;
         if (currentUserDB != null) {
-            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(), currentUserDB.getRole());
+            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(),
+                    currentUserDB.getPhone(), currentUserDB.getGender(), currentUserDB.getAvatar(),
+                    currentUserDB.getRole());
             response.setUser(jwtUser);
         }
 
@@ -136,7 +140,7 @@ public class AuthService {
         // update user
         this.userService.updateUserToken(new_refreshToken, email);
 
-        //set cookies
+        // set cookies
         ResponseCookie resCookie = ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
                 .secure(true)
@@ -147,7 +151,5 @@ public class AuthService {
                 .header(HttpHeaders.SET_COOKIE, resCookie.toString())
                 .body(response);
     }
-
-
 
 }

@@ -1,6 +1,7 @@
 package com.cinema.ticketbooking.controller;
 
 import com.cinema.ticketbooking.domain.User;
+import com.cinema.ticketbooking.domain.request.ReqChangePassword;
 import com.cinema.ticketbooking.domain.request.ReqCreateUserDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateUserDto;
 import com.cinema.ticketbooking.domain.response.ResUpdateUserDto;
@@ -11,6 +12,9 @@ import com.cinema.ticketbooking.util.annotation.ApiMessage;
 import com.cinema.ticketbooking.util.error.BadRequestException;
 import com.cinema.ticketbooking.util.error.IdInvalidException;
 import com.turkraft.springfilter.boot.Filter;
+
+import jakarta.validation.Valid;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -35,7 +39,7 @@ public class UserController {
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/users/{id}")
     @ApiMessage("fetch user by id")
-    public ResponseEntity<ResUserDto> getUserById(@PathVariable long id) throws IdInvalidException {
+    public ResponseEntity<ResUserDto> getUserById(@PathVariable("id") long id) throws IdInvalidException {
         User fetchUser = this.userService.getUserById(id);
         if (fetchUser == null) {
             throw new IdInvalidException("User with id " + id + " not found");
@@ -82,19 +86,15 @@ public class UserController {
 
     }
 
-    @PreAuthorize("hasRole('CUSTOMER')")
     @PutMapping("/users/me/password")
-    @ApiMessage("update an user")
-    public ResponseEntity<String> updateMyPassword(@RequestBody String password) {
-        if (password == null || password.isBlank()) {
-            throw new BadRequestException("Password is not blank");
-        }
-
+    @ApiMessage("update user password")
+    public ResponseEntity<Void> updateMyPassword(@Valid @RequestBody ReqChangePassword reqChangePassword) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
-        this.userService.updateMyPassword(email, password);
+        this.userService.updateMyPassword(email, reqChangePassword.getCurrentPassword(),
+                reqChangePassword.getNewPassword());
 
-        return ResponseEntity.status(HttpStatus.OK).body("Update password successfully");
+        return ResponseEntity.ok().build();
 
     }
 

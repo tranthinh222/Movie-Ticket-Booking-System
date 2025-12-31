@@ -7,6 +7,8 @@ import com.cinema.ticketbooking.domain.response.ResUpdateUserDto;
 import com.cinema.ticketbooking.domain.response.ResUserDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.UserRepository;
+import com.cinema.ticketbooking.util.error.BadRequestException;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -50,6 +52,8 @@ public class UserService {
                 item.getUsername(),
                 item.getEmail(),
                 item.getPhone(),
+                item.getGender(),
+                item.getAvatar(),
                 item.getRole(),
                 item.getCreatedAt(),
                 item.getUpdatedAt())).collect(Collectors.toList());
@@ -78,6 +82,8 @@ public class UserService {
         resUserDto.setUsername(user.getUsername());
         resUserDto.setEmail(user.getEmail());
         resUserDto.setPhone(user.getPhone());
+        resUserDto.setGender(user.getGender());
+        resUserDto.setAvatar(user.getAvatar());
         resUserDto.setRole(user.getRole());
         resUserDto.setCreatedAt(user.getCreatedAt());
         resUserDto.setUpdatedAt(user.getUpdatedAt());
@@ -100,6 +106,8 @@ public class UserService {
             // Cập nhật thông tin mới
             user.setUsername(reqUser.getUsername());
             user.setPhone(reqUser.getPhone());
+            user.setGender(reqUser.getGender());
+            user.setAvatar(reqUser.getAvatar());
 
             // Lưu vào database
             User savedUser = this.userRepository.save(user);
@@ -108,6 +116,8 @@ public class UserService {
             ResUpdateUserDto updatedUser = new ResUpdateUserDto();
             updatedUser.setUsername(savedUser.getUsername());
             updatedUser.setPhone(savedUser.getPhone());
+            updatedUser.setGender(savedUser.getGender());
+            updatedUser.setAvatar(savedUser.getAvatar());
 
             return updatedUser;
         }
@@ -127,9 +137,16 @@ public class UserService {
         }
     }
 
-    public void updateMyPassword(String email, String password) {
+    public void updateMyPassword(String email, String currentPassword, String newPassword) {
         User user = this.getUserByEmail(email);
-        String hashPassword = passwordEncoder.encode(password);
+
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        // Update to new password
+        String hashPassword = passwordEncoder.encode(newPassword);
         user.setPassword(hashPassword);
         this.userRepository.save(user);
     }
