@@ -1,3 +1,10 @@
+import org.gradle.api.tasks.testing.TestDescriptor
+import org.gradle.api.tasks.testing.TestListener
+import org.gradle.api.tasks.testing.TestResult
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+
 plugins {
 	java
 	id("org.springframework.boot") version "3.5.7"
@@ -45,8 +52,43 @@ dependencies {
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation(kotlin("stdlib-jdk8"))
     implementation("com.cloudinary:cloudinary-http44:1.38.0")
+	testImplementation("org.mockito:mockito-inline:5.2.0")
+
 }
 
-tasks.withType<Test> {
-	useJUnitPlatform()
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+
+    testLogging {
+        events = setOf(
+            TestLogEvent.PASSED,
+            TestLogEvent.SKIPPED,
+            TestLogEvent.FAILED
+        )
+        exceptionFormat = TestExceptionFormat.FULL
+        showExceptions = true
+        showCauses = true
+        showStackTraces = true
+        // nếu muốn hiện log System.out.println trong test thì bật cái này:
+        // showStandardStreams = true
+    }
+
+    addTestListener(object : TestListener {
+        override fun beforeSuite(suite: TestDescriptor) {}
+        override fun afterSuite(suite: TestDescriptor, result: TestResult) {
+            // suite.parent == null => root suite (tổng kết cuối)
+            if (suite.parent == null) {
+                println("\n========== TEST SUMMARY ==========")
+                println("Total  : ${result.testCount}")
+                println("Passed : ${result.successfulTestCount}")
+                println("Failed : ${result.failedTestCount}")
+                println("Skipped: ${result.skippedTestCount}")
+                println("==================================\n")
+            }
+        }
+
+        override fun beforeTest(testDescriptor: TestDescriptor) {}
+        override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {}
+    })
 }
+
