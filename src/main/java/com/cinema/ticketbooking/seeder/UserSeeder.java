@@ -2,13 +2,19 @@ package com.cinema.ticketbooking.seeder;
 
 import com.cinema.ticketbooking.domain.User;
 import com.cinema.ticketbooking.repository.UserRepository;
+import com.cinema.ticketbooking.util.constant.RoleEnum;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
+@Order(2)
 public class UserSeeder implements CommandLineRunner {
     private final UserRepository userRepository;
-    public UserSeeder(UserRepository userRepository) {
+    private final PasswordEncoder passwordEncoder;
+    public UserSeeder(UserRepository userRepository,  PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
     }
 
@@ -28,13 +34,14 @@ public class UserSeeder implements CommandLineRunner {
         {
             String username = "admin" + i;
             String email = "admin" + i + "@gmail.com";
-            String password = "123456";
+            String hashPassword = passwordEncoder.encode("123456");
             String phone = "097690845" + i;
             User admin = User.builder()
                     .username(username)
                     .email(email)
-                    .password(password)
-                    .phone(phone).build();
+                    .password(hashPassword)
+                    .phone(phone)
+                    .role(RoleEnum.ADMIN).build();
             userRepository.save(admin);
         }
     }
@@ -44,12 +51,13 @@ public class UserSeeder implements CommandLineRunner {
         {
             String username = "customer" + i;
             String email = "customer" + i + "@gmail.com";
-            String password = "123456";
+            String hashPassword = passwordEncoder.encode("123456");
             String phone = "098290845" + i;
             User admin = User.builder()
                     .username(username)
                     .email(email)
-                    .password(password)
+                    .password(hashPassword)
+                    .role(RoleEnum.CUSTOMER)
                     .phone(phone).build();
             userRepository.save(admin);
         }

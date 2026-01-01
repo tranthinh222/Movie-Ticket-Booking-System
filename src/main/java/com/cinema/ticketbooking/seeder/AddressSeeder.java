@@ -3,11 +3,13 @@ package com.cinema.ticketbooking.seeder;
 import com.cinema.ticketbooking.domain.Address;
 import com.cinema.ticketbooking.repository.AddressRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@Order(1)
 public class AddressSeeder implements CommandLineRunner {
     private final AddressRepository addressRepository;
     public AddressSeeder(AddressRepository addressRepository) {

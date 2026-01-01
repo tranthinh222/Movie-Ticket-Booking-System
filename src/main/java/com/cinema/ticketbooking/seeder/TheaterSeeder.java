@@ -5,11 +5,13 @@ import com.cinema.ticketbooking.domain.Theater;
 import com.cinema.ticketbooking.repository.AddressRepository;
 import com.cinema.ticketbooking.repository.TheaterRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Component
+@Order(3)
 public class TheaterSeeder implements CommandLineRunner {
     private final TheaterRepository theaterRepository;
     private final AddressRepository addressRepository;

@@ -11,6 +11,8 @@ public class ReqCreateFilmDto {
 
     @NotBlank(message = "Film name is required")
     private String name;
+    private String director;
+    private String actors;
 
     @NotNull(message = "Duration is required")
     @Positive(message = "Duration must be greater than 0")

@@ -3,7 +3,6 @@ package com.cinema.ticketbooking.controller;
 import com.cinema.ticketbooking.domain.Film;
 import com.cinema.ticketbooking.domain.FilmImage;
 import com.cinema.ticketbooking.domain.response.ResFilmImage;
-import com.cinema.ticketbooking.service.FilmImageService;
 import com.cinema.ticketbooking.service.FilmService;
 import com.cinema.ticketbooking.util.error.IdInvalidException;
 import org.junit.jupiter.api.Test;

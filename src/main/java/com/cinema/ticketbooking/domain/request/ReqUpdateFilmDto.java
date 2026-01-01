@@ -10,6 +10,8 @@ public class ReqUpdateFilmDto {
     @Positive(message = "id must be greater than 0")
     private Long id;
     private String name;
+    private String director;
+    private String actors;
     @Positive(message = "duration must be greater than 0")
     private Long duration;
     @PositiveOrZero(message = "price must be greater than or equal to 0")

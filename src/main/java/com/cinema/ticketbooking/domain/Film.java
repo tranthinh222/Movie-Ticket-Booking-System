@@ -4,7 +4,10 @@ import com.cinema.ticketbooking.util.SecurityUtil;
 import com.cinema.ticketbooking.util.constant.FilmStatusEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -13,6 +16,9 @@ import java.util.List;
 @Entity
 @Table(name = "films")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Film {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,6 +30,8 @@ public class Film {
 
     @Column(unique = true)
     private String name;
+    private String director;
+    private String actors;
     private Long duration;
     private Long price;
 
@@ -33,7 +41,6 @@ public class Film {
     private String language;
     @Column(name = "release_date")
     private LocalDate releaseDate;
-    private Long rating;
 
     @Enumerated(EnumType.STRING)
     private FilmStatusEnum status;

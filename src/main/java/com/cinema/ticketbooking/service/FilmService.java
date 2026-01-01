@@ -41,6 +41,8 @@ public class FilmService {
     public Film createFilm(ReqCreateFilmDto reqFilm) {
         Film film = new Film();
         film.setName(reqFilm.getName());
+        film.setDirector(reqFilm.getDirector());
+        film.setActors(reqFilm.getActors());
         film.setDuration(reqFilm.getDuration());
         film.setPrice(reqFilm.getPrice());
         film.setDescription(reqFilm.getDescription());
@@ -59,6 +61,8 @@ public class FilmService {
 
     private boolean hasUpdatableField(ReqUpdateFilmDto req) {
         return (req.getName() != null && !req.getName().trim().isEmpty())
+                || req.getDirector() != null && !req.getDirector().trim().isEmpty()
+                || req.getActors() != null && !req.getActors().trim().isEmpty()
                 || req.getDuration() != null
                 || req.getPrice() != null
                 || (req.getDescription() != null && !req.getDescription().trim().isEmpty())
@@ -88,6 +92,14 @@ public class FilmService {
                     .filter(name -> !name.trim().isEmpty())
                     .ifPresent(name -> newFilm.setName(name));
 
+            Optional.ofNullable(reqFilm.getDirector())
+                    .filter(director -> !director.trim().isEmpty())
+                    .ifPresent(director -> newFilm.setName(director));
+
+            Optional.ofNullable(reqFilm.getActors())
+                    .filter(actors -> !actors.trim().isEmpty())
+                    .ifPresent(actors -> newFilm.setName(actors));
+
             Optional.ofNullable(reqFilm.getDuration())
                     .ifPresent(duration -> newFilm.setDuration(duration));
 
@@ -108,9 +120,6 @@ public class FilmService {
 
             Optional.ofNullable(reqFilm.getRelease_date())
                     .ifPresent(date -> newFilm.setReleaseDate(date));
-
-            Optional.ofNullable(reqFilm.getRating())
-                    .ifPresent(rating -> newFilm.setRating(rating));
 
             Optional.ofNullable(reqFilm.getThumbnail())
                     .filter(thumbnail -> !thumbnail.trim().isEmpty())
