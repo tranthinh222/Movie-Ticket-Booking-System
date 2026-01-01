@@ -11,6 +11,7 @@ import com.cinema.ticketbooking.domain.response.ResBookingDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.BookingRepository;
 import com.cinema.ticketbooking.util.constant.BookingStatusEnum;
+import com.cinema.ticketbooking.util.constant.MethodEnum;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,14 +21,17 @@ public class BookingService {
     private final BookingRepository bookingRepo;
     private final UserService userService;
     private final BookingItemService bookingItemService;
+    private final PaymentService paymentService;
 
-    BookingService(BookingRepository bookingRepo, UserService userService, BookingItemService bookingItemService) {
+    BookingService(BookingRepository bookingRepo, UserService userService,
+            BookingItemService bookingItemService, PaymentService paymentService) {
         this.bookingRepo = bookingRepo;
         this.userService = userService;
         this.bookingItemService = bookingItemService;
+        this.paymentService = paymentService;
     }
 
-    public Booking createBooking(Long id) {
+    public Booking createBooking(Long id, MethodEnum paymentMethod) {
         Booking booking = new Booking();
         User user = this.userService.getUserById(id);
 
@@ -38,7 +42,12 @@ public class BookingService {
         Double total_price = this.bookingItemService.createListItem(id, savedBooking);
 
         savedBooking.setTotal_price(total_price);
-        return savedBooking;
+        Booking finalBooking = this.bookingRepo.save(savedBooking);
+
+        // Create payment automatically
+        this.paymentService.createPayment(finalBooking, paymentMethod);
+
+        return finalBooking;
     }
 
     public ResultPaginationDto getAllBookings(Specification<Booking> spec, Pageable pageable) {
@@ -82,5 +91,10 @@ public class BookingService {
         }
 
         return dto;
+    }
+
+    public Booking getBookingById(Long bookingId) {
+        return this.bookingRepo.findById(bookingId)
+                .orElse(null);
     }
 }

@@ -70,8 +70,6 @@ public class SeatService {
         return seat;
     }
 
-
-
     public Seat updateSeat(ReqUpdateSeatDto reqSeat) {
         Seat seat = findSeatById(reqSeat.getId());
         if (seat == null)
@@ -86,12 +84,12 @@ public class SeatService {
     public List<Seat> createDefaultSeatsForAuditorium(Auditorium auditorium) {
 
         Optional<SeatVariant> normalVariant = this.seatVariantRepository.findBySeatType(SeatTypeEnum.REG);
-        if (normalVariant.isPresent()) {
+        if (!normalVariant.isPresent()) {
             throw new IllegalStateException("Seat type REG did not find");
         }
 
         Optional<SeatVariant> vipVariant = this.seatVariantRepository.findBySeatType(SeatTypeEnum.VIP);
-        if (vipVariant.isPresent()){
+        if (!vipVariant.isPresent()) {
             throw new IllegalStateException("Seat type VIP did not find");
         }
 
