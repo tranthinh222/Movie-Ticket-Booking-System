@@ -138,4 +138,12 @@ public class UserService {
         return this.userRepository.findByRefreshTokenAndEmail(refreshToken, email);
     }
 
+    public User saveUser(User user) {
+        return this.userRepository.save(user);
+    }
+
+    public User getUserByResetToken(String resetToken) {
+        return this.userRepository.findByResetToken(resetToken);
+    }
+
 }

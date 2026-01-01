@@ -114,4 +114,19 @@ public class SecurityUtil {
                 .map(auth -> (String) auth.getCredentials());
     }
 
+    public String createResetToken(String email) {
+        Instant now = Instant.now();
+        Instant validity = now.plus(15, ChronoUnit.MINUTES); // Reset token valid for 15 minutes
+
+        JwtClaimsSet claims = JwtClaimsSet.builder()
+                .issuedAt(now)
+                .expiresAt(validity)
+                .subject(email)
+                .claim("type", "reset")
+                .build();
+
+        JwsHeader jwsHeader = JwsHeader.with(JWT_ALGORITHM).build();
+        return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
+    }
+
 }
