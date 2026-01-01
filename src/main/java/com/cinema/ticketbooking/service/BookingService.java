@@ -37,7 +37,7 @@ public class BookingService {
 
         Double total_price = this.bookingItemService.createListItem(id, savedBooking);
 
-        booking.setTotal_price(total_price);
+        savedBooking.setTotal_price(total_price);
         return savedBooking;
     }
 
