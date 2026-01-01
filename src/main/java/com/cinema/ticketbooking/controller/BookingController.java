@@ -36,7 +36,7 @@ public class BookingController {
     }
 
     @PostMapping("/bookings")
-    public ResponseEntity<Booking> createBooking() {
+    public ResponseEntity<Booking> createBooking(@Valid @RequestBody ReqCreateBookingDto request) {
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new IdInvalidException("User not authenticated"));
 
@@ -45,7 +45,8 @@ public class BookingController {
             throw new IdInvalidException("User not found");
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(this.bookingService.createBooking(user.getId()));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(this.bookingService.createBooking(user.getId(), request.getPaymentMethod()));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

@@ -28,7 +28,8 @@ public class AuditoriumService {
     private final TheaterRepository theaterRepository;
     private final SeatService seatService;
 
-    public AuditoriumService(AuditoriumRepository auditoriumRepository, TheaterRepository theaterRepository, SeatService seatService) {
+    public AuditoriumService(AuditoriumRepository auditoriumRepository, TheaterRepository theaterRepository,
+            SeatService seatService) {
         this.auditoriumRepository = auditoriumRepository;
         this.theaterRepository = theaterRepository;
         this.seatService = seatService;
@@ -59,6 +60,7 @@ public class AuditoriumService {
         auditorium.setNumber(reqAuditorium.getNumber());
         auditorium.setTheater(theater);
 
+        auditorium = auditoriumRepository.save(auditorium);
 
         List<Seat> listSeat = this.seatService.createDefaultSeatsForAuditorium(auditorium);
         auditorium.setTotalSeats((long) listSeat.size());
@@ -92,14 +94,13 @@ public class AuditoriumService {
         return dto;
     }
 
-
     public List<ResSeatDto> getSeatByAuditoriumId(Long auditoriumId) {
-        Optional<Auditorium> auditorium =  this.auditoriumRepository.findById(auditoriumId);
+        Optional<Auditorium> auditorium = this.auditoriumRepository.findById(auditoriumId);
         if (!auditorium.isPresent()) {
-            throw new IdInvalidException("Id auditorium with " + auditoriumId + " not found" );
+            throw new IdInvalidException("Id auditorium with " + auditoriumId + " not found");
         }
 
-        Auditorium a =  auditorium.get();
+        Auditorium a = auditorium.get();
 
         return a.getSeats()
                 .stream()
