@@ -22,7 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository,  PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
@@ -31,7 +31,7 @@ public class UserService {
         return this.userRepository.findById(id).orElse(null);
     }
 
-    public ResultPaginationDto  getAllUser(Specification<User> spec, Pageable pageable) {
+    public ResultPaginationDto getAllUser(Specification<User> spec, Pageable pageable) {
         Page<User> pageUser = this.userRepository.findAll(spec, pageable);
         ResultPaginationDto rs = new ResultPaginationDto();
 
@@ -44,7 +44,7 @@ public class UserService {
         rs.setMeta(meta);
         rs.setData(pageUser.getContent());
 
-        //remove sensitive data
+        // remove sensitive data
         List<ResUserDto> listUser = pageUser.stream().map(item -> new ResUserDto(
                 item.getId(),
                 item.getUsername(),
@@ -52,8 +52,7 @@ public class UserService {
                 item.getPhone(),
                 item.getRole(),
                 item.getCreatedAt(),
-                item.getUpdatedAt()
-        )).collect(Collectors.toList());
+                item.getUpdatedAt())).collect(Collectors.toList());
 
         rs.setData(listUser);
         return rs;
@@ -69,11 +68,11 @@ public class UserService {
         return this.userRepository.save(user);
     }
 
-    public User registerUser(User user){
+    public User registerUser(User user) {
         return this.userRepository.save(user);
     }
 
-    public ResUserDto convertToResUserDTO(User user){
+    public ResUserDto convertToResUserDTO(User user) {
         ResUserDto resUserDto = new ResUserDto();
         resUserDto.setId(user.getId());
         resUserDto.setUsername(user.getUsername());
@@ -85,7 +84,6 @@ public class UserService {
         return resUserDto;
     }
 
-
     public User getUserByEmail(String email) {
         return this.userRepository.findUserByEmail(email);
     }
@@ -94,14 +92,22 @@ public class UserService {
         return this.userRepository.existsByEmail(email);
     }
 
-    public ResUpdateUserDto updateUser(ReqUpdateUserDto reqUser)
-    {
+    public ResUpdateUserDto updateUser(ReqUpdateUserDto reqUser) {
         Optional<User> userOptional = this.userRepository.findById(reqUser.getId());
         if (userOptional.isPresent()) {
             User user = userOptional.get();
+
+            // Cập nhật thông tin mới
+            user.setUsername(reqUser.getUsername());
+            user.setPhone(reqUser.getPhone());
+
+            // Lưu vào database
+            User savedUser = this.userRepository.save(user);
+
+            // Trả về response
             ResUpdateUserDto updatedUser = new ResUpdateUserDto();
-            updatedUser.setUsername(user.getUsername());
-            updatedUser.setPhone(user.getPhone());
+            updatedUser.setUsername(savedUser.getUsername());
+            updatedUser.setPhone(savedUser.getPhone());
 
             return updatedUser;
         }
@@ -113,22 +119,20 @@ public class UserService {
         this.userRepository.deleteById(id);
     }
 
-    public void updateUserToken(String token, String email){
+    public void updateUserToken(String token, String email) {
         User currentUser = this.getUserByEmail(email);
-        if (currentUser != null){
+        if (currentUser != null) {
             currentUser.setRefreshToken(token);
             this.userRepository.save(currentUser);
         }
     }
 
-    public void updateMyPassword(String email, String password)
-    {
+    public void updateMyPassword(String email, String password) {
         User user = this.getUserByEmail(email);
         String hashPassword = passwordEncoder.encode(password);
         user.setPassword(hashPassword);
         this.userRepository.save(user);
     }
-
 
     public User getUserByRefreshTokenAndEmail(String refreshToken, String email) {
         return this.userRepository.findByRefreshTokenAndEmail(refreshToken, email);

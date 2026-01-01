@@ -46,8 +46,9 @@ public class FilmService {
         film.setDescription(reqFilm.getDescription());
         film.setGenre(reqFilm.getGenre());
         film.setLanguage(reqFilm.getLanguage());
-        film.setRating(reqFilm.getRating());
+        film.setStatus(reqFilm.getStatus());
         film.setReleaseDate(reqFilm.getRelease_date());
+        film.setThumbnail(reqFilm.getThumbnail());
 
         return this.filmRepository.save(film);
     }
@@ -64,7 +65,8 @@ public class FilmService {
                 || (req.getGenre() != null && !req.getGenre().trim().isEmpty())
                 || (req.getLanguage() != null && !req.getLanguage().trim().isEmpty())
                 || req.getRelease_date() != null
-                || req.getRating() != null;
+                || req.getRating() != null
+                || (req.getThumbnail() != null && !req.getThumbnail().trim().isEmpty());
     }
 
     public Film updateFilm(ReqUpdateFilmDto reqFilm) {
@@ -72,13 +74,12 @@ public class FilmService {
             throw new BadRequestException("No data provided for update");
         }
 
-
         Optional<Film> filmOptional = this.filmRepository.findById(reqFilm.getId());
         if (filmOptional.isPresent()) {
             Film newFilm = filmOptional.get();
 
             boolean isFilmExisted = isFilmNameDuplicated(reqFilm.getName());
-            if (isFilmExisted){
+            if (isFilmExisted) {
                 throw new ResourceAlreadyExistsException(
                         "Film with name " + reqFilm.getName() + " already exists");
             }
@@ -110,6 +111,11 @@ public class FilmService {
 
             Optional.ofNullable(reqFilm.getRating())
                     .ifPresent(rating -> newFilm.setRating(rating));
+
+            Optional.ofNullable(reqFilm.getThumbnail())
+                    .filter(thumbnail -> !thumbnail.trim().isEmpty())
+                    .ifPresent(thumbnail -> newFilm.setThumbnail(thumbnail));
+
             return this.filmRepository.save(newFilm);
 
         }

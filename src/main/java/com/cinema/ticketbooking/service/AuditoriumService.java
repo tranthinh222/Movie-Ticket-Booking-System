@@ -6,6 +6,7 @@ import com.cinema.ticketbooking.domain.SeatVariant;
 import com.cinema.ticketbooking.domain.Theater;
 import com.cinema.ticketbooking.domain.request.ReqCreateAuditoriumDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateAuditoriumDto;
+import com.cinema.ticketbooking.domain.response.ResAuditoriumDto;
 import com.cinema.ticketbooking.domain.response.ResSeatDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AuditoriumRepository;
@@ -27,7 +28,7 @@ public class AuditoriumService {
     private final TheaterRepository theaterRepository;
     private final SeatService seatService;
 
-    public AuditoriumService(AuditoriumRepository auditoriumRepository, TheaterRepository theaterRepository, SeatService  seatService) {
+    public AuditoriumService(AuditoriumRepository auditoriumRepository, TheaterRepository theaterRepository, SeatService seatService) {
         this.auditoriumRepository = auditoriumRepository;
         this.theaterRepository = theaterRepository;
         this.seatService = seatService;

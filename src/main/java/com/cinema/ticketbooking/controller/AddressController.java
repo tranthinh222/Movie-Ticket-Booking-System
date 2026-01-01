@@ -1,11 +1,10 @@
 package com.cinema.ticketbooking.controller;
 
 import com.cinema.ticketbooking.domain.Address;
-import com.cinema.ticketbooking.domain.Theater;
 import com.cinema.ticketbooking.domain.request.ReqCreateAddressDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateAddressDto;
-import com.cinema.ticketbooking.domain.response.ResAuditoriumDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
+import com.cinema.ticketbooking.repository.projection.TheaterIdNameProjection;
 import com.cinema.ticketbooking.service.AddressService;
 import com.cinema.ticketbooking.service.TheaterService;
 import com.cinema.ticketbooking.util.annotation.ApiMessage;
@@ -27,7 +26,7 @@ public class AddressController {
     private final AddressService addressService;
     private final TheaterService theaterService;
 
-    public AddressController(AddressService addressService,  TheaterService theaterService) {
+    public AddressController(AddressService addressService, TheaterService theaterService) {
         this.addressService = addressService;
         this.theaterService = theaterService;
     }
@@ -42,7 +41,7 @@ public class AddressController {
 
     @GetMapping("/addresses/{id}")
     @ApiMessage("fetch an address")
-    public ResponseEntity<Address> getAddressById(@PathVariable Long id) {
+    public ResponseEntity<Address> getAddressById(@PathVariable("id") Long id) {
         Address address = this.addressService.findAddressById(id);
         if (address == null) {
             throw new IdInvalidException("Address with id " + id + " not found");
@@ -61,7 +60,7 @@ public class AddressController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/addresses/{id}")
     @ApiMessage("delete an address")
-    public ResponseEntity<Void> deleteAddress(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteAddress(@PathVariable("id") Long id) {
         Address address = this.addressService.findAddressById(id);
         if (address == null) {
             throw new IdInvalidException("address with id " + id + " not found");
@@ -83,7 +82,7 @@ public class AddressController {
 
     @GetMapping("/theaters/address/{id}")
     @ApiMessage("fetch theaters by address")
-    public ResponseEntity<List<Theater>> getTheatersByAddressId(@PathVariable Long id) {
+    public ResponseEntity<List<TheaterIdNameProjection>> getTheatersByAddressId(@PathVariable("id") Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(this.addressService.getTheatersByAddressId(id));
     }
 

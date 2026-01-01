@@ -21,26 +21,25 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/v1")
 public class FilmController {
     private final FilmService filmService;
+
     public FilmController(FilmService filmService) {
         this.filmService = filmService;
     }
 
-    @GetMapping ("/films")
+    @GetMapping("/films")
     @ApiMessage("fetch all films")
     public ResponseEntity<ResultPaginationDto> getAllFilms(
-            @Filter Specification<Film> spec, Pageable pageable
-    ){
+            @Filter Specification<Film> spec, Pageable pageable) {
 
         return ResponseEntity.status(HttpStatus.OK).body(this.filmService.getAllFilms(spec, pageable));
     }
 
-    @GetMapping ("/films/{id}")
+    @GetMapping("/films/{id}")
     @ApiMessage("fetch a film")
-    public ResponseEntity<Film> getFilm(@PathVariable Long id){
+    public ResponseEntity<Film> getFilm(@PathVariable Long id) {
         Film film = this.filmService.getFilmById(id);
-        if (film == null)
-        {
-            throw new IdInvalidException("film with id " +  id + " not found");
+        if (film == null) {
+            throw new IdInvalidException("film with id " + id + " not found");
         }
         return ResponseEntity.status(HttpStatus.OK).body(film);
     }
@@ -48,9 +47,9 @@ public class FilmController {
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/films")
     @ApiMessage("create a film")
-    public ResponseEntity<Film> createFilm (@Valid @RequestBody ReqCreateFilmDto reqFilm) {
+    public ResponseEntity<Film> createFilm(@Valid @RequestBody ReqCreateFilmDto reqFilm) {
         boolean isFilmExisted = this.filmService.isFilmNameDuplicated(reqFilm.getName());
-        if (isFilmExisted){
+        if (isFilmExisted) {
             throw new ResourceAlreadyExistsException(
                     "Film with name " + reqFilm.getName() + " already exists");
         }
@@ -61,11 +60,10 @@ public class FilmController {
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/films/{id}")
     @ApiMessage("delete a film")
-    public ResponseEntity<Void> deleteFilm (@PathVariable Long id) throws Exception{
+    public ResponseEntity<Void> deleteFilm(@PathVariable("id") Long id) throws Exception {
         Film film = this.filmService.getFilmById(id);
-        if (film == null)
-        {
-            throw new IdInvalidException("Film with id "+ id +" not found");
+        if (film == null) {
+            throw new IdInvalidException("Film with id " + id + " not found");
         }
 
         this.filmService.deleteFilm(id);
@@ -75,9 +73,9 @@ public class FilmController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/films")
     @ApiMessage("update a film")
-    public ResponseEntity<Film> updateFilm (@Valid @RequestBody ReqUpdateFilmDto reqFilm){
+    public ResponseEntity<Film> updateFilm(@Valid @RequestBody ReqUpdateFilmDto reqFilm) {
         Film newFilm = this.filmService.updateFilm(reqFilm);
-        if (newFilm == null){
+        if (newFilm == null) {
             throw new IdInvalidException("Film with id " + reqFilm.getId() + " does not exist");
         }
 

@@ -72,5 +72,4 @@ public class SeatVariantController {
 
         return ResponseEntity.status(HttpStatus.OK).body(newSeat);
     }
-
 }

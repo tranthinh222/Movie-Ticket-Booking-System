@@ -9,14 +9,12 @@ import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AuditoriumRepository;
 import com.cinema.ticketbooking.repository.SeatRepository;
 import com.cinema.ticketbooking.repository.SeatVariantRepository;
-
 import com.cinema.ticketbooking.util.constant.SeatStatusEnum;
 import com.cinema.ticketbooking.util.constant.SeatTypeEnum;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -71,6 +69,8 @@ public class SeatService {
         this.seatRepository.save(seat);
         return seat;
     }
+
+
 
     public Seat updateSeat(ReqUpdateSeatDto reqSeat) {
         Seat seat = findSeatById(reqSeat.getId());

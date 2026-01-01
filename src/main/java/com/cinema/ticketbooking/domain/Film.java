@@ -1,6 +1,7 @@
 package com.cinema.ticketbooking.domain;
 
 import com.cinema.ticketbooking.util.SecurityUtil;
+import com.cinema.ticketbooking.util.constant.FilmStatusEnum;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -34,22 +35,30 @@ public class Film {
     private LocalDate releaseDate;
     private Long rating;
 
+    @Enumerated(EnumType.STRING)
+    private FilmStatusEnum status;
+
+    @Column(columnDefinition = "TEXT")
+    private String thumbnail;
+
     private Instant createdAt;
     private Instant updatedAt;
     private String createdBy;
     private String updatedBy;
 
     @PrePersist
-    public void handleBeforeCreated(){
+    public void handleBeforeCreated() {
         this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
         this.createdAt = Instant.now();
     }
 
     @PreUpdate
-    public void handleBeforeUpdated(){
+    public void handleBeforeUpdated() {
         this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
         this.updatedAt = Instant.now();
     }
 }

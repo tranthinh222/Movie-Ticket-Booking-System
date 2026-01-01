@@ -2,6 +2,7 @@ package com.cinema.ticketbooking.service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +13,7 @@ import com.cinema.ticketbooking.domain.SeatHold;
 import com.cinema.ticketbooking.domain.ShowTime;
 import com.cinema.ticketbooking.domain.User;
 import com.cinema.ticketbooking.domain.request.ReqCreateSeatHoldDto;
+import com.cinema.ticketbooking.domain.request.ReqRemoveSeatHold;
 import com.cinema.ticketbooking.repository.SeatHoldRepository;
 import com.cinema.ticketbooking.repository.SeatRepository;
 import com.cinema.ticketbooking.repository.ShowTimeRepository;
@@ -37,35 +39,73 @@ public class SeatHoldService {
     }
 
     @Transactional
-    public SeatHold createSeatHold(ReqCreateSeatHoldDto reqSeatHold) {
+    public List<SeatHold> createSeatHold(ReqCreateSeatHoldDto req) {
+
         String email = SecurityUtil.getCurrentUserLogin()
                 .orElseThrow(() -> new RuntimeException("Unauthenticated"));
 
-        User currentUserDB = this.userRepository.findUserByEmail(email);
+        User user = userRepository.findUserByEmail(email);
 
-        // Lock seat để tránh race condition (giả sử lockSeat là custom method với
-        // pessimistic lock)
-        // Seat seat = this.seatRepository.lockSeat(reqSeatHold.getSeatId());
-        Optional<Seat> seat = this.seatRepository.findById(reqSeatHold.getSeatId());
-
-        // Set HOLD (Controller đã check AVAILABLE, nhưng lock để an toàn)
-        seat.get().setStatus(SeatStatusEnum.HOLD);
-        this.seatRepository.save(seat.get());
-
-        ShowTime showtime = this.showTimeRepository
-                .findById(reqSeatHold.getShowtimeId())
+        ShowTime showtime = showTimeRepository.findById(req.getShowtimeId())
                 .orElseThrow(() -> new RuntimeException("ShowTime not found"));
 
-        SeatHold seatHold = new SeatHold();
-        seatHold.setSeat(seat.get());
-        seatHold.setShowTime(showtime);
-        seatHold.setUser(currentUserDB);
+        List<Seat> seats = seatRepository.lockSeats(req.getSeatIds());
 
-        seatHold.setExpiresAt(Instant.now().plus(10, ChronoUnit.MINUTES));
+        if (seats.size() != req.getSeatIds().size()) {
+            throw new RuntimeException("Some seats not found");
+        }
 
-        this.seatHoldRepository.save(seatHold);
+        for (Seat seat : seats) {
+            if (seat.getStatus() != SeatStatusEnum.AVAILABLE) {
+                throw new RuntimeException("Seat " + seat.getId() + " is not available");
+            }
+        }
 
-        return seatHold;
+        Instant expiresAt = Instant.now().plus(5, ChronoUnit.MINUTES);
+
+        List<SeatHold> seatHolds = new ArrayList<>();
+
+        for (Seat seat : seats) {
+            seat.setStatus(SeatStatusEnum.HOLD);
+
+            SeatHold hold = new SeatHold();
+            hold.setSeat(seat);
+            hold.setShowTime(showtime);
+            hold.setUser(user);
+            hold.setExpiresAt(expiresAt);
+
+            seatHolds.add(hold);
+        }
+
+        seatRepository.saveAll(seats);
+        seatHoldRepository.saveAll(seatHolds);
+
+        return seatHolds;
+    }
+
+    @Transactional
+    public void removeSeatHold() {
+
+        String email = SecurityUtil.getCurrentUserLogin()
+                .orElseThrow(() -> new RuntimeException("Unauthenticated"));
+
+        User user = userRepository.findUserByEmail(email);
+
+        List<SeatHold> allHoldsOfUser = getSeatHoldByUserId(user.getId());
+
+        if (allHoldsOfUser.isEmpty())
+            return;
+
+        List<Seat> seats = allHoldsOfUser.stream()
+                .map(SeatHold::getSeat)
+                .toList();
+
+        for (Seat seat : seats) {
+            seat.setStatus(SeatStatusEnum.AVAILABLE);
+        }
+
+        seatRepository.saveAll(seats);
+        seatHoldRepository.deleteAll(allHoldsOfUser);
     }
 
     public List<SeatHold> getSeatHoldByUserId(Long id) {
