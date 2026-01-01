@@ -2,6 +2,7 @@ package com.cinema.ticketbooking.service;
 
 import com.cinema.ticketbooking.domain.response.ResUserDto;
 import com.cinema.ticketbooking.domain.response.ResUserJwtDto;
+import com.cinema.ticketbooking.util.error.BadRequestException;
 import com.cinema.ticketbooking.util.error.IdInvalidException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -22,21 +23,28 @@ import com.cinema.ticketbooking.domain.response.ResLoginDto;
 import com.cinema.ticketbooking.util.SecurityUtil;
 import com.cinema.ticketbooking.util.error.DuplicateEmailException;
 
+import java.time.Instant;
+import java.util.Random;
+
 @Service
 public class AuthService {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final SecurityUtil securityUtil;
+    private final EmailService emailService;
+
     @Value("${ticketbooking.jwt.refresh-token-validity-in-seconds}")
     private long refreshTokenExpiration;
 
     AuthService(UserService userService, PasswordEncoder passwordEncoder,
-            AuthenticationManagerBuilder authenticationManagerBuilder, SecurityUtil securityUtil) {
+            AuthenticationManagerBuilder authenticationManagerBuilder, SecurityUtil securityUtil,
+            EmailService emailService) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.securityUtil = securityUtil;
+        this.emailService = emailService;
     }
 
     public ResLoginDto login(ReqLoginDto reqLoginDto) {
@@ -50,7 +58,8 @@ public class AuthService {
         User currentUserDB = this.userService.getUserByEmail(reqLoginDto.getEmail());
         ResUserJwtDto jwtUser = null;
         if (currentUserDB != null) {
-            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(), currentUserDB.getRole());
+            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(),
+                    currentUserDB.getRole());
             response.setUser(jwtUser);
         }
 
@@ -91,21 +100,20 @@ public class AuthService {
         return response;
     }
 
-    public ResUserJwtDto getAccount(){
+    public ResUserJwtDto getAccount() {
         String email = SecurityUtil.getCurrentUserLogin().isPresent() ? SecurityUtil.getCurrentUserLogin().get() : "";
 
         ResUserJwtDto jwtUser = null;
         User currentUserDB = this.userService.getUserByEmail(email);
         if (currentUserDB != null) {
-            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(), currentUserDB.getRole());
+            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(),
+                    currentUserDB.getRole());
         }
 
         return jwtUser;
     }
 
-
-    public ResponseEntity<ResLoginDto> getRefreshToken (String refreshToken)
-    {
+    public ResponseEntity<ResLoginDto> getRefreshToken(String refreshToken) {
         // check valid
         Jwt decodedToken = this.securityUtil.checkValidRefreshToken(refreshToken);
         String email = decodedToken.getSubject();
@@ -122,7 +130,8 @@ public class AuthService {
         User currentUserDB = this.userService.getUserByEmail(email);
         ResUserJwtDto jwtUser = null;
         if (currentUserDB != null) {
-            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(), currentUserDB.getRole());
+            jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(),
+                    currentUserDB.getRole());
             response.setUser(jwtUser);
         }
 
@@ -136,7 +145,7 @@ public class AuthService {
         // update user
         this.userService.updateUserToken(new_refreshToken, email);
 
-        //set cookies
+        // set cookies
         ResponseCookie resCookie = ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
                 .secure(true)
@@ -148,6 +157,77 @@ public class AuthService {
                 .body(response);
     }
 
+    public void forgotPassword(String email) {
+        User user = this.userService.getUserByEmail(email);
+        if (user == null) {
+            throw new BadRequestException("Email does not exist in system");
+        }
 
+        // Generate 6-digit OTP
+        String otp = String.format("%06d", new Random().nextInt(999999));
 
+        // Set OTP expiration to 5 minutes from now
+        Instant otpExpiration = Instant.now().plusSeconds(300);
+
+        // Save OTP to user
+        user.setOtpCode(otp);
+        user.setOtpExpiration(otpExpiration);
+        this.userService.saveUser(user);
+
+        // Send OTP via email
+        this.emailService.sendOtpEmail(email, otp);
+    }
+
+    public String verifyOtp(String email, String otp) {
+        User user = this.userService.getUserByEmail(email);
+        if (user == null) {
+            throw new BadRequestException("Email does not exist in system");
+        }
+
+        if (user.getOtpCode() == null || user.getOtpExpiration() == null) {
+            throw new BadRequestException("No OTP found for this email. Please request a new OTP");
+        }
+
+        // Check if OTP is expired
+        if (Instant.now().isAfter(user.getOtpExpiration())) {
+            throw new BadRequestException("OTP has expired. Please request a new OTP");
+        }
+
+        // Check if OTP matches
+        if (!user.getOtpCode().equals(otp)) {
+            throw new BadRequestException("Invalid OTP");
+        }
+
+        // Generate reset token
+        String resetToken = securityUtil.createResetToken(email);
+
+        // Save reset token to user
+        user.setResetToken(resetToken);
+
+        // Clear OTP after verification
+        user.setOtpCode(null);
+        user.setOtpExpiration(null);
+
+        this.userService.saveUser(user);
+
+        return resetToken;
+    }
+
+    public void resetPassword(String resetToken, String newPassword) {
+        // Find user by reset token
+        User user = this.userService.getUserByResetToken(resetToken);
+
+        if (user == null) {
+            throw new BadRequestException("Invalid or expired reset token");
+        }
+
+        // Update password
+        String hashPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(hashPassword);
+
+        // Clear reset token
+        user.setResetToken(null);
+
+        this.userService.saveUser(user);
+    }
 }

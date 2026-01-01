@@ -1,7 +1,11 @@
 package com.cinema.ticketbooking.controller;
 
+import com.cinema.ticketbooking.domain.request.ReqForgotPasswordDto;
+import com.cinema.ticketbooking.domain.request.ReqResetPasswordDto;
+import com.cinema.ticketbooking.domain.request.ReqVerifyOtpDto;
 import com.cinema.ticketbooking.domain.response.ResUserDto;
 import com.cinema.ticketbooking.domain.response.ResUserJwtDto;
+import com.cinema.ticketbooking.domain.response.ResVerifyOtpDto;
 import com.cinema.ticketbooking.service.UserService;
 import com.cinema.ticketbooking.util.SecurityUtil;
 import com.cinema.ticketbooking.util.annotation.ApiMessage;
@@ -92,6 +96,29 @@ public class AuthController {
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, deleteSpringCookie.toString()).build();
+    }
+
+    @PostMapping("/forgot-password")
+    @ApiMessage("Send OTP to email for password reset")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ReqForgotPasswordDto request) {
+        this.authService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/verify-otp")
+    @ApiMessage("Verify OTP and get reset token")
+    public ResponseEntity<ResVerifyOtpDto> verifyOtp(@Valid @RequestBody ReqVerifyOtpDto request) {
+        String resetToken = this.authService.verifyOtp(request.getEmail(), request.getOtp());
+        ResVerifyOtpDto response = new ResVerifyOtpDto();
+        response.setResetToken(resetToken);
+        return ResponseEntity.ok().body(response);
+    }
+
+    @PostMapping("/reset-password")
+    @ApiMessage("Reset password with reset token")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ReqResetPasswordDto request) {
+        this.authService.resetPassword(request.getResetToken(), request.getNewPassword());
+        return ResponseEntity.ok().build();
     }
 
 }
