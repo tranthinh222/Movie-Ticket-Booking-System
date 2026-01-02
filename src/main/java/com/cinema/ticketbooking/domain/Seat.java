@@ -34,9 +34,6 @@ public class Seat {
     private String seatRow;
     private int number;
 
-    @Enumerated(EnumType.STRING)
-    private SeatStatusEnum status;
-
     @OneToMany(mappedBy = "seat", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonIgnore
     List<BookingItem> bookingItems;

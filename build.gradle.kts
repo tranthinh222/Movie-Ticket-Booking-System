@@ -54,6 +54,10 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
     implementation("com.cloudinary:cloudinary-http44:1.38.0")
 	testImplementation("org.mockito:mockito-inline:5.2.0")
+	
+	// QR Code generation
+	implementation("com.google.zxing:core:3.5.2")
+	implementation("com.google.zxing:javase:3.5.2")
 
 }
 

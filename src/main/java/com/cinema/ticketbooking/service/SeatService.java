@@ -2,13 +2,18 @@ package com.cinema.ticketbooking.service;
 
 import com.cinema.ticketbooking.domain.Seat;
 import com.cinema.ticketbooking.domain.SeatVariant;
+import com.cinema.ticketbooking.domain.ShowTime;
 import com.cinema.ticketbooking.domain.Auditorium;
 import com.cinema.ticketbooking.domain.request.ReqCreateSeatDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateSeatDto;
+import com.cinema.ticketbooking.domain.response.ResSeatAvailabilityDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AuditoriumRepository;
+import com.cinema.ticketbooking.repository.BookingItemRepository;
+import com.cinema.ticketbooking.repository.SeatHoldRepository;
 import com.cinema.ticketbooking.repository.SeatRepository;
 import com.cinema.ticketbooking.repository.SeatVariantRepository;
+import com.cinema.ticketbooking.repository.ShowTimeRepository;
 import com.cinema.ticketbooking.util.constant.SeatStatusEnum;
 import com.cinema.ticketbooking.util.constant.SeatTypeEnum;
 import org.springframework.data.domain.Page;
@@ -24,12 +29,19 @@ public class SeatService {
     private final SeatRepository seatRepository;
     private final AuditoriumRepository auditoriumRepository;
     private final SeatVariantRepository seatVariantRepository;
+    private final SeatHoldRepository seatHoldRepository;
+    private final BookingItemRepository bookingItemRepository;
+    private final ShowTimeRepository showTimeRepository;
 
     public SeatService(SeatRepository seatRepository, AuditoriumRepository auditoriumRepository,
-            SeatVariantRepository seatVariantRepository) {
+            SeatVariantRepository seatVariantRepository, SeatHoldRepository seatHoldRepository,
+            BookingItemRepository bookingItemRepository, ShowTimeRepository showTimeRepository) {
         this.seatRepository = seatRepository;
         this.auditoriumRepository = auditoriumRepository;
         this.seatVariantRepository = seatVariantRepository;
+        this.seatHoldRepository = seatHoldRepository;
+        this.bookingItemRepository = bookingItemRepository;
+        this.showTimeRepository = showTimeRepository;
     }
 
     public ResultPaginationDto getAllSeats(Specification<Seat> spec, Pageable pageable) {
@@ -64,7 +76,6 @@ public class SeatService {
         seat.setSeatVariant(seatVariant.orElse(null));
         seat.setSeatRow(reqSeat.getSeatRow());
         seat.setNumber(reqSeat.getNumber());
-        seat.setStatus(reqSeat.getStatus());
 
         this.seatRepository.save(seat);
         return seat;
@@ -76,7 +87,6 @@ public class SeatService {
             return null;
         seat.setSeatRow(reqSeat.getSeatRow());
         seat.setNumber(reqSeat.getNumber());
-        seat.setStatus(reqSeat.getStatus());
         this.seatRepository.save(seat);
         return seat;
     }
@@ -103,8 +113,6 @@ public class SeatService {
                 seat.setAuditorium(auditorium);
                 seat.setSeatRow(String.valueOf(row));
                 seat.setNumber(number);
-                seat.setStatus(SeatStatusEnum.AVAILABLE);
-
                 seat.setSeatVariant(row == 'F' ? vipVariant.get() : normalVariant.get());
 
                 seats.add(seat);
@@ -113,6 +121,46 @@ public class SeatService {
 
         seatRepository.saveAll(seats);
         return seats;
+    }
+
+    /**
+     * Lấy danh sách ghế với trạng thái cho một showtime cụ thể
+     */
+    public List<ResSeatAvailabilityDto> getSeatAvailabilityByShowTime(Long showTimeId) {
+        ShowTime showTime = showTimeRepository.findById(showTimeId)
+                .orElseThrow(() -> new RuntimeException("ShowTime not found"));
+
+        List<Seat> seats = seatRepository.findByAuditoriumId(showTime.getAuditorium().getId());
+        List<ResSeatAvailabilityDto> result = new ArrayList<>();
+
+        for (Seat seat : seats) {
+            ResSeatAvailabilityDto dto = new ResSeatAvailabilityDto();
+            dto.setSeatId(seat.getId());
+            dto.setSeatRow(seat.getSeatRow());
+            dto.setNumber(seat.getNumber());
+
+            // Set seat variant info
+            if (seat.getSeatVariant() != null) {
+                dto.setSeatVariantId(seat.getSeatVariant().getId());
+                dto.setSeatVariantName(seat.getSeatVariant().getSeatType().name());
+                dto.setBasePrice(seat.getSeatVariant().getBasePrice());
+                dto.setBonus(seat.getSeatVariant().getBonus());
+                dto.setTotalPrice(seat.getSeatVariant().getBasePrice() + seat.getSeatVariant().getBonus());
+            }
+
+            // Check status theo showtime
+            boolean isBooked = bookingItemRepository.existsBySeatIdAndShowTimeId(seat.getId(), showTimeId);
+            if (isBooked) {
+                dto.setStatus(SeatStatusEnum.BOOKED);
+            } else {
+                boolean isHeld = seatHoldRepository.existsBySeatIdAndShowTimeId(seat.getId(), showTimeId);
+                dto.setStatus(isHeld ? SeatStatusEnum.HOLD : SeatStatusEnum.AVAILABLE);
+            }
+
+            result.add(dto);
+        }
+
+        return result;
     }
 
 }

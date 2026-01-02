@@ -89,7 +89,6 @@ public class AuditoriumService {
         dto.setId(seat.getId());
         dto.setSeatRow(seat.getSeatRow());
         dto.setNumber(seat.getNumber());
-        dto.setStatus(seat.getStatus().name());
         dto.setSeatVariantName(seat.getSeatVariant() != null ? seat.getSeatVariant().getSeatType().name() : null);
         return dto;
     }

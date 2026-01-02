@@ -38,6 +38,9 @@ public class Booking {
         private BookingStatusEnum status;
         private Double total_price;
 
+        @Column(columnDefinition = "TEXT")
+        private String qrCode; // Base64 encoded QR code or QR code URL
+
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
         private Instant createdAt;
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")

@@ -14,6 +14,7 @@ import com.cinema.ticketbooking.domain.ShowTime;
 import com.cinema.ticketbooking.domain.User;
 import com.cinema.ticketbooking.domain.request.ReqCreateSeatHoldDto;
 import com.cinema.ticketbooking.domain.request.ReqRemoveSeatHold;
+import com.cinema.ticketbooking.repository.BookingItemRepository;
 import com.cinema.ticketbooking.repository.SeatHoldRepository;
 import com.cinema.ticketbooking.repository.SeatRepository;
 import com.cinema.ticketbooking.repository.ShowTimeRepository;
@@ -29,13 +30,16 @@ public class SeatHoldService {
     private final UserRepository userRepository;
     private final ShowTimeRepository showTimeRepository;
     private final SeatRepository seatRepository;
+    private final BookingItemRepository bookingItemRepository;
 
     public SeatHoldService(SeatHoldRepository seatHoldRepository, UserRepository userRepository,
-            ShowTimeRepository showTimeRepository, SeatRepository seatRepository, SeatService seatService) {
+            ShowTimeRepository showTimeRepository, SeatRepository seatRepository,
+            SeatService seatService, BookingItemRepository bookingItemRepository) {
         this.seatHoldRepository = seatHoldRepository;
         this.userRepository = userRepository;
         this.showTimeRepository = showTimeRepository;
         this.seatRepository = seatRepository;
+        this.bookingItemRepository = bookingItemRepository;
     }
 
     @Transactional
@@ -55,9 +59,18 @@ public class SeatHoldService {
             throw new RuntimeException("Some seats not found");
         }
 
+        // Kiểm tra xem ghế đã được hold hoặc booked cho showtime này chưa
         for (Seat seat : seats) {
-            if (seat.getStatus() != SeatStatusEnum.AVAILABLE) {
-                throw new RuntimeException("Seat " + seat.getId() + " is not available");
+            // Kiểm tra SeatHold hiện tại cho showtime này
+            boolean isHeld = seatHoldRepository.existsBySeatIdAndShowTimeId(seat.getId(), showtime.getId());
+            if (isHeld) {
+                throw new RuntimeException("Seat " + seat.getId() + " is already held for this showtime");
+            }
+
+            // Kiểm tra BookingItem (ghế đã được booking) cho showtime này
+            boolean isBooked = bookingItemRepository.existsBySeatIdAndShowTimeId(seat.getId(), showtime.getId());
+            if (isBooked) {
+                throw new RuntimeException("Seat " + seat.getId() + " is already booked for this showtime");
             }
         }
 
@@ -66,8 +79,6 @@ public class SeatHoldService {
         List<SeatHold> seatHolds = new ArrayList<>();
 
         for (Seat seat : seats) {
-            seat.setStatus(SeatStatusEnum.HOLD);
-
             SeatHold hold = new SeatHold();
             hold.setSeat(seat);
             hold.setShowTime(showtime);
@@ -77,7 +88,6 @@ public class SeatHoldService {
             seatHolds.add(hold);
         }
 
-        seatRepository.saveAll(seats);
         seatHoldRepository.saveAll(seatHolds);
 
         return seatHolds;
@@ -96,15 +106,7 @@ public class SeatHoldService {
         if (allHoldsOfUser.isEmpty())
             return;
 
-        List<Seat> seats = allHoldsOfUser.stream()
-                .map(SeatHold::getSeat)
-                .toList();
-
-        for (Seat seat : seats) {
-            seat.setStatus(SeatStatusEnum.AVAILABLE);
-        }
-
-        seatRepository.saveAll(seats);
+        // Chỉ xóa SeatHold, không cần cập nhật Seat status
         seatHoldRepository.deleteAll(allHoldsOfUser);
     }
 
