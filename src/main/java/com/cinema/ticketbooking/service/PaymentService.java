@@ -51,4 +51,16 @@ public class PaymentService {
         return this.paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new BadRequestException("Payment not found with id: " + paymentId));
     }
+
+    public Payment savePayment(Payment payment) {
+        return this.paymentRepository.save(payment);
+    }
+
+    public Payment getPaymentByTransactionRef(String transactionRef) {
+        Payment payment = this.paymentRepository.findByTransactionRef(transactionRef);
+        if (payment == null) {
+            throw new BadRequestException("Payment not found with transaction reference: " + transactionRef);
+        }
+        return payment;
+    }
 }

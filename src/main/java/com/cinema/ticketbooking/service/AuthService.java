@@ -69,6 +69,7 @@ public class AuthService {
         ResUserJwtDto jwtUser = null;
         if (currentUserDB != null) {
             jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(),
+                    currentUserDB.getPhone(), currentUserDB.getGender(), currentUserDB.getAvatar(),
                     currentUserDB.getRole());
             response.setUser(jwtUser);
         }
@@ -116,6 +117,7 @@ public class AuthService {
         User currentUserDB = this.userService.getUserByEmail(email);
         if (currentUserDB != null) {
             jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(),
+                    currentUserDB.getPhone(), currentUserDB.getGender(), currentUserDB.getAvatar(),
                     currentUserDB.getRole());
         }
 
@@ -140,6 +142,7 @@ public class AuthService {
         ResUserJwtDto jwtUser = null;
         if (currentUserDB != null) {
             jwtUser = new ResUserJwtDto(currentUserDB.getId(), currentUserDB.getUsername(), currentUserDB.getEmail(),
+                    currentUserDB.getPhone(), currentUserDB.getGender(), currentUserDB.getAvatar(),
                     currentUserDB.getRole());
             response.setUser(jwtUser);
         }
