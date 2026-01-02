@@ -52,7 +52,7 @@ public class AuditoriumController {
         return ResponseEntity.status(HttpStatus.OK).body(auditorium);
     }
 
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/auditoriums")
     @ApiMessage("create a auditorium")
     public ResponseEntity<Auditorium> createAuditorium(@Valid @RequestBody ReqCreateAuditoriumDto reqAuditorium)
@@ -65,7 +65,7 @@ public class AuditoriumController {
 
     }
 
-    // @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/auditoriums/{id}")
     @ApiMessage("delete a auditorium")
     public ResponseEntity<Void> deleteAuditorium(@PathVariable("id") Long id) throws Exception {
