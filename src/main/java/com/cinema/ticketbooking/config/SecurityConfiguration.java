@@ -68,7 +68,8 @@ public class SecurityConfiguration {
                                         "/api/v1/auth/forgot-password", "/api/v1/auth/verify-otp",
                                         "/api/v1/payments/vnpay/callback",
                                         "/api/v1/auth/reset-password", "/api/v1/users",
-                                        "/api/v1/auth/refresh", "/h2-console/**")
+                                        "/api/v1/auth/refresh", "/h2-console/**",
+                                        "/api/v1/films", "/api/v1/films/**")
                                 .permitAll()
                                 .anyRequest().authenticated()
 
