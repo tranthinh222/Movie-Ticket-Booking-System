@@ -7,6 +7,8 @@ import com.cinema.ticketbooking.domain.response.ResUpdateUserDto;
 import com.cinema.ticketbooking.domain.response.ResUserDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.UserRepository;
+import com.cinema.ticketbooking.util.error.BadRequestException;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -97,17 +99,29 @@ public class UserService {
         if (userOptional.isPresent()) {
             User user = userOptional.get();
 
+            // Debug log
+            System.out.println("Before update - Phone: " + user.getPhone());
+            System.out.println("Request Phone: " + reqUser.getPhone());
+
             // Cập nhật thông tin mới
             user.setUsername(reqUser.getUsername());
             user.setPhone(reqUser.getPhone());
+            user.setGender(reqUser.getGender());
+            user.setAvatar(reqUser.getAvatar());
+
+            System.out.println("After setPhone - Phone: " + user.getPhone());
 
             // Lưu vào database
             User savedUser = this.userRepository.save(user);
+
+            System.out.println("After save - Phone: " + savedUser.getPhone());
 
             // Trả về response
             ResUpdateUserDto updatedUser = new ResUpdateUserDto();
             updatedUser.setUsername(savedUser.getUsername());
             updatedUser.setPhone(savedUser.getPhone());
+            updatedUser.setGender(savedUser.getGender());
+            updatedUser.setAvatar(savedUser.getAvatar());
 
             return updatedUser;
         }
@@ -127,11 +141,26 @@ public class UserService {
         }
     }
 
-    public void updateMyPassword(String email, String password) {
+    public void updateMyPassword(String email, String oldPassword, String newPassword) {
         User user = this.getUserByEmail(email);
-        String hashPassword = passwordEncoder.encode(password);
+
+        // Debug log
+        System.out.println("=== Change Password Debug ===");
+        System.out.println("Email: " + email);
+        System.out.println("User found: " + (user != null ? user.getUsername() : "null"));
+        System.out.println("Old password matches: " + passwordEncoder.matches(oldPassword, user.getPassword()));
+
+        // Verify old password
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BadRequestException("Old password is incorrect");
+        }
+
+        // Hash and save new password
+        String hashPassword = passwordEncoder.encode(newPassword);
         user.setPassword(hashPassword);
         this.userRepository.save(user);
+
+        System.out.println("Password changed successfully for: " + email);
     }
 
     public User getUserByRefreshTokenAndEmail(String refreshToken, String email) {

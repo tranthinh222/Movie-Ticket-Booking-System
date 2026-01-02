@@ -1,6 +1,7 @@
 package com.cinema.ticketbooking.domain;
 
 import com.cinema.ticketbooking.util.SecurityUtil;
+import com.cinema.ticketbooking.util.constant.GenderEnum;
 import com.cinema.ticketbooking.util.constant.RoleEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -36,6 +37,9 @@ public class User {
         private String email;
         private String password;
         private String phone;
+        @Enumerated(EnumType.STRING)
+        private GenderEnum gender;
+        private String avatar;
         @Column(columnDefinition = "MEDIUMTEXT")
         private String refreshToken;
 

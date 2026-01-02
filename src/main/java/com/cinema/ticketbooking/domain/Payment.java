@@ -32,6 +32,10 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private PaymentStatusEnum status;
+
+    @Column(unique = true)
+    private String transactionRef; // UUID for VNPay transaction reference
+
     private Instant transaction_time;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant createdAt;

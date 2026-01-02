@@ -63,6 +63,13 @@ public class VNPayService {
             throw new BadRequestException("Payment not found");
         }
 
+        // Generate UUID for transaction reference if not exists
+        if (payment.getTransactionRef() == null || payment.getTransactionRef().isEmpty()) {
+            String transactionRef = UUID.randomUUID().toString();
+            payment.setTransactionRef(transactionRef);
+            paymentService.savePayment(payment);
+        }
+
         // Calculate amount (VNPay requires amount in VND * 100)
         long amount = (long) (price * 100);
 
@@ -72,7 +79,7 @@ public class VNPayService {
         vnpParams.put("vnp_TmnCode", vnpTmnCode);
         vnpParams.put("vnp_Amount", String.valueOf(amount));
         vnpParams.put("vnp_CurrCode", "VND");
-        vnpParams.put("vnp_TxnRef", payment.getId().toString());
+        vnpParams.put("vnp_TxnRef", payment.getTransactionRef()); // Use UUID instead of payment ID
         vnpParams.put("vnp_OrderInfo",
                 orderInfo != null ? orderInfo : "Thanh toan ve xem phim #" + payment.getBooking().getId());
         vnpParams.put("vnp_OrderType", "other");
@@ -179,11 +186,14 @@ public class VNPayService {
         }
 
         String responseCode = params.get("vnp_ResponseCode");
-        Long paymentId = Long.parseLong(params.get("vnp_TxnRef"));
+        String transactionRef = params.get("vnp_TxnRef"); // UUID instead of payment ID
+
+        // Get payment by transaction reference
+        Payment payment = paymentService.getPaymentByTransactionRef(transactionRef);
 
         if ("00".equals(responseCode)) {
             // Payment successful
-            Payment payment = paymentService.updatePaymentStatus(paymentId, PaymentStatusEnum.PAID);
+            paymentService.updatePaymentStatus(payment.getId(), PaymentStatusEnum.PAID);
 
             // Generate QR code for booking
             Booking booking = payment.getBooking();
@@ -205,16 +215,15 @@ public class VNPayService {
                 // Send email with QR code
                 emailService.sendBookingConfirmationWithQR(booking);
             }
-            return directUrlSuccess + "?paymentId=" + paymentId + "&bookingId=" + booking.getId();
+            return directUrlSuccess + "?paymentId=" + payment.getId() + "&bookingId=" + booking.getId();
         } else {
             // Payment failed - delete booking, booking items and payment
-            Payment payment = paymentService.getPaymentById(paymentId);
             if (payment != null && payment.getBooking() != null) {
                 Long bookingId = payment.getBooking().getId();
                 // Delete booking (cascade will delete booking items and payment)
                 bookingService.deleteBooking(bookingId);
             }
-            return directUrlError + "?paymentId=" + paymentId + "&responseCode=" + responseCode;
+            return directUrlError + "?paymentId=" + payment.getId() + "&responseCode=" + responseCode;
         }
     }
 

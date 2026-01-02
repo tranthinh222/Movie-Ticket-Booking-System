@@ -1,6 +1,7 @@
 package com.cinema.ticketbooking.controller;
 
 import com.cinema.ticketbooking.domain.User;
+import com.cinema.ticketbooking.domain.request.ReqChangePasswordDto;
 import com.cinema.ticketbooking.domain.request.ReqCreateUserDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateUserDto;
 import com.cinema.ticketbooking.domain.response.ResUpdateUserDto;
@@ -11,6 +12,9 @@ import com.cinema.ticketbooking.util.annotation.ApiMessage;
 import com.cinema.ticketbooking.util.error.BadRequestException;
 import com.cinema.ticketbooking.util.error.IdInvalidException;
 import com.turkraft.springfilter.boot.Filter;
+
+import jakarta.validation.Valid;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -84,18 +88,14 @@ public class UserController {
 
     // @PreAuthorize("hasRole('CUSTOMER')")
     @PutMapping("/users/me/password")
-    @ApiMessage("update an user")
-    public ResponseEntity<String> updateMyPassword(@RequestBody String password) {
-        if (password == null || password.isBlank()) {
-            throw new BadRequestException("Password is not blank");
-        }
-
+    @ApiMessage("Change password")
+    public ResponseEntity<Void> updateMyPassword(@Valid @RequestBody ReqChangePasswordDto request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String email = auth.getName();
-        this.userService.updateMyPassword(email, password);
 
-        return ResponseEntity.status(HttpStatus.OK).body("Update password successfully");
+        this.userService.updateMyPassword(email, request.getCurrentPassword(), request.getNewPassword());
 
+        return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasRole('ADMIN')")
