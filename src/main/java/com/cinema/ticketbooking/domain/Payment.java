@@ -1,7 +1,7 @@
 package com.cinema.ticketbooking.domain;
 
 import com.cinema.ticketbooking.util.SecurityUtil;
-import com.cinema.ticketbooking.util.constant.MethodEnum;
+import com.cinema.ticketbooking.util.constant.PaymentMethodEnum;
 import com.cinema.ticketbooking.util.constant.PaymentStatusEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
@@ -26,9 +26,11 @@ public class Payment {
     private SeatHold seatHold;
 
     @Enumerated(EnumType.STRING)
-    private MethodEnum method;
+    @Column(length = 20)
+    private PaymentMethodEnum method;
 
     @Enumerated(EnumType.STRING)
+    @Column(length = 20)
     private PaymentStatusEnum status;
     private Instant transaction_time;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
@@ -39,16 +41,18 @@ public class Payment {
     private String updatedBy;
 
     @PrePersist
-    public void handleBeforeCreate () {
+    public void handleBeforeCreate() {
         this.createdBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
         createdAt = Instant.now();
     }
 
     @PreUpdate
-    public void handleBeforeUpdate () {
+    public void handleBeforeUpdate() {
         this.updatedBy = SecurityUtil.getCurrentUserLogin().isPresent()
-                ? SecurityUtil.getCurrentUserLogin().get() : "";
+                ? SecurityUtil.getCurrentUserLogin().get()
+                : "";
         updatedAt = Instant.now();
     }
 }

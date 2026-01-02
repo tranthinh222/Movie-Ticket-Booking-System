@@ -1,8 +1,6 @@
 package com.cinema.ticketbooking.domain;
 
 import com.cinema.ticketbooking.repository.SeatHoldRepository;
-import com.cinema.ticketbooking.repository.SeatRepository;
-import com.cinema.ticketbooking.util.constant.SeatStatusEnum;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -12,39 +10,25 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.List;
 
+/**
+ * Scheduler để tự động xóa các SeatHold đã hết hạn (quá 5 phút)
+ * Không cần cập nhật Seat status vì ghế không còn có trạng thái toàn cục nữa
+ */
 @Component
 public class SeatHoldCleanupScheduler {
 
     @Autowired
     private SeatHoldRepository seatHoldRepository;
 
-    @Autowired
-    private SeatRepository seatRepository;
-
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 60000) // Chạy mỗi 1 phút
     @Transactional
     public void cleanupExpiredSeatHolds() {
         Instant now = Instant.now();
         List<SeatHold> expiredHolds = seatHoldRepository.findExpiredSeatHolds(now);
 
-        int deletedCount = 0;
-        int updatedSeatsCount = 0;
-
-        for (SeatHold hold : expiredHolds) {
-            Seat seat = hold.getSeat();
-            if (seat != null && seat.getStatus() == SeatStatusEnum.HOLD) {
-                seat.setStatus(SeatStatusEnum.AVAILABLE);
-                seatRepository.save(seat);
-                updatedSeatsCount++;
-            }
-            seatHoldRepository.delete(hold);
-            deletedCount++;
+        if (!expiredHolds.isEmpty()) {
+            seatHoldRepository.deleteAll(expiredHolds);
+            System.out.println("Cleanup at " + now + ": Deleted " + expiredHolds.size() + " expired SeatHolds.");
         }
-
-        // if (deletedCount > 0) {
-        // System.out.println("Cleanup lúc " + now + ": Đã xóa " + deletedCount + "
-        // SeatHold. " +
-        // "Khôi phục " + updatedSeatsCount + " Seat từ HOLD sang AVAILABLE.");
-        // }
     }
 }

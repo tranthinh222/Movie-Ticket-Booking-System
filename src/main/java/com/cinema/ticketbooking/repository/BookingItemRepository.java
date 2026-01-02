@@ -7,4 +7,9 @@ import com.cinema.ticketbooking.domain.BookingItem;
 
 public interface BookingItemRepository extends JpaRepository<BookingItem, Long>, JpaSpecificationExecutor<BookingItem> {
 
+    /**
+     * Kiểm tra ghế đã được booking cho showtime cụ thể chưa
+     */
+    boolean existsBySeatIdAndShowTimeId(Long seatId, Long showTimeId);
+
 }

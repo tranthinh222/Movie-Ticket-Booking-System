@@ -4,6 +4,8 @@ import com.cinema.ticketbooking.domain.response.ResUserDto;
 import com.cinema.ticketbooking.domain.response.ResUserJwtDto;
 import com.cinema.ticketbooking.util.error.BadRequestException;
 import com.cinema.ticketbooking.util.error.IdInvalidException;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
@@ -37,6 +39,14 @@ public class AuthService {
     @Value("${ticketbooking.jwt.refresh-token-validity-in-seconds}")
     private long refreshTokenExpiration;
 
+    // Inner class to wrap login result with refresh token
+    @Data
+    @AllArgsConstructor
+    public static class LoginResult {
+        private ResLoginDto response;
+        private String refreshToken;
+    }
+
     AuthService(UserService userService, PasswordEncoder passwordEncoder,
             AuthenticationManagerBuilder authenticationManagerBuilder, SecurityUtil securityUtil,
             EmailService emailService) {
@@ -47,7 +57,7 @@ public class AuthService {
         this.emailService = emailService;
     }
 
-    public ResLoginDto login(ReqLoginDto reqLoginDto) {
+    public LoginResult login(ReqLoginDto reqLoginDto) {
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(reqLoginDto.getEmail(),
                 reqLoginDto.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authToken);
@@ -69,12 +79,11 @@ public class AuthService {
 
         // create refresh token
         String refreshToken = this.securityUtil.createRefreshToken(currentUserDB.getEmail(), response);
-        response.setRefreshToken(refreshToken);
 
         // update user
         this.userService.updateUserToken(refreshToken, reqLoginDto.getEmail());
 
-        return response;
+        return new LoginResult(response, refreshToken);
     }
 
     public ResUserDto register(ReqRegisterDto reqRegisterDto) {
@@ -146,7 +155,7 @@ public class AuthService {
         this.userService.updateUserToken(new_refreshToken, email);
 
         // set cookies
-        ResponseCookie resCookie = ResponseCookie.from("refresh_token", refreshToken)
+        ResponseCookie resCookie = ResponseCookie.from("refresh_token", new_refreshToken)
                 .httpOnly(true)
                 .secure(true)
                 .path("/")

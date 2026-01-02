@@ -24,4 +24,9 @@ public interface SeatHoldRepository extends JpaRepository<SeatHold, Long>, JpaSp
             """)
     List<SeatHold> findByUserIdFetchFull(@Param("userId") Long userId);
 
+    /**
+     * Kiểm tra ghế đã được hold cho showtime cụ thể chưa
+     */
+    boolean existsBySeatIdAndShowTimeId(Long seatId, Long showTimeId);
+
 }

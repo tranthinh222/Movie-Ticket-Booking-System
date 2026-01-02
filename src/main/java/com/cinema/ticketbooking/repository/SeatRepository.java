@@ -20,5 +20,4 @@ public interface SeatRepository extends JpaRepository<Seat, Long>, JpaSpecificat
     List<Seat> lockSeats(@Param("seatIds") List<Long> seatIds);
 
     List<Seat> findByAuditoriumId(Long auditoriumId);
-
 }

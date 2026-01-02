@@ -3,7 +3,7 @@ package com.cinema.ticketbooking.service;
 import com.cinema.ticketbooking.domain.Booking;
 import com.cinema.ticketbooking.domain.Payment;
 import com.cinema.ticketbooking.repository.PaymentRepository;
-import com.cinema.ticketbooking.util.constant.MethodEnum;
+import com.cinema.ticketbooking.util.constant.PaymentMethodEnum;
 import com.cinema.ticketbooking.util.constant.PaymentStatusEnum;
 import com.cinema.ticketbooking.util.error.BadRequestException;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ public class PaymentService {
         this.paymentRepository = paymentRepository;
     }
 
-    public Payment createPayment(Booking booking, MethodEnum method) {
+    public Payment createPayment(Booking booking, PaymentMethodEnum method) {
         if (booking == null) {
             throw new BadRequestException("Booking cannot be null");
         }
@@ -27,7 +27,7 @@ public class PaymentService {
         Payment payment = new Payment();
         payment.setBooking(booking);
         payment.setMethod(method);
-        payment.setStatus(PaymentStatusEnum.CASH); // Default status for initial payment
+        payment.setStatus(PaymentStatusEnum.UNPAID); // Default status for initial payment
         payment.setTransaction_time(Instant.now());
 
         return this.paymentRepository.save(payment);

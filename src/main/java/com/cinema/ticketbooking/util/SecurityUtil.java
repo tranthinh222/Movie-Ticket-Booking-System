@@ -114,6 +114,26 @@ public class SecurityUtil {
                 .map(auth -> (String) auth.getCredentials());
     }
 
+    public static Optional<Long> getCurrentUserId() {
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        Authentication authentication = securityContext.getAuthentication();
+        
+        if (authentication != null && authentication.getPrincipal() instanceof Jwt jwt) {
+            Object userClaim = jwt.getClaim("user");
+            if (userClaim instanceof java.util.Map) {
+                @SuppressWarnings("unchecked")
+                java.util.Map<String, Object> userMap = (java.util.Map<String, Object>) userClaim;
+                Object userId = userMap.get("id");
+                if (userId instanceof Integer) {
+                    return Optional.of(((Integer) userId).longValue());
+                } else if (userId instanceof Long) {
+                    return Optional.of((Long) userId);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
     public String createResetToken(String email) {
         Instant now = Instant.now();
         Instant validity = now.plus(15, ChronoUnit.MINUTES); // Reset token valid for 15 minutes

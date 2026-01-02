@@ -39,8 +39,8 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<ResLoginDto> login(@Valid @RequestBody ReqLoginDto reqLoginDto) {
-        ResLoginDto response = this.authService.login(reqLoginDto);
-        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", response.getRefreshToken())
+        var loginResult = this.authService.login(reqLoginDto);
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", loginResult.getRefreshToken())
                 .httpOnly(true)
                 .secure(true)
                 .path("/")
@@ -48,7 +48,7 @@ public class AuthController {
                 .build();
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                .body(response);
+                .body(loginResult.getResponse());
     }
 
     @PostMapping("/register")

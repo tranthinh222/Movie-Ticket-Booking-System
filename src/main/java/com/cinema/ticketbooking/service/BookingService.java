@@ -4,14 +4,17 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
 
 import com.cinema.ticketbooking.domain.Booking;
+import com.cinema.ticketbooking.domain.Payment;
 import com.cinema.ticketbooking.domain.User;
 import com.cinema.ticketbooking.domain.response.ResBookingDto;
+import com.cinema.ticketbooking.domain.response.ResCreateBookingDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.BookingRepository;
 import com.cinema.ticketbooking.util.constant.BookingStatusEnum;
-import com.cinema.ticketbooking.util.constant.MethodEnum;
+import com.cinema.ticketbooking.util.constant.PaymentMethodEnum;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,16 +25,19 @@ public class BookingService {
     private final UserService userService;
     private final BookingItemService bookingItemService;
     private final PaymentService paymentService;
+    private final VNPayService vnPayService;
 
     BookingService(BookingRepository bookingRepo, UserService userService,
-            BookingItemService bookingItemService, PaymentService paymentService) {
+            BookingItemService bookingItemService, PaymentService paymentService,
+            @Lazy VNPayService vnPayService) {
         this.bookingRepo = bookingRepo;
         this.userService = userService;
         this.bookingItemService = bookingItemService;
         this.paymentService = paymentService;
+        this.vnPayService = vnPayService;
     }
 
-    public Booking createBooking(Long id, MethodEnum paymentMethod) {
+    public ResCreateBookingDto createBooking(Long id, PaymentMethodEnum paymentMethod, String ipAddress) {
         Booking booking = new Booking();
         User user = this.userService.getUserById(id);
 
@@ -45,9 +51,33 @@ public class BookingService {
         Booking finalBooking = this.bookingRepo.save(savedBooking);
 
         // Create payment automatically
-        this.paymentService.createPayment(finalBooking, paymentMethod);
+        Payment payment = this.paymentService.createPayment(finalBooking, paymentMethod);
 
-        return finalBooking;
+        // Create response DTO
+        ResCreateBookingDto response = new ResCreateBookingDto();
+        response.setUserId(user.getId());
+        response.setUsername(user.getUsername());
+        response.setPrice(total_price);
+        response.setCreatedAt(finalBooking.getCreatedAt());
+        response.setPaymentId(payment.getId());
+
+        // If not CASH, automatically create payment URL
+        if (paymentMethod != PaymentMethodEnum.CASH) {
+            try {
+                String paymentUrl = null;
+                String orderInfo = "Thanh toan ve xem phim #" + finalBooking.getId();
+
+                if (paymentMethod == PaymentMethodEnum.VNPAY) {
+                    paymentUrl = vnPayService.createPaymentUrl(payment.getId(), total_price, orderInfo, ipAddress);
+                }
+
+                response.setPaymentUrl(paymentUrl);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to create payment URL: " + e.getMessage());
+            }
+        }
+
+        return response;
     }
 
     public ResultPaginationDto getAllBookings(Specification<Booking> spec, Pageable pageable) {
@@ -77,12 +107,13 @@ public class BookingService {
         dto.setId(booking.getId());
         dto.setStatus(booking.getStatus());
         dto.setTotal_price(booking.getTotal_price());
+        dto.setQrCode(booking.getQrCode());
         dto.setCreatedAt(booking.getCreatedAt());
         dto.setUpdatedAt(booking.getUpdatedAt());
         dto.setCreatedBy(booking.getCreatedBy());
         dto.setUpdatedBy(booking.getUpdatedBy());
 
-        // Chỉ lấy user.id và user.username
+        // Map user info
         if (booking.getUser() != null) {
             ResBookingDto.UserInfo userInfo = new ResBookingDto.UserInfo();
             userInfo.setId(booking.getUser().getId());
@@ -90,11 +121,122 @@ public class BookingService {
             dto.setUser(userInfo);
         }
 
+        // Map seats, showtime, film, theater from booking items
+        if (booking.getBookingItems() != null && !booking.getBookingItems().isEmpty()) {
+            // Map seats
+            java.util.List<ResBookingDto.SeatInfo> seats = booking.getBookingItems().stream()
+                    .map(item -> new ResBookingDto.SeatInfo(
+                            item.getSeat().getId(),
+                            item.getSeat().getSeatRow(),
+                            item.getSeat().getNumber(),
+                            item.getPrice()))
+                    .collect(Collectors.toList());
+            dto.setSeats(seats);
+
+            // Get showtime, film, theater from first booking item
+            com.cinema.ticketbooking.domain.BookingItem firstItem = booking.getBookingItems().get(0);
+            if (firstItem.getShowTime() != null) {
+                com.cinema.ticketbooking.domain.ShowTime showtime = firstItem.getShowTime();
+
+                // Map showtime info
+                ResBookingDto.ShowTimeInfo showtimeInfo = new ResBookingDto.ShowTimeInfo(
+                        showtime.getId(),
+                        showtime.getDate(),
+                        showtime.getStartTime(),
+                        showtime.getEndTime(),
+                        showtime.getAuditorium() != null ? String.valueOf(showtime.getAuditorium().getNumber())
+                                : null);
+                dto.setShowtime(showtimeInfo);
+
+                // Map film info
+                if (showtime.getFilm() != null) {
+                    com.cinema.ticketbooking.domain.Film film = showtime.getFilm();
+                    ResBookingDto.FilmInfo filmInfo = new ResBookingDto.FilmInfo(
+                            film.getId(),
+                            film.getName(),
+                            film.getDirector(),
+                            film.getActors(),
+                            film.getDuration(),
+                            film.getDescription(),
+                            film.getGenre(),
+                            film.getLanguage(),
+                            film.getReleaseDate(),
+                            film.getStatus(),
+                            film.getThumbnail());
+                    dto.setFilm(filmInfo);
+                }
+
+                // Map theater info
+                if (showtime.getAuditorium() != null && showtime.getAuditorium().getTheater() != null) {
+                    com.cinema.ticketbooking.domain.Theater theater = showtime.getAuditorium().getTheater();
+                    String addressStr = null;
+                    if (theater.getAddress() != null) {
+                        addressStr = String.format("%s %s, %s",
+                                theater.getAddress().getStreet_number() != null
+                                        ? theater.getAddress().getStreet_number()
+                                        : "",
+                                theater.getAddress().getStreet_name() != null
+                                        ? theater.getAddress().getStreet_name()
+                                        : "",
+                                theater.getAddress().getCity() != null ? theater.getAddress().getCity() : "").trim();
+                    }
+                    ResBookingDto.TheaterInfo theaterInfo = new ResBookingDto.TheaterInfo(
+                            theater.getId(),
+                            theater.getName(),
+                            addressStr);
+                    dto.setTheater(theaterInfo);
+                }
+            }
+        }
+
+        // Map payment ID (get first payment if exists)
+        if (booking.getPayments() != null && !booking.getPayments().isEmpty()) {
+            dto.setPaymentId(booking.getPayments().get(0).getId());
+        }
+
         return dto;
     }
 
     public Booking getBookingById(Long bookingId) {
-        return this.bookingRepo.findById(bookingId)
+        return this.bookingRepo.findByIdWithDetails(bookingId)
                 .orElse(null);
+    }
+
+    public Booking updateBooking(Booking booking) {
+        return this.bookingRepo.save(booking);
+    }
+
+    public void deleteBooking(Long bookingId) {
+        this.bookingRepo.deleteById(bookingId);
+    }
+
+    public ResultPaginationDto getBookingsByUserId(Long userId, Pageable pageable) {
+        // Step 1: Get paginated IDs only
+        Page<Long> pageIds = this.bookingRepo.findIdsByUserId(userId, pageable);
+
+        // Step 2: Fetch booking details with JOIN FETCH
+        List<Long> bookingIds = pageIds.getContent();
+        List<Booking> bookingsWithDetails = bookingIds.isEmpty()
+                ? new java.util.ArrayList<>()
+                : this.bookingRepo.findByIdsWithDetails(bookingIds);
+
+        // Convert to DTOs
+        List<ResBookingDto> bookingDtos = bookingsWithDetails.stream()
+                .map(this::convertToResBookingDto)
+                .collect(Collectors.toList());
+
+        // Build pagination result
+        ResultPaginationDto resultPaginationDto = new ResultPaginationDto();
+        ResultPaginationDto.Meta mt = new ResultPaginationDto.Meta();
+
+        mt.setCurrentPage(pageable.getPageNumber() + 1);
+        mt.setTotalPages(pageIds.getTotalPages());
+        mt.setPageSize(pageable.getPageSize());
+        mt.setTotalItems(pageIds.getTotalElements());
+
+        resultPaginationDto.setMeta(mt);
+        resultPaginationDto.setData(bookingDtos);
+
+        return resultPaginationDto;
     }
 }

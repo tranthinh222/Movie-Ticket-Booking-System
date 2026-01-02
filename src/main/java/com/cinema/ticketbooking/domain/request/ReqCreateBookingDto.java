@@ -1,14 +1,11 @@
 package com.cinema.ticketbooking.domain.request;
 
-import com.cinema.ticketbooking.util.constant.MethodEnum;
+import com.cinema.ticketbooking.util.constant.PaymentMethodEnum;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class ReqCreateBookingDto {
-    @NotNull(message = "number is required")
-    private Long userId;
-
     @NotNull(message = "Payment method is required")
-    private MethodEnum paymentMethod;
+    private PaymentMethodEnum paymentMethod;
 }

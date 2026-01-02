@@ -23,6 +23,10 @@ public class BookingItem {
     @JoinColumn(name = "seat_id")
     private Seat seat;
 
+    @ManyToOne
+    @JoinColumn(name = "showtime_id")
+    private ShowTime showTime;
+
     private double price;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant createdAt;
