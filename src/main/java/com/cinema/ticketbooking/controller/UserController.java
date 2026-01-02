@@ -56,7 +56,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.OK).body(this.userService.getAllUser(spec, pageable));
     }
 
-    //@PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/users")
     @ApiMessage("create an user")
     public ResponseEntity<User> createUser(@RequestBody ReqCreateUserDto user) throws Exception {
@@ -70,7 +70,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(this.userService.createUser(user));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/users")
     @ApiMessage("update an user")
     public ResponseEntity<ResUpdateUserDto> updateUser(@RequestBody ReqUpdateUserDto reqUser) {
@@ -82,7 +82,7 @@ public class UserController {
 
     }
 
-    @PreAuthorize("hasRole('CUSTOMER')")
+    // @PreAuthorize("hasRole('CUSTOMER')")
     @PutMapping("/users/me/password")
     @ApiMessage("update an user")
     public ResponseEntity<String> updateMyPassword(@RequestBody String password) {
