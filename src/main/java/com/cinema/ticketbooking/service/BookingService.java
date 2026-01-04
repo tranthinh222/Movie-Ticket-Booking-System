@@ -11,11 +11,15 @@ import com.cinema.ticketbooking.domain.Payment;
 import com.cinema.ticketbooking.domain.User;
 import com.cinema.ticketbooking.domain.response.ResBookingDto;
 import com.cinema.ticketbooking.domain.response.ResCreateBookingDto;
+import com.cinema.ticketbooking.domain.response.ResRevenueDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.BookingRepository;
 import com.cinema.ticketbooking.util.constant.BookingStatusEnum;
 import com.cinema.ticketbooking.util.constant.PaymentMethodEnum;
 
+import java.time.Instant;
+import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -206,6 +210,13 @@ public class BookingService {
         return this.bookingRepo.save(booking);
     }
 
+    public Booking updateBookingStatus(Long bookingId, BookingStatusEnum status) {
+        Booking booking = this.bookingRepo.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
+        booking.setStatus(status);
+        return this.bookingRepo.save(booking);
+    }
+
     public void deleteBooking(Long bookingId) {
         this.bookingRepo.deleteById(bookingId);
     }
@@ -238,5 +249,53 @@ public class BookingService {
         resultPaginationDto.setData(bookingDtos);
 
         return resultPaginationDto;
+    }
+
+    /**
+     * Lấy doanh thu trong tháng hiện tại
+     * 
+     * @return ResRevenueDto chứa thông tin doanh thu
+     */
+    public ResRevenueDto getCurrentMonthRevenue() {
+        // Lấy thời gian bắt đầu và kết thúc của tháng hiện tại
+        YearMonth currentMonth = YearMonth.now();
+        Instant startOfMonth = currentMonth.atDay(1)
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant();
+        Instant startOfNextMonth = currentMonth.plusMonths(1).atDay(1)
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant();
+
+        return getRevenueByDateRange(currentMonth.getMonthValue(), currentMonth.getYear(),
+                startOfMonth, startOfNextMonth);
+    }
+
+    /**
+     * Lấy doanh thu theo tháng và năm cụ thể
+     * 
+     * @param month tháng (1-12)
+     * @param year  năm
+     * @return ResRevenueDto chứa thông tin doanh thu
+     */
+    public ResRevenueDto getRevenueByMonth(int month, int year) {
+        YearMonth yearMonth = YearMonth.of(year, month);
+        Instant startOfMonth = yearMonth.atDay(1)
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant();
+        Instant startOfNextMonth = yearMonth.plusMonths(1).atDay(1)
+                .atStartOfDay(ZoneId.systemDefault())
+                .toInstant();
+
+        return getRevenueByDateRange(month, year, startOfMonth, startOfNextMonth);
+    }
+
+    private ResRevenueDto getRevenueByDateRange(int month, int year, Instant startDate, Instant endDate) {
+        // Lấy tổng doanh thu
+        Double totalRevenue = this.bookingRepo.getTotalRevenueByDateRange(startDate, endDate);
+
+        // Lấy số lượng booking
+        Long totalBookings = this.bookingRepo.countBookingsByDateRange(startDate, endDate);
+
+        return new ResRevenueDto(month, year, totalRevenue, totalBookings);
     }
 }
