@@ -12,6 +12,7 @@ import com.cinema.ticketbooking.service.FilmService;
 import com.cinema.ticketbooking.service.SeatService;
 import com.cinema.ticketbooking.service.ShowTimeService;
 import com.cinema.ticketbooking.util.annotation.ApiMessage;
+import com.cinema.ticketbooking.util.error.BadRequestException;
 import com.cinema.ticketbooking.util.error.IdInvalidException;
 import com.turkraft.springfilter.boot.Filter;
 import jakarta.validation.Valid;
@@ -84,6 +85,12 @@ public class ShowTimeController {
         if (showTime == null) {
             throw new IdInvalidException("ShowTime with id " + id + " not found");
         }
+
+        // Check if showtime has any bookings
+        if (this.showTimeService.hasBookings(id)) {
+            throw new BadRequestException("Cannot delete showtime with id " + id + " because it has existing bookings");
+        }
+
         this.showTimeService.deleteShowTime(id);
         return ResponseEntity.status(HttpStatus.OK).body(null);
     }
@@ -91,11 +98,18 @@ public class ShowTimeController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/showtimes")
     public ResponseEntity<ShowTime> updateShowTime(@Valid @RequestBody ReqUpdateShowTimeDto reqShowTime) {
-        ShowTime newShowTime = this.showTimeService.updateShowTime(reqShowTime);
-        if (newShowTime == null) {
-            throw new IdInvalidException("ShowTime with id " + newShowTime.getId() + " does not exist");
+        ShowTime existingShowTime = this.showTimeService.findShowTimeById(reqShowTime.getId());
+        if (existingShowTime == null) {
+            throw new IdInvalidException("ShowTime with id " + reqShowTime.getId() + " does not exist");
         }
 
+        // Check if showtime has any bookings
+        if (this.showTimeService.hasBookings(reqShowTime.getId())) {
+            throw new BadRequestException(
+                    "Cannot update showtime with id " + reqShowTime.getId() + " because it has existing bookings");
+        }
+
+        ShowTime newShowTime = this.showTimeService.updateShowTime(reqShowTime);
         return ResponseEntity.status(HttpStatus.OK).body(newShowTime);
     }
 

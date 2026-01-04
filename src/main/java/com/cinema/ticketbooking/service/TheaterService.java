@@ -26,7 +26,8 @@ import java.util.stream.Collectors;
 public class TheaterService {
     private final TheaterRepository theaterRepository;
     private final AddressRepository addressRepository;
-    public TheaterService(TheaterRepository theaterRepository,  AddressRepository addressRepository) {
+
+    public TheaterService(TheaterRepository theaterRepository, AddressRepository addressRepository) {
         this.theaterRepository = theaterRepository;
         this.addressRepository = addressRepository;
     }
@@ -38,9 +39,9 @@ public class TheaterService {
         ResultPaginationDto.Meta mt = new ResultPaginationDto.Meta();
 
         mt.setCurrentPage(pageable.getPageNumber() + 1);
-        mt.setTotalPages(pageable.getPageSize());
-        mt.setPageSize(theaterPage.getTotalPages());
-        mt.setCurrentPage(theaterPage.getTotalElements());
+        mt.setTotalPages(theaterPage.getTotalPages());
+        mt.setPageSize(pageable.getPageSize());
+        mt.setTotalItems(theaterPage.getTotalElements());
 
         resultPaginationDto.setMeta(mt);
         resultPaginationDto.setData(theaterPage.getContent());
@@ -51,15 +52,15 @@ public class TheaterService {
     public Theater createTheater(ReqCreateTheaterDto reqTheater) {
         Theater theater = new Theater();
         theater.setName(reqTheater.getName());
-        if (reqTheater.getAddressId() != null){
+        if (reqTheater.getAddressId() != null) {
             Optional<Address> optionalAddress = addressRepository.findById(reqTheater.getAddressId());
-            theater.setAddress(optionalAddress.isPresent() ? optionalAddress.get():null);
+            theater.setAddress(optionalAddress.isPresent() ? optionalAddress.get() : null);
         }
 
         return this.theaterRepository.save(theater);
     }
 
-    public Theater findTheaterById(Long id){
+    public Theater findTheaterById(Long id) {
         return this.theaterRepository.findById(id).orElse(null);
     }
 
@@ -67,16 +68,13 @@ public class TheaterService {
         this.theaterRepository.deleteById(id);
     }
 
-
     private boolean hasUpdatableField(ReqUpdateTheaterDto req) {
         return req.getName() != null && !req.getName().trim().isEmpty();
     }
 
-
     public List<ResAuditoriumDto> getAuditoriumsByTheaterId(Long theaterId) {
         Theater t = theaterRepository.findById(theaterId)
                 .orElseThrow(() -> new NotFoundException("Theater not found"));
-
 
         return t.getAuditoriums()
                 .stream()
@@ -84,13 +82,13 @@ public class TheaterService {
                 .collect(Collectors.toList());
     }
 
-    public Theater updateTheater(ReqUpdateTheaterDto reqUpdateTheaterDto){
+    public Theater updateTheater(ReqUpdateTheaterDto reqUpdateTheaterDto) {
         if (!hasUpdatableField(reqUpdateTheaterDto)) {
             throw new BadRequestException("No data provided for update");
         }
 
         Theater theater = findTheaterById(reqUpdateTheaterDto.getId());
-        if (theater == null){
+        if (theater == null) {
             return null;
         }
 

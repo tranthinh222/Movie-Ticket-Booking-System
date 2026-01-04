@@ -1,7 +1,6 @@
 package com.cinema.ticketbooking.domain.request;
 
 import com.cinema.ticketbooking.util.annotation.ValidShowTime;
-import com.cinema.ticketbooking.util.constant.ShowTimeStatusEnum;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -11,7 +10,7 @@ import java.time.LocalTime;
 @Data
 @ValidShowTime
 public class ReqUpdateShowTimeDto {
-    @NotNull (message = "id must not be null")
+    @NotNull(message = "id must not be null")
     private Long id;
     @NotNull(message = "date is not null")
     private LocalDate date;
@@ -19,6 +18,4 @@ public class ReqUpdateShowTimeDto {
     private LocalTime startTime;
     @NotNull(message = "end time is not null")
     private LocalTime endTime;
-    @NotNull(message = "status must not be null")
-    private ShowTimeStatusEnum status;
 }

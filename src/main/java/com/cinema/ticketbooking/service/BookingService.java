@@ -16,6 +16,7 @@ import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.BookingRepository;
 import com.cinema.ticketbooking.util.constant.BookingStatusEnum;
 import com.cinema.ticketbooking.util.constant.PaymentMethodEnum;
+import com.cinema.ticketbooking.util.constant.PaymentStatusEnum;
 
 import java.time.Instant;
 import java.time.YearMonth;
@@ -214,6 +215,16 @@ public class BookingService {
         Booking booking = this.bookingRepo.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
         booking.setStatus(status);
+
+        // Update payment status to PAID when booking is CONFIRMED
+        if (status == BookingStatusEnum.CONFIRMED) {
+            List<Payment> payments = this.paymentService.getPaymentsByBookingId(bookingId);
+            for (Payment payment : payments) {
+                payment.setStatus(PaymentStatusEnum.PAID);
+                this.paymentService.savePayment(payment);
+            }
+        }
+
         return this.bookingRepo.save(booking);
     }
 

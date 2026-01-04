@@ -9,6 +9,7 @@ import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.service.AuditoriumService;
 import com.cinema.ticketbooking.service.FilmService;
 import com.cinema.ticketbooking.service.ShowTimeService;
+import com.cinema.ticketbooking.util.error.BadRequestException;
 import com.cinema.ticketbooking.util.error.IdInvalidException;
 
 import org.junit.jupiter.api.Test;
@@ -27,11 +28,15 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ShowTimeControllerTest {
 
-    @Mock private ShowTimeService showTimeService;
-    @Mock private FilmService filmService;
-    @Mock private AuditoriumService auditoriumService;
+    @Mock
+    private ShowTimeService showTimeService;
+    @Mock
+    private FilmService filmService;
+    @Mock
+    private AuditoriumService auditoriumService;
 
-    @InjectMocks private ShowTimeController showTimeController;
+    @InjectMocks
+    private ShowTimeController showTimeController;
 
     // -----------------------
     // GET /showtimes
@@ -149,7 +154,10 @@ class ShowTimeControllerTest {
     @Test
     void deleteShowTime_shouldReturnOk_whenFound() {
         // Arrange
-        when(showTimeService.findShowTimeById(5L)).thenReturn(new ShowTime());
+        ShowTime existingShowTime = new ShowTime();
+        existingShowTime.setId(5L);
+        when(showTimeService.findShowTimeById(5L)).thenReturn(existingShowTime);
+        when(showTimeService.hasBookings(5L)).thenReturn(false);
 
         // Act
         ResponseEntity<Void> res = showTimeController.deleteShowTime(5L);
@@ -157,6 +165,8 @@ class ShowTimeControllerTest {
         // Assert
         assertEquals(HttpStatus.OK, res.getStatusCode());
         assertNull(res.getBody());
+        verify(showTimeService).findShowTimeById(5L);
+        verify(showTimeService).hasBookings(5L);
         verify(showTimeService).deleteShowTime(5L);
     }
 
@@ -182,9 +192,14 @@ class ShowTimeControllerTest {
         ReqUpdateShowTimeDto req = new ReqUpdateShowTimeDto();
         req.setId(1L);
 
+        ShowTime existingShowTime = new ShowTime();
+        existingShowTime.setId(1L);
+
         ShowTime updated = new ShowTime();
         updated.setId(1L);
 
+        when(showTimeService.findShowTimeById(1L)).thenReturn(existingShowTime);
+        when(showTimeService.hasBookings(1L)).thenReturn(false);
         when(showTimeService.updateShowTime(req)).thenReturn(updated);
 
         // Act
@@ -193,6 +208,66 @@ class ShowTimeControllerTest {
         // Assert
         assertEquals(HttpStatus.OK, res.getStatusCode());
         assertSame(updated, res.getBody());
+        verify(showTimeService).findShowTimeById(1L);
+        verify(showTimeService).hasBookings(1L);
         verify(showTimeService).updateShowTime(req);
+    }
+
+    @Test
+    void updateShowTime_shouldThrowIdInvalidException_whenNotFound() {
+        // Arrange
+        ReqUpdateShowTimeDto req = new ReqUpdateShowTimeDto();
+        req.setId(99L);
+
+        when(showTimeService.findShowTimeById(99L)).thenReturn(null);
+
+        // Act & Assert
+        IdInvalidException ex = assertThrows(IdInvalidException.class,
+                () -> showTimeController.updateShowTime(req));
+        assertEquals("ShowTime with id 99 does not exist", ex.getMessage());
+
+        verify(showTimeService).findShowTimeById(99L);
+        verify(showTimeService, never()).updateShowTime(any());
+    }
+
+    @Test
+    void updateShowTime_shouldThrowBadRequest_whenHasBookings() {
+        // Arrange
+        ReqUpdateShowTimeDto req = new ReqUpdateShowTimeDto();
+        req.setId(1L);
+
+        ShowTime existingShowTime = new ShowTime();
+        existingShowTime.setId(1L);
+
+        when(showTimeService.findShowTimeById(1L)).thenReturn(existingShowTime);
+        when(showTimeService.hasBookings(1L)).thenReturn(true);
+
+        // Act & Assert
+        BadRequestException ex = assertThrows(BadRequestException.class,
+                () -> showTimeController.updateShowTime(req));
+        assertEquals("Cannot update showtime with id 1 because it has existing bookings", ex.getMessage());
+
+        verify(showTimeService).findShowTimeById(1L);
+        verify(showTimeService).hasBookings(1L);
+        verify(showTimeService, never()).updateShowTime(any());
+    }
+
+    @Test
+    void deleteShowTime_shouldThrowBadRequest_whenHasBookings() {
+        // Arrange
+        ShowTime existingShowTime = new ShowTime();
+        existingShowTime.setId(1L);
+
+        when(showTimeService.findShowTimeById(1L)).thenReturn(existingShowTime);
+        when(showTimeService.hasBookings(1L)).thenReturn(true);
+
+        // Act & Assert
+        BadRequestException ex = assertThrows(BadRequestException.class,
+                () -> showTimeController.deleteShowTime(1L));
+        assertEquals("Cannot delete showtime with id 1 because it has existing bookings", ex.getMessage());
+
+        verify(showTimeService).findShowTimeById(1L);
+        verify(showTimeService).hasBookings(1L);
+        verify(showTimeService, never()).deleteShowTime(anyLong());
     }
 }
