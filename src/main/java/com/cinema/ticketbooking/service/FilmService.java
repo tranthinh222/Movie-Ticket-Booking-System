@@ -82,23 +82,26 @@ public class FilmService {
         if (filmOptional.isPresent()) {
             Film newFilm = filmOptional.get();
 
-            boolean isFilmExisted = isFilmNameDuplicated(reqFilm.getName());
-            if (isFilmExisted) {
-                throw new ResourceAlreadyExistsException(
-                        "Film with name " + reqFilm.getName() + " already exists");
-            }
+            // boolean isFilmExisted = isFilmNameDuplicated(reqFilm.getName());
+            // if (isFilmExisted) {
+            // throw new ResourceAlreadyExistsException(
+            // "Film with name " + reqFilm.getName() + " already exists");
+            // }
 
             Optional.ofNullable(reqFilm.getName())
                     .filter(name -> !name.trim().isEmpty())
                     .ifPresent(name -> newFilm.setName(name));
 
+            Optional.ofNullable(reqFilm.getStatus())
+                    .ifPresent(status -> newFilm.setStatus(status));
+
             Optional.ofNullable(reqFilm.getDirector())
                     .filter(director -> !director.trim().isEmpty())
-                    .ifPresent(director -> newFilm.setName(director));
+                    .ifPresent(director -> newFilm.setDirector(director));
 
             Optional.ofNullable(reqFilm.getActors())
                     .filter(actors -> !actors.trim().isEmpty())
-                    .ifPresent(actors -> newFilm.setName(actors));
+                    .ifPresent(actors -> newFilm.setActors(actors));
 
             Optional.ofNullable(reqFilm.getDuration())
                     .ifPresent(duration -> newFilm.setDuration(duration));
