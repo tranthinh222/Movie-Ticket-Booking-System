@@ -26,10 +26,6 @@ public class ReqRegisterDto {
     @NotBlank(message = "username is not empty")
     private String username;
 
-    @Pattern(
-            regexp = "^(0[0-9]{9,10})$",
-            message = "Invalid phone number"
-    )
     private String phone;
 
     @Enumerated(EnumType.STRING)

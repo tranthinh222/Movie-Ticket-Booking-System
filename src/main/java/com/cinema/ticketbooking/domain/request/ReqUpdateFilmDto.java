@@ -3,7 +3,7 @@ package com.cinema.ticketbooking.domain.request;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.time.LocalDate;
-
+import com.cinema.ticketbooking.util.constant.FilmStatusEnum;
 @Data
 public class ReqUpdateFilmDto {
     @NotNull(message = "id must not be null")
@@ -16,6 +16,8 @@ public class ReqUpdateFilmDto {
     private Long duration;
     @PositiveOrZero(message = "price must be greater than or equal to 0")
     private Long price;
+
+    private FilmStatusEnum status;
 
     private String description;
     private String genre;
