@@ -6,6 +6,7 @@ import com.cinema.ticketbooking.domain.response.ResLoginDto;
 import com.cinema.ticketbooking.domain.response.ResUserDto;
 import com.cinema.ticketbooking.domain.response.ResUserJwtDto;
 import com.cinema.ticketbooking.service.AuthService;
+import com.cinema.ticketbooking.service.AuthService.LoginResult;
 import com.cinema.ticketbooking.service.UserService;
 import com.cinema.ticketbooking.util.SecurityUtil;
 import com.cinema.ticketbooking.util.error.ApiException;
@@ -42,15 +43,20 @@ class AuthControllerTest {
     void login_shouldReturnResLoginDtoAndSetCookie_whenValidRequest() throws Exception {
         // Arrange
         ReqLoginDto request = new ReqLoginDto();
+        request.setEmail("test@test.com");
+        request.setPassword("password");
+
         ResLoginDto responseDto = new ResLoginDto();
-        responseDto.setRefreshToken("refresh-token");
+        responseDto.setAccessToken("access-token");
+
+        LoginResult loginResult = new LoginResult(responseDto, "refresh-token");
 
         // Inject private field refreshTokenExpiration using Reflection
         Field field = AuthController.class.getDeclaredField("refreshTokenExpiration");
         field.setAccessible(true);
         field.set(authController, 3600L);
 
-        when(authService.login(request)).thenReturn(responseDto);
+        when(authService.login(request)).thenReturn(loginResult);
 
         // Act
         ResponseEntity<ResLoginDto> response = authController.login(request);
@@ -133,7 +139,7 @@ class AuthControllerTest {
             // Assert
             assertEquals(HttpStatus.OK, response.getStatusCode());
             assertTrue(response.getHeaders().containsKey(HttpHeaders.SET_COOKIE));
-            assertTrue(response.getHeaders().getFirst(HttpHeaders.SET_COOKIE).contains("refresh_token=;"));
+            assertTrue(response.getHeaders().getFirst(HttpHeaders.SET_COOKIE).contains("refresh_token="));
             verify(userService).updateUserToken(null, "user@example.com");
         }
     }

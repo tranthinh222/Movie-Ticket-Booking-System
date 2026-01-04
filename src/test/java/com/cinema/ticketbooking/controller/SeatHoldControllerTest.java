@@ -1,15 +1,12 @@
 package com.cinema.ticketbooking.controller;
 
-import com.cinema.ticketbooking.domain.Seat;
 import com.cinema.ticketbooking.domain.SeatHold;
 import com.cinema.ticketbooking.domain.User;
 import com.cinema.ticketbooking.domain.request.ReqCreateSeatHoldDto;
 import com.cinema.ticketbooking.service.SeatHoldService;
 import com.cinema.ticketbooking.service.SeatService;
 import com.cinema.ticketbooking.service.UserService;
-import com.cinema.ticketbooking.util.constant.SeatStatusEnum;
 import com.cinema.ticketbooking.util.error.IdInvalidException;
-import com.cinema.ticketbooking.util.error.UnavailableResourceException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,67 +33,38 @@ class SeatHoldControllerTest {
     // POST /seat-holds
     // -----------------------
     @Test
-    void createSeatHold_shouldThrowIdInvalidException_whenSeatNotFound() {
+    void createSeatHold_shouldReturnCreated_whenValidRequest() {
         // Arrange
         ReqCreateSeatHoldDto req = new ReqCreateSeatHoldDto();
-        req.setSeatId(100L);
+        req.setSeatIds(List.of(100L, 101L));
         req.setShowtimeId(10L);
 
-        when(seatService.findSeatById(100L)).thenReturn(null);
-
-        // Act + Assert
-        IdInvalidException ex = assertThrows(IdInvalidException.class,
-                () -> seatHoldController.createSeatHold(req));
-        assertEquals("Seat with id 100 does not exist", ex.getMessage());
-
-        verify(seatHoldService, never()).createSeatHold(any());
-    }
-
-    @Test
-    void createSeatHold_shouldThrowUnavailableResourceException_whenSeatNotAvailable() {
-        // Arrange
-        ReqCreateSeatHoldDto req = new ReqCreateSeatHoldDto();
-        req.setSeatId(100L);
-        req.setShowtimeId(10L);
-
-        Seat seat = new Seat();
-        seat.setId(100L);
-        seat.setStatus(SeatStatusEnum.HOLD); // hoặc BOOKED
-
-        when(seatService.findSeatById(100L)).thenReturn(seat);
-
-        // Act + Assert
-        UnavailableResourceException ex = assertThrows(UnavailableResourceException.class,
-                () -> seatHoldController.createSeatHold(req));
-        assertEquals("Seat is booked or hold", ex.getMessage());
-
-        verify(seatHoldService, never()).createSeatHold(any());
-    }
-
-    @Test
-    void createSeatHold_shouldReturnCreated_whenSeatAvailable() {
-        // Arrange
-        ReqCreateSeatHoldDto req = new ReqCreateSeatHoldDto();
-        req.setSeatId(100L);
-        req.setShowtimeId(10L);
-
-        Seat seat = new Seat();
-        seat.setId(100L);
-        seat.setStatus(SeatStatusEnum.AVAILABLE);
-
-        SeatHold created = new SeatHold();
-
-        when(seatService.findSeatById(100L)).thenReturn(seat);
-        when(seatHoldService.createSeatHold(req)).thenReturn(created);
+        List<SeatHold> createdHolds = List.of(new SeatHold(), new SeatHold());
+        when(seatHoldService.createSeatHold(req)).thenReturn(createdHolds);
 
         // Act
-        ResponseEntity<SeatHold> res = seatHoldController.createSeatHold(req);
+        ResponseEntity<Void> res = seatHoldController.createSeatHold(req);
 
         // Assert
         assertEquals(HttpStatus.CREATED, res.getStatusCode());
-        assertSame(created, res.getBody());
+        assertNull(res.getBody());
 
         verify(seatHoldService).createSeatHold(req);
+    }
+
+    // -----------------------
+    // DELETE /seat-holds
+    // -----------------------
+    @Test
+    void removeSeatHold_shouldReturnNoContent() {
+        // Act
+        ResponseEntity<Void> res = seatHoldController.removeSeatHold();
+
+        // Assert
+        assertEquals(HttpStatus.NO_CONTENT, res.getStatusCode());
+        assertNull(res.getBody());
+
+        verify(seatHoldService).removeSeatHold();
     }
 
     // -----------------------

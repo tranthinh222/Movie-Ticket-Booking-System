@@ -120,14 +120,12 @@ class SeatServiceTest {
         req.setSeatRow("A");
         req.setNumber(1);
 
-
         Auditorium auditorium = new Auditorium();
         SeatVariant variant = new SeatVariant();
 
         when(auditoriumRepository.findById(10L)).thenReturn(Optional.of(auditorium));
         when(seatVariantRepository.findById(20L)).thenReturn(Optional.of(variant));
 
-        // Dùng captor để kiểm tra seat được save có đúng field không
         ArgumentCaptor<Seat> seatCaptor = ArgumentCaptor.forClass(Seat.class);
         when(seatRepository.save(any(Seat.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -142,9 +140,8 @@ class SeatServiceTest {
         assertSame(variant, savedSeat.getSeatVariant());
         assertEquals("A", savedSeat.getSeatRow());
         assertEquals(1, savedSeat.getNumber());
-        assertEquals(req.getStatus(), savedSeat.getStatus());
 
-        // Hàm trả về chính seat đã tạo
+        // Note: Seat entity no longer has status field
         assertSame(created, savedSeat);
     }
 
@@ -156,7 +153,6 @@ class SeatServiceTest {
         req.setSeatVariantId(20L);
         req.setSeatRow("B");
         req.setNumber(2);
-        // req.setStatus(...);
 
         when(auditoriumRepository.findById(10L)).thenReturn(Optional.empty());
         when(seatVariantRepository.findById(20L)).thenReturn(Optional.empty());
@@ -175,7 +171,6 @@ class SeatServiceTest {
         assertNull(saved.getSeatVariant());
         assertEquals("B", saved.getSeatRow());
         assertEquals(2, saved.getNumber());
-        assertEquals(req.getStatus(), saved.getStatus());
 
         assertSame(created, saved);
     }
@@ -213,7 +208,6 @@ class SeatServiceTest {
         req.setId(1L);
         req.setSeatRow("C");
         req.setNumber(9);
-        // req.setStatus(...);
 
         // Act
         Seat updated = seatService.updateSeat(req);
@@ -223,8 +217,8 @@ class SeatServiceTest {
         assertSame(existing, updated);
         assertEquals("C", updated.getSeatRow());
         assertEquals(9, updated.getNumber());
-        assertEquals(req.getStatus(), updated.getStatus());
 
+        // Note: Seat entity no longer has status field
         verify(seatRepository).save(existing);
     }
 }
