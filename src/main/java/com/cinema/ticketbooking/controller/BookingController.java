@@ -16,8 +16,10 @@ import com.cinema.ticketbooking.domain.ShowTime;
 import com.cinema.ticketbooking.domain.Theater;
 import com.cinema.ticketbooking.domain.User;
 import com.cinema.ticketbooking.domain.request.ReqCreateBookingDto;
+import com.cinema.ticketbooking.domain.request.ReqUpdateBookingStatusDto;
 import com.cinema.ticketbooking.domain.response.ResBookingDto;
 import com.cinema.ticketbooking.domain.response.ResCreateBookingDto;
+import com.cinema.ticketbooking.domain.response.ResRevenueDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.service.BookingService;
 import com.cinema.ticketbooking.service.UserService;
@@ -28,8 +30,10 @@ import com.turkraft.springfilter.boot.Filter;
 
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -190,6 +194,55 @@ public class BookingController {
             @PathVariable("userId") Long userId,
             Pageable pageable) {
         return ResponseEntity.ok(this.bookingService.getBookingsByUserId(userId, pageable));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/bookings/{id}/status")
+    @ApiMessage("update booking status")
+    public ResponseEntity<ResBookingDto> updateBookingStatus(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody ReqUpdateBookingStatusDto request) {
+        Booking booking = this.bookingService.getBookingById(id);
+        if (booking == null) {
+            throw new IdInvalidException("Booking not found");
+        }
+
+        Booking updatedBooking = this.bookingService.updateBookingStatus(id, request.getStatus());
+
+        ResBookingDto response = new ResBookingDto();
+        response.setId(updatedBooking.getId());
+        response.setUser(new ResBookingDto.UserInfo(updatedBooking.getUser().getId(), updatedBooking.getUser().getUsername()));
+        response.setStatus(updatedBooking.getStatus());
+        response.setTotal_price(updatedBooking.getTotal_price());
+        response.setQrCode(updatedBooking.getQrCode());
+        response.setCreatedAt(updatedBooking.getCreatedAt());
+        response.setUpdatedAt(updatedBooking.getUpdatedAt());
+        response.setCreatedBy(updatedBooking.getCreatedBy());
+        response.setUpdatedBy(updatedBooking.getUpdatedBy());
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/bookings/revenue/current-month")
+    @ApiMessage("get revenue for current month")
+    public ResponseEntity<ResRevenueDto> getCurrentMonthRevenue() {
+        return ResponseEntity.ok(this.bookingService.getCurrentMonthRevenue());
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/bookings/revenue")
+    @ApiMessage("get revenue by month and year")
+    public ResponseEntity<ResRevenueDto> getRevenueByMonth(
+            @RequestParam("month") int month,
+            @RequestParam("year") int year) {
+        if (month < 1 || month > 12) {
+            throw new IdInvalidException("Month must be between 1 and 12");
+        }
+        if (year < 2000 || year > 2100) {
+            throw new IdInvalidException("Year must be between 2000 and 2100");
+        }
+        return ResponseEntity.ok(this.bookingService.getRevenueByMonth(month, year));
     }
 
 }
