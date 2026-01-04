@@ -6,6 +6,7 @@ import com.cinema.ticketbooking.domain.request.ReqRegisterDto;
 import com.cinema.ticketbooking.domain.response.ResLoginDto;
 import com.cinema.ticketbooking.domain.response.ResUserDto;
 import com.cinema.ticketbooking.domain.response.ResUserJwtDto;
+import com.cinema.ticketbooking.service.AuthService.LoginResult;
 import com.cinema.ticketbooking.util.SecurityUtil;
 import com.cinema.ticketbooking.util.constant.RoleEnum;
 import com.cinema.ticketbooking.util.error.DuplicateEmailException;
@@ -44,6 +45,9 @@ class AuthServiceTest {
     @Mock
     private SecurityUtil securityUtil;
 
+    @Mock
+    private EmailService emailService;
+
     @InjectMocks
     private AuthService authService;
 
@@ -57,7 +61,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void login_shouldReturnResLoginDto_whenCredentialsValid() {
+    void login_shouldReturnLoginResult_whenCredentialsValid() {
         // Arrange
         ReqLoginDto req = new ReqLoginDto();
         req.setEmail("test@test.com"); 
@@ -75,15 +79,16 @@ class AuthServiceTest {
         doReturn("refresh_token").when(securityUtil).createRefreshToken(anyString(), any());
 
         // Act
-        ResLoginDto result = authService.login(req);
+        LoginResult result = authService.login(req);
 
         // Assert
         assertNotNull(result);
-        assertEquals("access_token", result.getAccessToken());
         assertEquals("refresh_token", result.getRefreshToken());
-        assertNotNull(result.getUser());
-        assertEquals("Tester", result.getUser().getUsername());
-        assertEquals(RoleEnum.CUSTOMER, result.getUser().getRole());
+        assertNotNull(result.getResponse());
+        assertEquals("access_token", result.getResponse().getAccessToken());
+        assertNotNull(result.getResponse().getUser());
+        assertEquals("Tester", result.getResponse().getUser().getUsername());
+        assertEquals(RoleEnum.CUSTOMER, result.getResponse().getUser().getRole());
         verify(userService).updateUserToken("refresh_token", "test@test.com");
     }
 

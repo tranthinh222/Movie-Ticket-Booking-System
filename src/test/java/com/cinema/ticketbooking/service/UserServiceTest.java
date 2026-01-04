@@ -8,6 +8,7 @@ import com.cinema.ticketbooking.domain.response.ResUserDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.UserRepository;
 import com.cinema.ticketbooking.util.constant.RoleEnum;
+import com.cinema.ticketbooking.util.error.BadRequestException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -238,12 +239,15 @@ class UserServiceTest {
     void updateUser_shouldReturnResUpdateUserDto_whenUserFound() {
         ReqUpdateUserDto req = new ReqUpdateUserDto();
         req.setId(1L);
+        req.setUsername("abc");
+        req.setPhone("0909");
 
         User u = new User();
         u.setUsername("abc");
         u.setPhone("0909");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(u));
+        when(userRepository.save(any(User.class))).thenReturn(u);
 
         ResUpdateUserDto result = userService.updateUser(req);
 
@@ -251,7 +255,7 @@ class UserServiceTest {
         assertEquals("abc", result.getUsername());
         assertEquals("0909", result.getPhone());
 
-         verify(userRepository, never()).save(any());
+        verify(userRepository).save(any(User.class));
     }
 
     // -----------------------
@@ -290,14 +294,16 @@ class UserServiceTest {
     // updateMyPassword
     // -----------------------
     @Test
-    void updateMyPassword_shouldEncodePasswordAndSave() {
+    void updateMyPassword_shouldEncodePasswordAndSave_whenOldPasswordCorrect() {
         User u = new User();
+        u.setPassword("OLD_HASHED");
         when(userRepository.findUserByEmail("a@gmail.com")).thenReturn(u);
-        when(passwordEncoder.encode("newpass")).thenReturn("HASHED");
+        when(passwordEncoder.matches("oldpass", "OLD_HASHED")).thenReturn(true);
+        when(passwordEncoder.encode("newpass")).thenReturn("NEW_HASHED");
 
-        userService.updateMyPassword("a@gmail.com", "newpass");
+        userService.updateMyPassword("a@gmail.com", "oldpass", "newpass");
 
-        assertEquals("HASHED", u.getPassword());
+        assertEquals("NEW_HASHED", u.getPassword());
         verify(userRepository).save(u);
         verify(passwordEncoder).encode("newpass");
     }

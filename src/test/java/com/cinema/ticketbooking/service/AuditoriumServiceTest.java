@@ -7,7 +7,6 @@ import com.cinema.ticketbooking.domain.response.ResSeatDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AuditoriumRepository;
 import com.cinema.ticketbooking.repository.TheaterRepository;
-import com.cinema.ticketbooking.util.constant.SeatStatusEnum;
 import com.cinema.ticketbooking.util.constant.SeatTypeEnum;
 
 import org.junit.jupiter.api.Test;
@@ -34,6 +33,9 @@ class AuditoriumServiceTest {
 
     @Mock
     private TheaterRepository theaterRepository;
+
+    @Mock
+    private SeatService seatService;
 
     @InjectMocks
     private AuditoriumService auditoriumService;
@@ -67,44 +69,52 @@ class AuditoriumServiceTest {
     }
 
     @Test
-    void createAuditorium_shouldReturnAuditorium_whenTheaterExists() {
+    void createAuditorium_shouldCreateSeatsAndReturnAuditorium_whenTheaterExists() {
         // Arrange
         ReqCreateAuditoriumDto req = new ReqCreateAuditoriumDto();
-        req.setNumber(1L);           
-        req.setTotalSeats(100L);     
+        req.setNumber(1L);
         req.setTheaterId(10L);
 
         Theater theater = new Theater();
         when(theaterRepository.findById(10L))
                 .thenReturn(Optional.of(theater));
 
+        // Mock auditoriumRepository.save to return auditorium with ID
+        Auditorium savedAuditorium = new Auditorium();
+        savedAuditorium.setNumber(1L);
+        savedAuditorium.setTheater(theater);
+        when(auditoriumRepository.save(any(Auditorium.class))).thenReturn(savedAuditorium);
+
+        // Mock seatService to return list of seats
+        List<Seat> createdSeats = List.of(new Seat(), new Seat(), new Seat());
+        when(seatService.createDefaultSeatsForAuditorium(any(Auditorium.class))).thenReturn(createdSeats);
+
         // Act
         Auditorium result = auditoriumService.createAuditorium(req);
 
         // Assert
         assertEquals(1L, result.getNumber());
-        assertEquals(100L, result.getTotalSeats());
         assertEquals(theater, result.getTheater());
-        verify(auditoriumRepository).save(result);
+        // totalSeats is set based on created seats (second save)
+        verify(auditoriumRepository, times(2)).save(any(Auditorium.class));
+        verify(seatService).createDefaultSeatsForAuditorium(any(Auditorium.class));
     }
 
     @Test
-    void createAuditorium_shouldSetNullTheater_whenTheaterNotFound() {
+    void createAuditorium_shouldThrowException_whenTheaterNotFound() {
         // Arrange
         ReqCreateAuditoriumDto req = new ReqCreateAuditoriumDto();
         req.setNumber(2L);
-        req.setTotalSeats(80L);
         req.setTheaterId(99L);
 
         when(theaterRepository.findById(99L))
                 .thenReturn(Optional.empty());
 
-        // Act
-        Auditorium result = auditoriumService.createAuditorium(req);
-
-        // Assert
-        assertNull(result.getTheater());
-        verify(auditoriumRepository).save(result);
+        // Act & Assert
+        RuntimeException ex = assertThrows(RuntimeException.class,
+                () -> auditoriumService.createAuditorium(req));
+        assertEquals("Theater not found", ex.getMessage());
+        verify(auditoriumRepository, never()).save(any());
     }
 
     @Test
@@ -172,7 +182,6 @@ class AuditoriumServiceTest {
         seat.setId(1L);
         seat.setSeatRow("A");
         seat.setNumber(10);                 
-        seat.setStatus(SeatStatusEnum.AVAILABLE); 
         seat.setSeatVariant(variant);
 
         // Act
@@ -180,21 +189,24 @@ class AuditoriumServiceTest {
 
         // Assert
         assertEquals("VIP", dto.getSeatVariantName());
-        assertEquals("AVAILABLE", dto.getStatus());
+        assertEquals(1L, dto.getId());
+        assertEquals("A", dto.getSeatRow());
+        assertEquals(10, dto.getNumber());
     }
-
 
     @Test
     void convertToSeatDto_shouldSetNullVariantName_whenVariantIsNull() {
         // Arrange
         Seat seat = new Seat();
-        seat.setStatus(SeatStatusEnum.BOOKED);
+        seat.setId(2L);
+        seat.setSeatRow("B");
+        seat.setNumber(5);
 
         // Act
         ResSeatDto dto = auditoriumService.convertToSeatDto(seat);
 
         // Assert
-        assertEquals("BOOKED", dto.getStatus());
         assertNull(dto.getSeatVariantName());
+        assertEquals(2L, dto.getId());
     }
 }

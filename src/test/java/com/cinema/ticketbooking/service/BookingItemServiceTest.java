@@ -2,6 +2,7 @@ package com.cinema.ticketbooking.service;
 
 import com.cinema.ticketbooking.domain.*;
 import com.cinema.ticketbooking.repository.BookingItemRepository;
+import com.cinema.ticketbooking.repository.SeatHoldRepository;
 import com.cinema.ticketbooking.util.error.NoResourceException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +23,9 @@ class BookingItemServiceTest {
 
     @Mock
     private SeatHoldService seatHoldService;
+
+    @Mock
+    private SeatHoldRepository seatHoldRepository;
 
     @InjectMocks
     private BookingItemService bookingItemService;
@@ -50,6 +54,14 @@ class BookingItemServiceTest {
         Long userId = 1L;
         Booking booking = new Booking();
 
+        // Create Film with price
+        Film film = new Film();
+        film.setPrice(50L);
+
+        // Create ShowTime with Film
+        ShowTime showTime = new ShowTime();
+        showTime.setFilm(film);
+
         SeatVariant seatVariant = new SeatVariant();
         seatVariant.setBasePrice(100.0);
         seatVariant.setBonus(20.0);
@@ -59,6 +71,7 @@ class BookingItemServiceTest {
 
         SeatHold seatHold = new SeatHold();
         seatHold.setSeat(seat);
+        seatHold.setShowTime(showTime);
 
         when(seatHoldService.getSeatHoldByUserId(userId))
                 .thenReturn(List.of(seatHold));
@@ -70,7 +83,9 @@ class BookingItemServiceTest {
         Double totalPrice = bookingItemService.createListItem(userId, booking);
 
         // Assert
-        assertEquals(120.0, totalPrice);
+        // Total = basePrice(100) + bonus(20) + filmPrice(50) = 170
+        assertEquals(170.0, totalPrice);
         verify(bookingItemRepository, times(1)).save(any(BookingItem.class));
+        verify(seatHoldRepository).deleteAll(anyList());
     }
 }

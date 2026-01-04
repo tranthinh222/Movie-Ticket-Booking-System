@@ -1,11 +1,12 @@
 package com.cinema.ticketbooking.service;
 
 import com.cinema.ticketbooking.domain.Address;
-import com.cinema.ticketbooking.domain.Theater;
 import com.cinema.ticketbooking.domain.request.ReqCreateAddressDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateAddressDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AddressRepository;
+import com.cinema.ticketbooking.repository.projection.AddressWithTheatersProjection;
+import com.cinema.ticketbooking.repository.projection.TheaterIdNameProjection;
 import com.cinema.ticketbooking.util.error.BadRequestException;
 import com.cinema.ticketbooking.util.error.NotFoundException;
 import org.junit.jupiter.api.Test;
@@ -157,25 +158,30 @@ class AddressServiceTest {
     }
 
     @Test
-    void getTheatersByAddressId_shouldReturnTheaters_whenAddressExists() {
+    void getTheatersByAddressId_shouldReturnTheaterProjections_whenAddressExists() {
         // Arrange
-        Theater theater = new Theater();
-        Address address = new Address();
-        address.setTheaters(List.of(theater));
-        when(addressRepository.findById(1L)).thenReturn(Optional.of(address));
+        TheaterIdNameProjection theaterProjection = mock(TheaterIdNameProjection.class);
+        when(theaterProjection.getId()).thenReturn(1L);
+        when(theaterProjection.getName()).thenReturn("Theater 1");
+
+        AddressWithTheatersProjection addressProjection = mock(AddressWithTheatersProjection.class);
+        when(addressProjection.getTheaters()).thenReturn(List.of(theaterProjection));
+
+        when(addressRepository.findProjectedById(1L)).thenReturn(Optional.of(addressProjection));
 
         // Act
-        List<Theater> result = addressService.getTheatersByAddressId(1L);
+        List<TheaterIdNameProjection> result = addressService.getTheatersByAddressId(1L);
 
         // Assert
         assertEquals(1, result.size());
-        assertEquals(theater, result.get(0));
+        assertEquals(1L, result.get(0).getId());
+        assertEquals("Theater 1", result.get(0).getName());
     }
 
     @Test
     void getTheatersByAddressId_shouldThrowNotFoundException_whenAddressNotFound() {
         // Arrange
-        when(addressRepository.findById(1L)).thenReturn(Optional.empty());
+        when(addressRepository.findProjectedById(1L)).thenReturn(Optional.empty());
 
         // Act & Assert
         NotFoundException exception = assertThrows(

@@ -5,12 +5,12 @@ import com.cinema.ticketbooking.domain.SeatHold;
 import com.cinema.ticketbooking.domain.ShowTime;
 import com.cinema.ticketbooking.domain.User;
 import com.cinema.ticketbooking.domain.request.ReqCreateSeatHoldDto;
+import com.cinema.ticketbooking.repository.BookingItemRepository;
 import com.cinema.ticketbooking.repository.SeatHoldRepository;
 import com.cinema.ticketbooking.repository.SeatRepository;
 import com.cinema.ticketbooking.repository.ShowTimeRepository;
 import com.cinema.ticketbooking.repository.UserRepository;
 import com.cinema.ticketbooking.util.SecurityUtil;
-import com.cinema.ticketbooking.util.constant.SeatStatusEnum;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,16 +34,17 @@ class SeatHoldServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private ShowTimeRepository showTimeRepository;
     @Mock private SeatRepository seatRepository;
+    @Mock private BookingItemRepository bookingItemRepository;
 
     @InjectMocks private SeatHoldService seatHoldService;
 
     @Test
-    void createSeatHold_shouldCreateSeatHold_whenAuthenticatedAndDataValid() {
+    void createSeatHold_shouldCreateSeatHolds_whenAuthenticatedAndDataValid() {
         // Arrange
         String email = "test@gmail.com";
 
         ReqCreateSeatHoldDto req = new ReqCreateSeatHoldDto();
-        req.setSeatId(100L);
+        req.setSeatIds(List.of(100L));
         req.setShowtimeId(10L);
 
         User user = new User();
@@ -51,7 +52,6 @@ class SeatHoldServiceTest {
 
         Seat seat = new Seat();
         seat.setId(100L);
-        seat.setStatus(SeatStatusEnum.AVAILABLE);
 
         ShowTime showTime = new ShowTime();
         showTime.setId(10L);
@@ -62,30 +62,31 @@ class SeatHoldServiceTest {
             mocked.when(SecurityUtil::getCurrentUserLogin).thenReturn(Optional.of(email));
 
             when(userRepository.findUserByEmail(email)).thenReturn(user);
-            when(seatRepository.findById(100L)).thenReturn(Optional.of(seat));
             when(showTimeRepository.findById(10L)).thenReturn(Optional.of(showTime));
+            when(seatRepository.lockSeats(List.of(100L))).thenReturn(List.of(seat));
+            when(seatHoldRepository.existsBySeatIdAndShowTimeId(100L, 10L)).thenReturn(false);
+            when(bookingItemRepository.existsBySeatIdAndShowTimeId(100L, 10L)).thenReturn(false);
 
             // Act
-            SeatHold result = seatHoldService.createSeatHold(req);
+            List<SeatHold> result = seatHoldService.createSeatHold(req);
 
             // Assert
             assertNotNull(result);
-            assertEquals(user, result.getUser());
-            assertEquals(seat, result.getSeat());
-            assertEquals(showTime, result.getShowTime());
-
-            // Seat phải chuyển sang HOLD và được lưu
-            assertEquals(SeatStatusEnum.HOLD, seat.getStatus());
-            verify(seatRepository).save(seat);
+            assertEquals(1, result.size());
+            
+            SeatHold seatHold = result.get(0);
+            assertEquals(user, seatHold.getUser());
+            assertEquals(seat, seatHold.getSeat());
+            assertEquals(showTime, seatHold.getShowTime());
 
             // SeatHold được save
-            verify(seatHoldRepository).save(any(SeatHold.class));
+            verify(seatHoldRepository).saveAll(anyList());
 
-            assertNotNull(result.getExpiresAt());
-            Instant min = start.plus(9, ChronoUnit.MINUTES);
-            Instant max = start.plus(11, ChronoUnit.MINUTES);
-            assertTrue(result.getExpiresAt().isAfter(min));
-            assertTrue(result.getExpiresAt().isBefore(max));
+            assertNotNull(seatHold.getExpiresAt());
+            Instant min = start.plus(4, ChronoUnit.MINUTES);
+            Instant max = start.plus(6, ChronoUnit.MINUTES);
+            assertTrue(seatHold.getExpiresAt().isAfter(min));
+            assertTrue(seatHold.getExpiresAt().isBefore(max));
         }
     }
 
@@ -93,7 +94,7 @@ class SeatHoldServiceTest {
     void createSeatHold_shouldThrowUnauthenticated_whenNoLogin() {
         // Arrange
         ReqCreateSeatHoldDto req = new ReqCreateSeatHoldDto();
-        req.setSeatId(100L);
+        req.setSeatIds(List.of(100L));
         req.setShowtimeId(10L);
 
         try (MockedStatic<SecurityUtil> mocked = mockStatic(SecurityUtil.class)) {
@@ -113,19 +114,15 @@ class SeatHoldServiceTest {
         String email = "test@gmail.com";
 
         ReqCreateSeatHoldDto req = new ReqCreateSeatHoldDto();
-        req.setSeatId(100L);
+        req.setSeatIds(List.of(100L));
         req.setShowtimeId(10L);
 
         User user = new User();
-        Seat seat = new Seat();
-        seat.setId(100L);
-        seat.setStatus(SeatStatusEnum.AVAILABLE);
 
         try (MockedStatic<SecurityUtil> mocked = mockStatic(SecurityUtil.class)) {
             mocked.when(SecurityUtil::getCurrentUserLogin).thenReturn(Optional.of(email));
 
             when(userRepository.findUserByEmail(email)).thenReturn(user);
-            when(seatRepository.findById(100L)).thenReturn(Optional.of(seat));
             when(showTimeRepository.findById(10L)).thenReturn(Optional.empty());
 
             // Act + Assert
@@ -133,36 +130,73 @@ class SeatHoldServiceTest {
                     () -> seatHoldService.createSeatHold(req));
             assertEquals("ShowTime not found", ex.getMessage());
 
-            // Vì code set HOLD + save seat trước khi check showtime
-            assertEquals(SeatStatusEnum.HOLD, seat.getStatus());
-            verify(seatRepository).save(seat);
-            verify(seatHoldRepository, never()).save(any());
+            verify(seatHoldRepository, never()).saveAll(anyList());
         }
     }
 
     @Test
-    void createSeatHold_shouldThrowNoSuchElement_whenSeatNotFound() {
+    void createSeatHold_shouldThrow_whenSomeSeatNotFound() {
         // Arrange
         String email = "test@gmail.com";
 
         ReqCreateSeatHoldDto req = new ReqCreateSeatHoldDto();
-        req.setSeatId(100L);
+        req.setSeatIds(List.of(100L, 101L));
         req.setShowtimeId(10L);
 
         User user = new User();
+        Seat seat = new Seat();
+        seat.setId(100L);
+        
+        ShowTime showTime = new ShowTime();
+        showTime.setId(10L);
 
         try (MockedStatic<SecurityUtil> mocked = mockStatic(SecurityUtil.class)) {
             mocked.when(SecurityUtil::getCurrentUserLogin).thenReturn(Optional.of(email));
 
             when(userRepository.findUserByEmail(email)).thenReturn(user);
-            when(seatRepository.findById(100L)).thenReturn(Optional.empty());
+            when(showTimeRepository.findById(10L)).thenReturn(Optional.of(showTime));
+            // Only return 1 seat when requesting 2
+            when(seatRepository.lockSeats(List.of(100L, 101L))).thenReturn(List.of(seat));
 
             // Act + Assert
-            assertThrows(java.util.NoSuchElementException.class,
+            RuntimeException ex = assertThrows(RuntimeException.class,
                     () -> seatHoldService.createSeatHold(req));
+            assertEquals("Some seats not found", ex.getMessage());
 
-            verify(seatRepository, never()).save(any());
-            verify(seatHoldRepository, never()).save(any());
+            verify(seatHoldRepository, never()).saveAll(anyList());
+        }
+    }
+
+    @Test
+    void createSeatHold_shouldThrow_whenSeatAlreadyHeld() {
+        // Arrange
+        String email = "test@gmail.com";
+
+        ReqCreateSeatHoldDto req = new ReqCreateSeatHoldDto();
+        req.setSeatIds(List.of(100L));
+        req.setShowtimeId(10L);
+
+        User user = new User();
+        Seat seat = new Seat();
+        seat.setId(100L);
+        
+        ShowTime showTime = new ShowTime();
+        showTime.setId(10L);
+
+        try (MockedStatic<SecurityUtil> mocked = mockStatic(SecurityUtil.class)) {
+            mocked.when(SecurityUtil::getCurrentUserLogin).thenReturn(Optional.of(email));
+
+            when(userRepository.findUserByEmail(email)).thenReturn(user);
+            when(showTimeRepository.findById(10L)).thenReturn(Optional.of(showTime));
+            when(seatRepository.lockSeats(List.of(100L))).thenReturn(List.of(seat));
+            when(seatHoldRepository.existsBySeatIdAndShowTimeId(100L, 10L)).thenReturn(true);
+
+            // Act + Assert
+            RuntimeException ex = assertThrows(RuntimeException.class,
+                    () -> seatHoldService.createSeatHold(req));
+            assertEquals("Seat 100 is already held for this showtime", ex.getMessage());
+
+            verify(seatHoldRepository, never()).saveAll(anyList());
         }
     }
 

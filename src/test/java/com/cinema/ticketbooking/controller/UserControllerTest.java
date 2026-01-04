@@ -1,13 +1,13 @@
 package com.cinema.ticketbooking.controller;
 
 import com.cinema.ticketbooking.domain.User;
+import com.cinema.ticketbooking.domain.request.ReqChangePasswordDto;
 import com.cinema.ticketbooking.domain.request.ReqCreateUserDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateUserDto;
 import com.cinema.ticketbooking.domain.response.ResUpdateUserDto;
 import com.cinema.ticketbooking.domain.response.ResUserDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.service.UserService;
-import com.cinema.ticketbooking.util.error.BadRequestException;
 import com.cinema.ticketbooking.util.error.IdInvalidException;
 
 import org.junit.jupiter.api.*;
@@ -39,7 +39,6 @@ class UserControllerTest {
 
     @AfterEach
     void tearDown() {
-        // tránh ảnh hưởng test khác
         SecurityContextHolder.clearContext();
     }
 
@@ -86,7 +85,7 @@ class UserControllerTest {
     // -----------------------
     @Test
     void getAllUsers_shouldReturnOkAndBody() {
-        // Arrange: set SecurityContext để code không bị NPE
+        // Arrange
         var auth = new UsernamePasswordAuthenticationToken(
                 "admin@gmail.com",
                 "N/A",
@@ -143,7 +142,6 @@ class UserControllerTest {
         User saved = new User();
         saved.setId(1L);
 
-        // quan trọng: controller đổi req.setPassword(hash) rồi gọi service.createUser(req)
         when(userService.createUser(any(ReqCreateUserDto.class))).thenReturn(saved);
 
         // Act
@@ -153,7 +151,7 @@ class UserControllerTest {
         assertEquals(HttpStatus.CREATED, res.getStatusCode());
         assertSame(saved, res.getBody());
 
-        assertEquals("HASHED", req.getPassword()); // controller đã set lại password
+        assertEquals("HASHED", req.getPassword());
         verify(passwordEncoder).encode("plain");
         verify(userService).createUser(req);
     }
@@ -201,18 +199,8 @@ class UserControllerTest {
     // PUT /users/me/password
     // -----------------------
     @Test
-    void updateMyPassword_shouldThrowBadRequest_whenPasswordBlank() {
-        // Act + Assert
-        BadRequestException ex = assertThrows(BadRequestException.class,
-                () -> userController.updateMyPassword("   "));
-        assertEquals("Password is not blank", ex.getMessage());
-
-        verify(userService, never()).updateMyPassword(anyString(), anyString());
-    }
-
-    @Test
     void updateMyPassword_shouldCallServiceAndReturnOk_whenValid() {
-        // Arrange: set auth name = email
+        // Arrange
         var auth = new UsernamePasswordAuthenticationToken(
                 "user@gmail.com",
                 "N/A",
@@ -220,17 +208,21 @@ class UserControllerTest {
         );
         SecurityContextHolder.getContext().setAuthentication(auth);
 
+        ReqChangePasswordDto request = new ReqChangePasswordDto();
+        request.setCurrentPassword("oldpass");
+        request.setNewPassword("newpass");
+
         // Act
-        ResponseEntity<String> res = userController.updateMyPassword("newpass");
+        ResponseEntity<Void> res = userController.updateMyPassword(request);
 
         // Assert
         assertEquals(HttpStatus.OK, res.getStatusCode());
-        assertEquals("Update password successfully", res.getBody());
-        verify(userService).updateMyPassword("user@gmail.com", "newpass");
+        assertNull(res.getBody());
+        verify(userService).updateMyPassword("user@gmail.com", "oldpass", "newpass");
     }
 
     // -----------------------
-    // DELETE /users  (NOTE: mapping hiện tại thiếu {id}, nhưng unit test vẫn gọi được)
+    // DELETE /users/{id}
     // -----------------------
     @Test
     void deleteUser_shouldThrowIdInvalidException_whenNotFound() {
