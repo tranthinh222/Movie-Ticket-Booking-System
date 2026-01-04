@@ -7,6 +7,7 @@ import com.cinema.ticketbooking.domain.response.ResCreateBookingDto;
 import com.cinema.ticketbooking.repository.BookingRepository;
 import com.cinema.ticketbooking.util.constant.BookingStatusEnum;
 import com.cinema.ticketbooking.util.constant.PaymentMethodEnum;
+import com.cinema.ticketbooking.util.constant.PaymentStatusEnum;
 import org.junit.jupiter.api.Test;
 
 import java.io.UnsupportedEncodingException;
@@ -125,7 +126,7 @@ class BookingServiceTest {
         // Arrange
         Booking booking = new Booking();
         booking.setId(1L);
-        
+
         when(bookingRepository.findByIdWithDetails(1L)).thenReturn(java.util.Optional.of(booking));
 
         // Act
@@ -157,5 +158,68 @@ class BookingServiceTest {
 
         // Assert
         verify(bookingRepository).deleteById(5L);
+    }
+
+    @Test
+    void updateBookingStatus_shouldUpdateStatusAndPaymentToPaid_whenConfirmed() {
+        // Arrange
+        Long bookingId = 1L;
+        Booking booking = new Booking();
+        booking.setId(bookingId);
+        booking.setStatus(BookingStatusEnum.PENDING);
+
+        Payment payment1 = new Payment();
+        payment1.setId(100L);
+        payment1.setStatus(PaymentStatusEnum.UNPAID);
+
+        Payment payment2 = new Payment();
+        payment2.setId(101L);
+        payment2.setStatus(PaymentStatusEnum.UNPAID);
+
+        when(bookingRepository.findById(bookingId)).thenReturn(java.util.Optional.of(booking));
+        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
+        when(paymentService.getPaymentsByBookingId(bookingId)).thenReturn(java.util.List.of(payment1, payment2));
+
+        // Act
+        Booking result = bookingService.updateBookingStatus(bookingId, BookingStatusEnum.CONFIRMED);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(BookingStatusEnum.CONFIRMED, result.getStatus());
+        verify(paymentService).getPaymentsByBookingId(bookingId);
+        verify(paymentService, times(2)).savePayment(any(Payment.class));
+    }
+
+    @Test
+    void updateBookingStatus_shouldNotUpdatePayment_whenNotConfirmed() {
+        // Arrange
+        Long bookingId = 1L;
+        Booking booking = new Booking();
+        booking.setId(bookingId);
+        booking.setStatus(BookingStatusEnum.PENDING);
+
+        when(bookingRepository.findById(bookingId)).thenReturn(java.util.Optional.of(booking));
+        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
+
+        // Act
+        Booking result = bookingService.updateBookingStatus(bookingId, BookingStatusEnum.CANCELLED);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(BookingStatusEnum.CANCELLED, result.getStatus());
+        verify(paymentService, never()).getPaymentsByBookingId(anyLong());
+        verify(paymentService, never()).savePayment(any(Payment.class));
+    }
+
+    @Test
+    void updateBookingStatus_shouldThrowException_whenBookingNotFound() {
+        // Arrange
+        Long bookingId = 99L;
+        when(bookingRepository.findById(bookingId)).thenReturn(java.util.Optional.empty());
+
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            bookingService.updateBookingStatus(bookingId, BookingStatusEnum.CONFIRMED);
+        });
     }
 }

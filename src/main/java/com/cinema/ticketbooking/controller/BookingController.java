@@ -211,7 +211,8 @@ public class BookingController {
 
         ResBookingDto response = new ResBookingDto();
         response.setId(updatedBooking.getId());
-        response.setUser(new ResBookingDto.UserInfo(updatedBooking.getUser().getId(), updatedBooking.getUser().getUsername()));
+        response.setUser(
+                new ResBookingDto.UserInfo(updatedBooking.getUser().getId(), updatedBooking.getUser().getUsername()));
         response.setStatus(updatedBooking.getStatus());
         response.setTotal_price(updatedBooking.getTotal_price());
         response.setQrCode(updatedBooking.getQrCode());

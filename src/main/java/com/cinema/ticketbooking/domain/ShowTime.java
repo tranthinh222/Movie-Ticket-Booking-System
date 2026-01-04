@@ -1,7 +1,6 @@
 package com.cinema.ticketbooking.domain;
 
 import com.cinema.ticketbooking.util.SecurityUtil;
-import com.cinema.ticketbooking.util.constant.ShowTimeStatusEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -40,9 +39,6 @@ public class ShowTime {
         private LocalDate date;
         private LocalTime startTime;
         private LocalTime endTime;
-
-        @Enumerated(EnumType.STRING)
-        private ShowTimeStatusEnum status;
 
         @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
         private Instant createdAt;

@@ -7,6 +7,7 @@ import com.cinema.ticketbooking.domain.request.ReqCreateShowTimeDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateShowTimeDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AuditoriumRepository;
+import com.cinema.ticketbooking.repository.BookingItemRepository;
 import com.cinema.ticketbooking.repository.FilmRepository;
 import com.cinema.ticketbooking.repository.ShowTimeRepository;
 import org.springframework.data.domain.Page;
@@ -21,12 +22,14 @@ public class ShowTimeService {
     private final ShowTimeRepository showTimeRepository;
     private final FilmRepository filmRepository;
     private final AuditoriumRepository auditoriumRepository;
+    private final BookingItemRepository bookingItemRepository;
 
     public ShowTimeService(ShowTimeRepository showTimeRepository, FilmRepository filmRepository,
-            AuditoriumRepository auditoriumRepository) {
+            AuditoriumRepository auditoriumRepository, BookingItemRepository bookingItemRepository) {
         this.showTimeRepository = showTimeRepository;
         this.filmRepository = filmRepository;
         this.auditoriumRepository = auditoriumRepository;
+        this.bookingItemRepository = bookingItemRepository;
     }
 
     public ResultPaginationDto getAllShowTimes(Specification<ShowTime> spec, Pageable pageable) {
@@ -59,7 +62,6 @@ public class ShowTimeService {
         showTime.setDate(reqShowTime.getDate());
         showTime.setStartTime(reqShowTime.getStartTime());
         showTime.setEndTime(reqShowTime.getEndTime());
-        showTime.setStatus(reqShowTime.getStatus());
 
         this.showTimeRepository.save(showTime);
         return showTime;
@@ -67,6 +69,13 @@ public class ShowTimeService {
 
     public void deleteShowTime(Long id) {
         this.showTimeRepository.deleteById(id);
+    }
+
+    /**
+     * Kiểm tra xem showtime có booking nào không
+     */
+    public boolean hasBookings(Long showTimeId) {
+        return this.bookingItemRepository.existsByShowTimeId(showTimeId);
     }
 
     public ShowTime updateShowTime(ReqUpdateShowTimeDto reqShowTime) {
@@ -77,7 +86,6 @@ public class ShowTimeService {
         showTime.setDate(reqShowTime.getDate());
         showTime.setStartTime(reqShowTime.getStartTime());
         showTime.setEndTime(reqShowTime.getEndTime());
-        showTime.setStatus(reqShowTime.getStatus());
 
         return this.showTimeRepository.save(showTime);
     }

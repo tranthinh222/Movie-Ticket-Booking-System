@@ -31,188 +31,166 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class FilmServiceTest {
 
-    @Mock
-    private FilmRepository filmRepository;
+        @Mock
+        private FilmRepository filmRepository;
 
-    @InjectMocks
-    private FilmService filmService;
+        @InjectMocks
+        private FilmService filmService;
 
-    // getAllFilms 
-    @Test
-    void getAllFilms_shouldReturnPaginationResult_whenCalled() {
-        // Arrange
-        Film film = new Film();
-        Page<Film> page = new PageImpl<>(List.of(film));
-        Pageable pageable = PageRequest.of(0, 10);
+        // getAllFilms
+        @Test
+        void getAllFilms_shouldReturnPaginationResult_whenCalled() {
+                // Arrange
+                Film film = new Film();
+                Page<Film> page = new PageImpl<>(List.of(film));
+                Pageable pageable = PageRequest.of(0, 10);
 
-        when(filmRepository.findAll(
-                ArgumentMatchers.<Specification<Film>>any(),
-                eq(pageable))
-        ).thenReturn(page);
+                when(filmRepository.findAll(
+                                ArgumentMatchers.<Specification<Film>>any(),
+                                eq(pageable))).thenReturn(page);
 
-        // Act
-        ResultPaginationDto result =
-                filmService.getAllFilms(null, pageable);
+                // Act
+                ResultPaginationDto result = filmService.getAllFilms(null, pageable);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(1, result.getMeta().getTotalItems());
-        List<?> data = (List<?>) result.getData();
-        assertEquals(1, data.size());
-        verify(filmRepository).findAll(ArgumentMatchers.<Specification<Film>>any(), eq(pageable));
-    }
+                // Assert
+                assertNotNull(result);
+                assertEquals(1, result.getMeta().getTotalItems());
+                List<?> data = (List<?>) result.getData();
+                assertEquals(1, data.size());
+                verify(filmRepository).findAll(ArgumentMatchers.<Specification<Film>>any(), eq(pageable));
+        }
 
-    // createFilm
-    @Test
-    void createFilm_shouldSaveAndReturnFilm_whenValidRequest() {
-        // Arrange
-        ReqCreateFilmDto req = new ReqCreateFilmDto();
-        req.setName("Avatar");
+        // createFilm
+        @Test
+        void createFilm_shouldSaveAndReturnFilm_whenValidRequest() {
+                // Arrange
+                ReqCreateFilmDto req = new ReqCreateFilmDto();
+                req.setName("Avatar");
 
-        Film savedFilm = new Film();
-        savedFilm.setName("Avatar");
+                Film savedFilm = new Film();
+                savedFilm.setName("Avatar");
 
-        when(filmRepository.save(any(Film.class)))
-                .thenReturn(savedFilm);
+                when(filmRepository.save(any(Film.class)))
+                                .thenReturn(savedFilm);
 
-        // Act
-        Film result = filmService.createFilm(req);
+                // Act
+                Film result = filmService.createFilm(req);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals("Avatar", result.getName());
-        verify(filmRepository).save(any(Film.class));
-    }
+                // Assert
+                assertNotNull(result);
+                assertEquals("Avatar", result.getName());
+                verify(filmRepository).save(any(Film.class));
+        }
 
-    // deleteFilm
-    @Test
-    void deleteFilm_shouldCallRepositoryDelete_whenCalled() {
-        // Arrange
-        Long filmId = 1L;
+        // deleteFilm
+        @Test
+        void deleteFilm_shouldCallRepositoryDelete_whenCalled() {
+                // Arrange
+                Long filmId = 1L;
 
-        // Act
-        filmService.deleteFilm(filmId);
+                // Act
+                filmService.deleteFilm(filmId);
 
-        // Assert
-        verify(filmRepository).deleteById(filmId);
-    }
+                // Assert
+                verify(filmRepository).deleteById(filmId);
+        }
 
-    // updateFilm
-    @Test
-    void updateFilm_shouldThrowBadRequestException_whenNoFieldProvided() {
-        // Arrange
-        ReqUpdateFilmDto req = new ReqUpdateFilmDto();
-        req.setId(1L);
+        // updateFilm
+        @Test
+        void updateFilm_shouldThrowBadRequestException_whenNoFieldProvided() {
+                // Arrange
+                ReqUpdateFilmDto req = new ReqUpdateFilmDto();
+                req.setId(1L);
 
-        // Act & Assert
-        assertThrows(
-                BadRequestException.class,
-                () -> filmService.updateFilm(req)
-        );
-    }
+                // Act & Assert
+                assertThrows(
+                                BadRequestException.class,
+                                () -> filmService.updateFilm(req));
+        }
 
-    @Test
-    void updateFilm_shouldThrowResourceAlreadyExists_whenNameDuplicated() {
-        // Arrange
-        ReqUpdateFilmDto req = new ReqUpdateFilmDto();
-        req.setId(1L);
-        req.setName("Avatar");
+        // Test removed: updateFilm no longer checks for duplicate names
+        // The duplicate name validation was removed from FilmService.updateFilm()
 
-        Film film = new Film();
-        when(filmRepository.findById(1L))
-                .thenReturn(Optional.of(film));
-        when(filmRepository.existsByName("Avatar"))
-                .thenReturn(true);
+        @Test
+        void updateFilm_shouldUpdateAndReturnFilm_whenValidRequest() {
+                // Arrange
+                ReqUpdateFilmDto req = new ReqUpdateFilmDto();
+                req.setId(1L);
+                req.setName("New Name");
 
-        // Act & Assert
-        assertThrows(
-                ResourceAlreadyExistsException.class,
-                () -> filmService.updateFilm(req)
-        );
-    }
+                Film film = new Film();
+                film.setName("Old Name");
 
-    @Test
-    void updateFilm_shouldUpdateAndReturnFilm_whenValidRequest() {
-        // Arrange
-        ReqUpdateFilmDto req = new ReqUpdateFilmDto();
-        req.setId(1L);
-        req.setName("New Name");
+                when(filmRepository.findById(1L))
+                                .thenReturn(Optional.of(film));
+                when(filmRepository.save(any(Film.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        Film film = new Film();
-        film.setName("Old Name");
+                // Act
+                Film result = filmService.updateFilm(req);
 
-        when(filmRepository.findById(1L))
-                .thenReturn(Optional.of(film));
-        when(filmRepository.existsByName("New Name"))
-                .thenReturn(false);
-        when(filmRepository.save(any(Film.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                // Assert
+                assertNotNull(result);
+                assertEquals("New Name", result.getName());
+                verify(filmRepository).save(film);
+        }
 
-        // Act
-        Film result = filmService.updateFilm(req);
+        @Test
+        void updateFilm_shouldReturnNull_whenFilmNotFound() {
+                // Arrange
+                ReqUpdateFilmDto req = new ReqUpdateFilmDto();
+                req.setId(1L);
+                req.setName("Test");
 
-        // Assert
-        assertNotNull(result);
-        assertEquals("New Name", result.getName());
-        verify(filmRepository).save(film);
-    }
+                when(filmRepository.findById(1L))
+                                .thenReturn(Optional.empty());
 
-    @Test
-    void updateFilm_shouldReturnNull_whenFilmNotFound() {
-        // Arrange
-        ReqUpdateFilmDto req = new ReqUpdateFilmDto();
-        req.setId(1L);
-        req.setName("Test");
+                // Act
+                Film result = filmService.updateFilm(req);
 
-        when(filmRepository.findById(1L))
-                .thenReturn(Optional.empty());
+                // Assert
+                assertNull(result);
+        }
 
-        // Act
-        Film result = filmService.updateFilm(req);
+        // getFilmById
+        @Test
+        void getFilmById_shouldReturnFilm_whenFound() {
+                // Arrange
+                Film film = new Film();
+                when(filmRepository.findById(1L))
+                                .thenReturn(Optional.of(film));
 
-        // Assert
-        assertNull(result);
-    }
+                // Act
+                Film result = filmService.getFilmById(1L);
 
-    // getFilmById
-    @Test
-    void getFilmById_shouldReturnFilm_whenFound() {
-        // Arrange
-        Film film = new Film();
-        when(filmRepository.findById(1L))
-                .thenReturn(Optional.of(film));
+                // Assert
+                assertNotNull(result);
+        }
 
-        // Act
-        Film result = filmService.getFilmById(1L);
+        @Test
+        void getFilmById_shouldReturnNull_whenNotFound() {
+                // Arrange
+                when(filmRepository.findById(1L))
+                                .thenReturn(Optional.empty());
 
-        // Assert
-        assertNotNull(result);
-    }
+                // Act
+                Film result = filmService.getFilmById(1L);
 
-    @Test
-    void getFilmById_shouldReturnNull_whenNotFound() {
-        // Arrange
-        when(filmRepository.findById(1L))
-                .thenReturn(Optional.empty());
+                // Assert
+                assertNull(result);
+        }
 
-        // Act
-        Film result = filmService.getFilmById(1L);
+        // isFilmNameDuplicated
+        @Test
+        void isFilmNameDuplicated_shouldReturnTrue_whenFilmExists() {
+                // Arrange
+                when(filmRepository.existsByName("Avatar"))
+                                .thenReturn(true);
 
-        // Assert
-        assertNull(result);
-    }
+                // Act
+                boolean result = filmService.isFilmNameDuplicated("Avatar");
 
-    // isFilmNameDuplicated
-    @Test
-    void isFilmNameDuplicated_shouldReturnTrue_whenFilmExists() {
-        // Arrange
-        when(filmRepository.existsByName("Avatar"))
-                .thenReturn(true);
-
-        // Act
-        boolean result = filmService.isFilmNameDuplicated("Avatar");
-
-        // Assert
-        assertTrue(result);
-    }
+                // Assert
+                assertTrue(result);
+        }
 }

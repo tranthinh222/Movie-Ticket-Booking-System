@@ -33,10 +33,13 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class TheaterServiceTest {
 
-    @Mock private TheaterRepository theaterRepository;
-    @Mock private AddressRepository addressRepository;
+    @Mock
+    private TheaterRepository theaterRepository;
+    @Mock
+    private AddressRepository addressRepository;
 
-    @InjectMocks private TheaterService theaterService;
+    @InjectMocks
+    private TheaterService theaterService;
 
     // -----------------------
     // getAllTheaters
@@ -60,12 +63,11 @@ class TheaterServiceTest {
         assertNotNull(result.getMeta());
         assertEquals(content, result.getData());
 
-         // mt.setCurrentPage(pageable.getPageNumber() + 1) rồi bị ghi đè bằng totalElements
-        assertEquals(25, result.getMeta().getCurrentPage());
-        // totalPages đang set = pageable.getPageSize()
-        assertEquals(10, result.getMeta().getTotalPages());
-        // pageSize đang set = theaterPage.getTotalPages()
-        assertEquals(3, result.getMeta().getPageSize());
+        // Correct pagination meta values
+        assertEquals(1, result.getMeta().getCurrentPage()); // pageable.getPageNumber() + 1 = 0 + 1 = 1
+        assertEquals(3, result.getMeta().getTotalPages()); // theaterPage.getTotalPages() = 3
+        assertEquals(10, result.getMeta().getPageSize()); // pageable.getPageSize() = 10
+        assertEquals(25, result.getMeta().getTotalItems()); // theaterPage.getTotalElements() = 25
 
         verify(theaterRepository).findAll(spec, pageable);
     }

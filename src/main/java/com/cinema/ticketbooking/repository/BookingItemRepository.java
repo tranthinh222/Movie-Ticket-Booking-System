@@ -12,4 +12,9 @@ public interface BookingItemRepository extends JpaRepository<BookingItem, Long>,
      */
     boolean existsBySeatIdAndShowTimeId(Long seatId, Long showTimeId);
 
+    /**
+     * Kiểm tra có booking nào cho showtime không
+     */
+    boolean existsByShowTimeId(Long showTimeId);
+
 }
