@@ -52,10 +52,12 @@ public class MovieRecommendationService {
         var genre = request.getGenre() == null ? "" : request.getGenre().trim();
         var offers = request.getBudget() == null ? List.<com.cinema.ticketbooking.domain.Discount>of()
                 : discounts.list(false);
+        Map<Long, List<com.cinema.ticketbooking.domain.Seat>> roomSeats = new HashMap<>();
+        Map<String, DiscountService.Quote> quotes = new HashMap<>();
         Map<Long, ResMovieRecommendationDto> results = new LinkedHashMap<>();
         for (var show : repository.findRecommendationCandidates(date, now.toLocalDate(), now.toLocalTime())) {
             var film = show.getFilm();
-            if (film == null || film.getId() == null || excluded.contains(film.getId()))
+            if (film == null || film.getId() == null || excluded.contains(film.getId()) || results.containsKey(film.getId()))
                 continue;
             if (!genre.isEmpty() && (film.getGenre() == null || Arrays.stream(film.getGenre().split("[,;]"))
                     .noneMatch(value -> value.trim().equalsIgnoreCase(genre))))
@@ -68,7 +70,7 @@ public class MovieRecommendationService {
             if (film.getPrice() != null && show.getAuditorium() != null) {
                 var unavailable = new HashSet<>(bookings.findUnavailableSeatIds(show.getId()));
                 unavailable.addAll(holds.findUnavailableSeatIds(show.getId(), now.atZone(clock.getZone()).toInstant()));
-                var prices = seats.findByAuditoriumId(show.getAuditorium().getId()).stream()
+                var prices = roomSeats.computeIfAbsent(show.getAuditorium().getId(), seats::findByAuditoriumId).stream()
                         .filter(seat -> seat.getSeatVariant() != null && !unavailable.contains(seat.getId()))
                         .map(seat -> java.math.BigDecimal.valueOf(film.getPrice())
                                 .add(java.math.BigDecimal.valueOf(seat.getSeatVariant().getBasePrice()))

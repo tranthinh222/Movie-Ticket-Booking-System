@@ -13,6 +13,6 @@ public record AiIntentDto(@NotNull Intent intent, @Size(max = 100) String genre,
     }
 
     public enum Intent {
-        MOVIES, MORE_MOVIES, MOVIE_DETAILS, SEATS, DISCOUNTS, GREETING, CLARIFY
+        MOVIES, MORE_MOVIES, MOVIE_DETAILS, SEATS, DISCOUNTS, GREETING, OFF_TOPIC, CLARIFY
     }
 }
