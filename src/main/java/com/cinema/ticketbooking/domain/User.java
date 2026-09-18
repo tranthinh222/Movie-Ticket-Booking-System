@@ -40,12 +40,12 @@ public class User {
         @Enumerated(EnumType.STRING)
         private GenderEnum gender;
         private String avatar;
-        @Column(columnDefinition = "MEDIUMTEXT")
+        @Column(columnDefinition = "TEXT")
         private String refreshToken;
 
         private String otpCode;
         private Instant otpExpiration;
-        @Column(columnDefinition = "MEDIUMTEXT")
+        @Column(columnDefinition = "TEXT")
         private String resetToken;
 
         @Enumerated(EnumType.STRING)

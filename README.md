@@ -5,7 +5,7 @@ Hệ thống đặt vé xem phim trực tuyến sử dụng Spring Boot, tích h
 ## 📋 Yêu cầu hệ thống
 
 - **Java 17** hoặc cao hơn
-- **MySQL 8.x** hoặc Docker
+- **PostgreSQL 17** hoặc Docker
 - **Gradle** (đã tích hợp sẵn wrapper)
 
 ---
@@ -23,28 +23,30 @@ cd Movie-Ticket-Booking-System
 docker-compose up -d
 ```
 
-Ứng dụng sẽ chạy tại: `http://localhost:8080`
+Ứng dụng sẽ chạy tại: `http://localhost:8081`
 
 ---
 
 ### Cách 2: Chạy trực tiếp
 
-#### Bước 1: Cài đặt MySQL
+#### Bước 1: Khởi động PostgreSQL
 
-Tạo database:
+Chạy `docker compose up -d postgres` để tạo database local tự động. Xem [hướng dẫn PostgreSQL và chuyển dữ liệu](POSTGRESQL_MIGRATION.md).
+
+Nếu cài PostgreSQL trực tiếp, tạo database:
 
 ```sql
 CREATE DATABASE ticketbooking;
 ```
 
-#### Bước 2: Cấu hình application.properties
+#### Bước 2: Cấu hình application-local.properties
 
-Tạo file `src/main/resources/application.properties`:
+Cấu hình file riêng `src/main/resources/application-local.properties` (không commit):
 
 ```properties
 # Database
-spring.datasource.url=jdbc:mysql://localhost:3306/ticketbooking
-spring.datasource.username=root
+spring.datasource.url=jdbc:postgresql://127.0.0.1:5432/ticketbooking
+spring.datasource.username=cinema
 spring.datasource.password=your_password
 spring.jpa.hibernate.ddl-auto=update
 
@@ -52,7 +54,7 @@ spring.jpa.hibernate.ddl-auto=update
 vnpay.tmnCode=YOUR_TMN_CODE
 vnpay.hashSecret=YOUR_HASH_SECRET
 vnpay.url=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
-vnpay.returnUrl=http://localhost:8080/api/v1/payments/vnpay-callback
+vnpay.returnUrl=http://localhost:8081/api/v1/payments/vnpay-callback
 
 # JWT (tự tạo key hoặc dùng mẫu)
 ticketbooking.jwt.base64-secret=your-secret-key-base64
@@ -187,7 +189,7 @@ src/main/java/com/cinema/ticketbooking/
 
 | Lỗi                        | Giải pháp                                     |
 | -------------------------- | --------------------------------------------- |
-| Database connection failed | Kiểm tra MySQL đang chạy và thông tin kết nối |
+| Database connection failed | Kiểm tra PostgreSQL đang chạy và thông tin kết nối |
 | VNPay redirect lỗi         | Kiểm tra `vnpay.returnUrl` đúng host          |
 | Ghế không giữ được         | Đảm bảo đã đăng nhập                          |
 | Tests fail                 | Chạy `./gradlew clean test`                   |

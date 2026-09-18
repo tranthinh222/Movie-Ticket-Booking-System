@@ -1,23 +1,38 @@
-version: "3.8"
-
 services:
   cinema-app:
     build: .
     container_name: cinema-api
     ports:
-      - "8080:8080"
+      - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ticketbooking
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: 123456
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/ticketbooking
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-cinema}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-cinema_local_password}
+      JWT_SECRET: ${JWT_SECRET:-}
+      CLOUDINARY_URL: ${CLOUDINARY_URL:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      GEMINI_MODEL: ${GEMINI_MODEL:-}
     depends_on:
-      - mysql
+      postgres:
+        condition: service_healthy
 
-  mysql:
-    image: mysql:8
-    container_name: cinema-mysql
+  postgres:
+    image: postgres:17
+    container_name: cinema-postgres
     environment:
-      MYSQL_ROOT_PASSWORD: 123456
-      MYSQL_DATABASE: ticketbooking
+      POSTGRES_USER: ${DB_USERNAME:-cinema}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-cinema_local_password}
+      POSTGRES_DB: ticketbooking
     ports:
-      - "3307:3306"
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - cinema-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  cinema-postgres-data:

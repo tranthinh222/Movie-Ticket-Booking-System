@@ -61,7 +61,7 @@ class BookingControllerTest {
 
             when(userService.getUserById(1L)).thenReturn(user);
             when(httpServletRequest.getRemoteAddr()).thenReturn("127.0.0.1");
-            when(bookingService.createBooking(1L, PaymentMethodEnum.CASH, "127.0.0.1")).thenReturn(responseDto);
+            when(bookingService.createBooking(1L, PaymentMethodEnum.CASH, "127.0.0.1", null)).thenReturn(responseDto);
 
             // Act
             ResponseEntity<ResCreateBookingDto> response = bookingController.createBooking(request, httpServletRequest);
@@ -73,7 +73,7 @@ class BookingControllerTest {
             assertEquals("TestUser", response.getBody().getUsername());
             assertEquals(200000.0, response.getBody().getPrice());
             verify(userService).getUserById(1L);
-            verify(bookingService).createBooking(1L, PaymentMethodEnum.CASH, "127.0.0.1");
+            verify(bookingService).createBooking(1L, PaymentMethodEnum.CASH, "127.0.0.1", null);
         }
     }
 

@@ -16,7 +16,7 @@ public class News {
     private String title;
     @Column(nullable = false, length = 2000)
     private String summary;
-    @Column(nullable = false, columnDefinition = "LONGTEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
     @Column(length = 2000)
     private String image;

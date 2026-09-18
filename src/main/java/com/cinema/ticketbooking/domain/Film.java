@@ -35,7 +35,7 @@ public class Film {
     private Long duration;
     private Long price;
 
-    @Column(columnDefinition = "MEDIUMTEXT")
+    @Column(columnDefinition = "TEXT")
     private String description;
     private String genre;
     private String language;

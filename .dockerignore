@@ -1,0 +1,7 @@
+
+.git
+.gradle
+build
+src/main/resources/application-local.properties
+**/migration.load
+.env
