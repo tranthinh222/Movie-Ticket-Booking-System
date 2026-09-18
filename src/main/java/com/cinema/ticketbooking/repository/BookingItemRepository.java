@@ -19,4 +19,7 @@ public interface BookingItemRepository extends JpaRepository<BookingItem, Long>,
 
     @org.springframework.data.jpa.repository.Query("select b.seat.id from BookingItem b where b.showTime.id = :showTimeId")
     java.util.List<Long> findUnavailableSeatIds(@org.springframework.data.repository.query.Param("showTimeId") Long showTimeId);
+
+    @org.springframework.data.jpa.repository.Query("select b.showTime.id, b.seat.id from BookingItem b where b.showTime.id in :ids")
+    java.util.List<Object[]> findUnavailableSeatsForShows(@org.springframework.data.repository.query.Param("ids") java.util.List<Long> ids);
 }

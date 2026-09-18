@@ -19,5 +19,6 @@ public interface SeatRepository extends JpaRepository<Seat, Long>, JpaSpecificat
     @Query("SELECT s FROM Seat s WHERE s.id IN :seatIds")
     List<Seat> lockSeats(@Param("seatIds") List<Long> seatIds);
 
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "seatVariant")
     List<Seat> findByAuditoriumId(Long auditoriumId);
 }

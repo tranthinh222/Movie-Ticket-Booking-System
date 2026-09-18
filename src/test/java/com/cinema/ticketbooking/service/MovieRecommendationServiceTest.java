@@ -100,7 +100,7 @@ class MovieRecommendationServiceTest {
   var room=new Auditorium();em.persist(room);
   var show=new ShowTime();show.setFilm(f);show.setAuditorium(room);show.setDate(today.plusDays(1));show.setStartTime(LocalTime.NOON);em.persist(show);em.flush();
   var seatRepo=org.mockito.Mockito.mock(com.cinema.ticketbooking.repository.SeatRepository.class);
-  var seat=new Seat();var variant=new SeatVariant();variant.setBasePrice(20000);variant.setBonus(10000);seat.setSeatVariant(variant);
+  var seat=new Seat();seat.setId(99L);var variant=new SeatVariant();variant.setBasePrice(20000);variant.setBonus(10000);seat.setSeatVariant(variant);
   org.mockito.Mockito.when(seatRepo.findByAuditoriumId(room.getId())).thenReturn(java.util.List.of(seat));
   var service=new MovieRecommendationService(repository,seatRepo,discounts,bookings,holds,Clock.fixed(Instant.parse("2026-09-18T07:00:00Z"),ZoneId.of("Asia/Ho_Chi_Minh")));
   var req=new ReqMovieRecommendationDto();req.setBudget(new java.math.BigDecimal("100000"));
@@ -111,6 +111,13 @@ class MovieRecommendationServiceTest {
   org.mockito.Mockito.when(discounts.calculate("SAVE",new java.math.BigDecimal("100000.0"))).thenReturn(new DiscountService.Quote("SAVE",new java.math.BigDecimal("100000.0"),new java.math.BigDecimal("20000"),new java.math.BigDecimal("80000")));
   req.setBudget(new java.math.BigDecimal("80000"));var result=service.recommend(req).get(0);assertEquals("SAVE",result.discountCode());assertEquals(new java.math.BigDecimal("80000"),result.finalTicketPrice());
   req.setBudget(new java.math.BigDecimal("79999"));assertTrue(service.recommend(req).isEmpty());
+  req.setBudget(new java.math.BigDecimal("150000"));
+  org.mockito.Mockito.when(bookings.findUnavailableSeatsForShows(org.mockito.ArgumentMatchers.anyList())).thenReturn(java.util.Collections.singletonList(new Object[]{show.getId(),99L}));
+  assertTrue(service.recommend(req).isEmpty());
+  org.mockito.Mockito.when(bookings.findUnavailableSeatsForShows(org.mockito.ArgumentMatchers.anyList())).thenReturn(java.util.List.of());
+  org.mockito.Mockito.when(holds.findUnavailableSeatsForShows(org.mockito.ArgumentMatchers.anyList(),org.mockito.ArgumentMatchers.any())).thenReturn(java.util.Collections.singletonList(new Object[]{show.getId(),99L}));
+  assertTrue(service.recommend(req).isEmpty());
+
   org.mockito.Mockito.when(seatRepo.findByAuditoriumId(room.getId())).thenReturn(java.util.List.of());assertTrue(service.recommend(req).isEmpty());
  }
 }

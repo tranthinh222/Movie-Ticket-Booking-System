@@ -31,4 +31,7 @@ public interface SeatHoldRepository extends JpaRepository<SeatHold, Long>, JpaSp
 
     @org.springframework.data.jpa.repository.Query("select h.seat.id from SeatHold h where h.showTime.id = :showTimeId and (h.expiresAt is null or h.expiresAt > :now)")
     java.util.List<Long> findUnavailableSeatIds(@org.springframework.data.repository.query.Param("showTimeId") Long showTimeId, @org.springframework.data.repository.query.Param("now") java.time.Instant now);
+
+    @org.springframework.data.jpa.repository.Query("select h.showTime.id, h.seat.id from SeatHold h where h.showTime.id in :ids and (h.expiresAt is null or h.expiresAt > :now)")
+    java.util.List<Object[]> findUnavailableSeatsForShows(@org.springframework.data.repository.query.Param("ids") java.util.List<Long> ids, @org.springframework.data.repository.query.Param("now") java.time.Instant now);
 }

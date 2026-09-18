@@ -55,7 +55,15 @@ public class MovieRecommendationService {
         Map<Long, List<com.cinema.ticketbooking.domain.Seat>> roomSeats = new HashMap<>();
         Map<String, DiscountService.Quote> quotes = new HashMap<>();
         Map<Long, ResMovieRecommendationDto> results = new LinkedHashMap<>();
-        for (var show : repository.findRecommendationCandidates(date, now.toLocalDate(), now.toLocalTime())) {
+        var shows=repository.findRecommendationCandidates(date, now.toLocalDate(), now.toLocalTime());
+        Map<Long, Set<Long>> unavailableByShow=new HashMap<>();
+        var ids=shows.stream().map(com.cinema.ticketbooking.domain.ShowTime::getId).toList();
+        if(!ids.isEmpty()){
+            var blocked=new ArrayList<>(bookings.findUnavailableSeatsForShows(ids));
+            blocked.addAll(holds.findUnavailableSeatsForShows(ids,now.atZone(clock.getZone()).toInstant()));
+            for(var row:blocked)unavailableByShow.computeIfAbsent((Long)row[0],key->new HashSet<>()).add((Long)row[1]);
+        }
+        for (var show : shows) {
             var film = show.getFilm();
             if (film == null || film.getId() == null || excluded.contains(film.getId()) || results.containsKey(film.getId()))
                 continue;
@@ -68,8 +76,7 @@ public class MovieRecommendationService {
             java.math.BigDecimal price = null, finalPrice = null, saving = java.math.BigDecimal.ZERO;
             String discountCode = null;
             if (film.getPrice() != null && show.getAuditorium() != null) {
-                var unavailable = new HashSet<>(bookings.findUnavailableSeatIds(show.getId()));
-                unavailable.addAll(holds.findUnavailableSeatIds(show.getId(), now.atZone(clock.getZone()).toInstant()));
+                var unavailable = unavailableByShow.getOrDefault(show.getId(),Set.of());
                 var prices = roomSeats.computeIfAbsent(show.getAuditorium().getId(), seats::findByAuditoriumId).stream()
                         .filter(seat -> seat.getSeatVariant() != null && !unavailable.contains(seat.getId()))
                         .map(seat -> java.math.BigDecimal.valueOf(film.getPrice())
@@ -85,7 +92,7 @@ public class MovieRecommendationService {
                             continue;
                         DiscountService.Quote quote;
                         try {
-                            quote = discounts.calculate(offer.getCode(), candidate);
+                            quote = quotes.computeIfAbsent(offer.getCode()+":"+candidate.toPlainString(),key->discounts.calculate(offer.getCode(), candidate));
                         } catch (BadRequestException changedOffer) {
                             continue;
                         }
