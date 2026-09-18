@@ -28,8 +28,8 @@ public class MovieRecommendationService {
     @Transactional(readOnly = true)
     public List<ResMovieRecommendationDto> recommend(ReqMovieRecommendationDto request) {
         var now = LocalDateTime.now(clock);
-        var date = request.getDate() == null ? now.toLocalDate() : request.getDate();
-        if (date.isBefore(now.toLocalDate()))
+        var date = request.getDate();
+        if (date != null && date.isBefore(now.toLocalDate()))
             throw new BadRequestException("Ngày xem phim không được ở quá khứ.");
         var genre = request.getGenre() == null ? "" : request.getGenre().trim();
         Map<Long, ResMovieRecommendationDto> results = new LinkedHashMap<>();
@@ -43,7 +43,7 @@ public class MovieRecommendationService {
             if (request.getMaxDuration() != null
                     && (film.getDuration() == null || film.getDuration() > request.getMaxDuration()))
                 continue;
-            String reason = "Có suất chiếu ngày " + date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ".";
+            String reason = "Có suất chiếu ngày " + show.getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ".";
             if (!genre.isEmpty())
                 reason += " Phù hợp thể loại " + genre + ".";
             if (film.getDuration() != null)

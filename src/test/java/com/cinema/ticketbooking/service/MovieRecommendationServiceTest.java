@@ -55,7 +55,7 @@ class MovieRecommendationServiceTest {
         show(film("Long", "Hài", 130), today, 16);
         show(film("Wrong genre", "Hài hước", 100), today, 16);
         var req = new ReqMovieRecommendationDto();
-        req.setGenre(" hài ");
+        req.setDate(today);req.setGenre(" hài ");
         req.setMaxDuration(120);
         var result = service().recommend(req);
         assertEquals(1, result.size());
@@ -79,4 +79,11 @@ class MovieRecommendationServiceTest {
         req.setDate(today.plusDays(1));
         assertEquals(5, service().recommend(req).size());
     }
+ @Test void emptyDateFindsFutureShowsAfterTodaysShowsEnd(){
+  var f=film("OPPENHEIMER","Tiểu Sử, Chính Kịch, Lịch Sử",180);
+  show(f,today,13);show(f,today.plusDays(1),9);
+  var req=new ReqMovieRecommendationDto();req.setGenre("Lịch sử");req.setMaxDuration(300);
+  var result=service().recommend(req);assertEquals(1,result.size());assertEquals(f.getId(),result.get(0).filmId());assertTrue(result.get(0).reason().contains("19/09/2026"));
+  req.setDate(today);assertTrue(service().recommend(req).isEmpty());
+ }
 }

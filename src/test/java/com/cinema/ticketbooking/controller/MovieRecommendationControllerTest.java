@@ -13,7 +13,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest({MovieRecommendationController.class,SeatRecommendationController.class})
+@WebMvcTest({MovieRecommendationController.class,SeatRecommendationController.class,AssistantChatController.class})
 @ActiveProfiles("test")
 @Import({ SecurityConfiguration.class, CorsConfig.class, CustomAuthenticationEntryPoint.class })
 class MovieRecommendationControllerTest {
@@ -21,6 +21,8 @@ class MovieRecommendationControllerTest {
     MockMvc mvc;
     @MockitoBean
     MovieRecommendationService service;
+    @MockitoBean
+    com.cinema.ticketbooking.service.AssistantChatService chatService;
     @MockitoBean
     com.cinema.ticketbooking.service.SeatRecommendationService seatService;
 
@@ -41,5 +43,11 @@ class MovieRecommendationControllerTest {
       mvc.perform(post("/api/v1/assistant/seat-recommendations").contentType("application/json").content("{\"showTimeId\":1,\"people\":2}")).andExpect(status().isOk());
       verify(seatService).recommend(any());clearInvocations(seatService);
       mvc.perform(post("/api/v1/assistant/seat-recommendations").contentType("application/json").content("{\"showTimeId\":1,\"people\":0}")).andExpect(status().isBadRequest());verifyNoInteractions(seatService);
+    }
+    @Test void chatIsPublicAndValidatesInput() throws Exception {
+      mvc.perform(post("/api/v1/assistant/chat").contentType("application/json").content("{\"message\":\"Tìm phim\",\"topic\":\"MOVIES\"}")).andExpect(status().isOk());
+      verify(chatService).chat(any());clearInvocations(chatService);
+      mvc.perform(post("/api/v1/assistant/chat").contentType("application/json").content("{\"message\":\" \"}")).andExpect(status().isBadRequest());
+      mvc.perform(post("/api/v1/assistant/chat").contentType("application/json").content("{\"message\":\"Ghế\",\"topic\":\"SEATS\",\"seats\":{\"showTimeId\":1,\"people\":0}}")).andExpect(status().isBadRequest());verifyNoInteractions(chatService);
     }
 }
