@@ -12,4 +12,6 @@ public class ReqMovieRecommendationDto {
     @Max(value = 600, message = "Thời lượng tối đa không được vượt quá 600 phút.")
     private Integer maxDuration;
     private LocalDate date;
+    @DecimalMin(value="0", message="Ngân sách không được âm.")
+    private java.math.BigDecimal budget;
 }

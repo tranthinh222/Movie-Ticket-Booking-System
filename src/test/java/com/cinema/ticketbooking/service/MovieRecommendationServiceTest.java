@@ -22,7 +22,7 @@ class MovieRecommendationServiceTest {
     final LocalDate today = LocalDate.of(2026, 9, 18);
 
     MovieRecommendationService service() {
-        return new MovieRecommendationService(repository,
+        return new MovieRecommendationService(repository, org.mockito.Mockito.mock(com.cinema.ticketbooking.repository.SeatRepository.class),
                 Clock.fixed(Instant.parse("2026-09-18T07:00:00Z"), ZoneId.of("Asia/Ho_Chi_Minh")));
     }
 
@@ -85,5 +85,24 @@ class MovieRecommendationServiceTest {
   var req=new ReqMovieRecommendationDto();req.setGenre("Lịch sử");req.setMaxDuration(300);
   var result=service().recommend(req);assertEquals(1,result.size());assertEquals(f.getId(),result.get(0).filmId());assertTrue(result.get(0).reason().contains("19/09/2026"));
   req.setDate(today);assertTrue(service().recommend(req).isEmpty());
+ }
+ @Test void excludedMoviesDoNotConsumeResultLimit(){
+  var previous=film("Previous","Hài",100);show(previous,today.plusDays(1),9);
+  var next=film("Next","Hài",100);show(next,today.plusDays(1),10);
+  var result=service().recommend(new ReqMovieRecommendationDto(),java.util.Set.of(previous.getId()));assertEquals(1,result.size());assertEquals(next.getId(),result.get(0).filmId());
+ }
+
+ @Test void budgetIncludesSeatPriceAndUnknownPricesAreExcluded(){
+  var f=film("Budget film","Hài",100);f.setPrice(70000L);
+  var room=new Auditorium();em.persist(room);
+  var show=new ShowTime();show.setFilm(f);show.setAuditorium(room);show.setDate(today.plusDays(1));show.setStartTime(LocalTime.NOON);em.persist(show);em.flush();
+  var seatRepo=org.mockito.Mockito.mock(com.cinema.ticketbooking.repository.SeatRepository.class);
+  var seat=new Seat();var variant=new SeatVariant();variant.setBasePrice(20000);variant.setBonus(10000);seat.setSeatVariant(variant);
+  org.mockito.Mockito.when(seatRepo.findByAuditoriumId(room.getId())).thenReturn(java.util.List.of(seat));
+  var service=new MovieRecommendationService(repository,seatRepo,Clock.fixed(Instant.parse("2026-09-18T07:00:00Z"),ZoneId.of("Asia/Ho_Chi_Minh")));
+  var req=new ReqMovieRecommendationDto();req.setBudget(new java.math.BigDecimal("100000"));
+  assertEquals(new java.math.BigDecimal("100000.0"),service.recommend(req).get(0).minTicketPrice());
+  req.setBudget(new java.math.BigDecimal("99999"));assertTrue(service.recommend(req).isEmpty());
+  org.mockito.Mockito.when(seatRepo.findByAuditoriumId(room.getId())).thenReturn(java.util.List.of());assertTrue(service.recommend(req).isEmpty());
  }
 }
