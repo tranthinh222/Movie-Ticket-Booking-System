@@ -31,14 +31,14 @@ public class GlobalException {
     public ResponseEntity<RestResponse<Object>> handleBadCredentials(BadCredentialsException ex) {
         RestResponse<Object> response = new RestResponse<>();
         response.setStatusCode(HttpStatus.UNAUTHORIZED.value());
-        response.setError(ex.getMessage());
-        response.setMessage("Invalid username or password");
+        response.setError("Email hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.");
+        response.setMessage("Email hoặc mật khẩu không đúng. Vui lòng kiểm tra lại.");
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
     @ExceptionHandler(value = { ResourceAlreadyExistsException.class, UnavailableResourceException.class })
-    public ResponseEntity<RestResponse<Object>> handleResourceAlreadyExists(ResourceAlreadyExistsException ex) {
+    public ResponseEntity<RestResponse<Object>> handleResourceAlreadyExists(Exception ex) {
         RestResponse<Object> response = new RestResponse<>();
 
         response.setStatusCode(HttpStatus.CONFLICT.value()); // 409
@@ -49,7 +49,7 @@ public class GlobalException {
     }
 
     @ExceptionHandler(value = { BadRequestException.class, NoResourceException.class })
-    public ResponseEntity<RestResponse<Object>> handleBadRequest(BadRequestException ex) {
+    public ResponseEntity<RestResponse<Object>> handleBadRequest(Exception ex) {
         RestResponse<Object> response = new RestResponse<>();
 
         response.setStatusCode(HttpStatus.BAD_REQUEST.value()); // 400
@@ -76,7 +76,7 @@ public class GlobalException {
         RestResponse<Object> restResponse = new RestResponse<Object>();
         restResponse.setStatusCode(HttpStatus.CONFLICT.value());
         restResponse.setError(ex.getMessage());
-        restResponse.setMessage("Duplicate email in system");
+        restResponse.setMessage(ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(restResponse);
     }
 
@@ -88,10 +88,14 @@ public class GlobalException {
 
         RestResponse<Object> res = new RestResponse<Object>();
         res.setStatusCode(HttpStatus.BAD_REQUEST.value());
-        res.setError(exception.getBody().getDetail());
+        res.setError("Thông tin nhập chưa hợp lệ.");
 
         List<String> errors = fieldErrors.stream().map(f -> f.getDefaultMessage()).collect(Collectors.toList());
-        res.setMessage(errors.size() > 1 ? errors : errors.get(0));
+        res.setMessage(errors.isEmpty() ? "Thông tin nhập chưa hợp lệ." : errors);
+        java.util.Map<String, java.util.List<String>> details = fieldErrors.stream().collect(
+                Collectors.groupingBy(FieldError::getField,
+                        Collectors.mapping(FieldError::getDefaultMessage, Collectors.toList())));
+        res.setData(details);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(res);
     }

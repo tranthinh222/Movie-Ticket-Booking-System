@@ -70,6 +70,7 @@ class BookingItemServiceTest {
         seat.setSeatVariant(seatVariant);
 
         SeatHold seatHold = new SeatHold();
+        seatHold.setExpiresAt(java.time.Instant.now().plusSeconds(300));
         seatHold.setSeat(seat);
         seatHold.setShowTime(showTime);
 

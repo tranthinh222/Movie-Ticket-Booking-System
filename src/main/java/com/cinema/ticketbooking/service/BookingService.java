@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class BookingService {
+    private final DiscountService discountService;
     private final BookingRepository bookingRepo;
     private final UserService userService;
     private final BookingItemService bookingItemService;
@@ -34,16 +35,22 @@ public class BookingService {
 
     BookingService(BookingRepository bookingRepo, UserService userService,
             BookingItemService bookingItemService, PaymentService paymentService,
-            @Lazy VNPayService vnPayService) {
+            @Lazy VNPayService vnPayService, DiscountService discountService) {
         this.bookingRepo = bookingRepo;
         this.userService = userService;
         this.bookingItemService = bookingItemService;
         this.paymentService = paymentService;
         this.vnPayService = vnPayService;
+        this.discountService = discountService;
     }
 
     @org.springframework.transaction.annotation.Transactional
     public ResCreateBookingDto createBooking(Long id, PaymentMethodEnum paymentMethod, String ipAddress) {
+        return createBooking(id, paymentMethod, ipAddress, null);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public ResCreateBookingDto createBooking(Long id, PaymentMethodEnum paymentMethod, String ipAddress, String discountCode) {
         Booking booking = new Booking();
         User user = this.userService.getUserById(id);
 
@@ -53,6 +60,18 @@ public class BookingService {
 
         Double total_price = this.bookingItemService.createListItem(id, savedBooking);
 
+        savedBooking.setSubtotal(total_price);
+        savedBooking.setDiscountAmount(0.0);
+        if (discountCode != null && !discountCode.isBlank()) {
+            var quote = discountService.calculate(discountCode, java.math.BigDecimal.valueOf(total_price));
+            savedBooking.setDiscountCode(quote.code());
+            savedBooking.setDiscountAmount(quote.discountAmount().doubleValue());
+            total_price = quote.total().doubleValue();
+        }
+        if (paymentMethod == PaymentMethodEnum.VNPAY && total_price <= 0) {
+            throw new com.cinema.ticketbooking.util.error.BadRequestException(
+                    "VNPay yêu cầu tổng thanh toán lớn hơn 0đ. Vui lòng bỏ mã hoặc chọn thanh toán tại quầy.");
+        }
         savedBooking.setTotal_price(total_price);
         Booking finalBooking = this.bookingRepo.save(savedBooking);
 
@@ -64,6 +83,9 @@ public class BookingService {
         response.setUserId(user.getId());
         response.setUsername(user.getUsername());
         response.setPrice(total_price);
+        response.setSubtotal(finalBooking.getSubtotal());
+        response.setDiscountAmount(finalBooking.getDiscountAmount());
+        response.setDiscountCode(finalBooking.getDiscountCode());
         response.setCreatedAt(finalBooking.getCreatedAt());
         response.setPaymentId(payment.getId());
 
@@ -111,6 +133,9 @@ public class BookingService {
     private ResBookingDto convertToResBookingDto(Booking booking) {
         ResBookingDto dto = new ResBookingDto();
         dto.setId(booking.getId());
+        dto.setSubtotal(booking.getSubtotal());
+        dto.setDiscountAmount(booking.getDiscountAmount());
+        dto.setDiscountCode(booking.getDiscountCode());
         dto.setStatus(booking.getStatus());
         dto.setTotal_price(booking.getTotal_price());
         dto.setQrCode(booking.getQrCode());

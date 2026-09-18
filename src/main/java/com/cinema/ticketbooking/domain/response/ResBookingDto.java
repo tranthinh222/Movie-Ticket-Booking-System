@@ -16,6 +16,9 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ResBookingDto {
+    private String discountCode;
+    private Double subtotal;
+    private Double discountAmount;
     private Long id;
     private UserInfo user;
     private BookingStatusEnum status;

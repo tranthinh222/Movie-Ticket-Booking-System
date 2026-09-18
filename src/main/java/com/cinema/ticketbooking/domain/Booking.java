@@ -17,6 +17,9 @@ public class Booking {
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
+        private String discountCode;
+        private Double subtotal;
+        private Double discountAmount;
 
         // @ManyToOne
         // @JoinColumn(name = "showtime_id")

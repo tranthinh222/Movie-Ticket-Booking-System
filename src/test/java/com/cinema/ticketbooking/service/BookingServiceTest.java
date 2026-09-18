@@ -21,6 +21,30 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {
+    @Mock private DiscountService discountService;
+
+    @Test
+    void discountedBookingStoresSnapshotAndUsesReducedAmountForVNPay() throws Exception {
+        User user = new User(); user.setId(1L); user.setUsername("Test");
+        when(userService.getUserById(1L)).thenReturn(user);
+        when(bookingRepository.save(any())).thenAnswer(invocation -> {
+            Booking booking = invocation.getArgument(0); booking.setId(99L); return booking;
+        });
+        when(bookingItemService.createListItem(eq(1L), any())).thenReturn(130000.0);
+        when(discountService.calculate(eq("CINE10"), any())).thenReturn(new DiscountService.Quote(
+                "CINE10", new java.math.BigDecimal("130000"), new java.math.BigDecimal("13000"), new java.math.BigDecimal("117000")));
+        Payment payment = new Payment(); payment.setId(55L);
+        when(paymentService.createPayment(any(), eq(PaymentMethodEnum.VNPAY))).thenReturn(payment);
+        when(vnPayService.createPaymentUrl(eq(55L), eq(117000.0), anyString(), anyString())).thenReturn("https://payment.example/test");
+        var response = bookingService.createBooking(1L, PaymentMethodEnum.VNPAY, "127.0.0.1", "CINE10");
+        assertEquals(117000.0, response.getPrice());
+        assertEquals(130000.0, response.getSubtotal());
+        assertEquals(13000.0, response.getDiscountAmount());
+        assertEquals("CINE10", response.getDiscountCode());
+        verify(paymentService).createPayment(argThat(b -> b.getTotal_price() == 117000.0
+                && b.getDiscountAmount() == 13000.0), eq(PaymentMethodEnum.VNPAY));
+        verify(vnPayService).createPaymentUrl(eq(55L), eq(117000.0), anyString(), anyString());
+    }
 
     @Mock
     private BookingRepository bookingRepository;

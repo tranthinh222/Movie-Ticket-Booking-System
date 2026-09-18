@@ -35,7 +35,7 @@ public class BookingItemService {
     @Transactional
     public Double createListItem(Long userId, Booking booking) {
         List<SeatHold> listSeatHold = this.seatHoldService.getSeatHoldByUserId(userId);
-        if (listSeatHold.size() == 0)
+        if (listSeatHold.isEmpty() || listSeatHold.stream().anyMatch(h -> h.getExpiresAt() == null || !h.getExpiresAt().isAfter(java.time.Instant.now())))
             throw new NoResourceException("Ghế giữ quá thời gian hoặc không khả dụng vui lòng chọn và đặt ghế khác");
         Double sum = 0.0;
         for (SeatHold seatHold : listSeatHold) {

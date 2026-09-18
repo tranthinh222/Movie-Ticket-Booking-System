@@ -16,14 +16,15 @@ import java.time.Instant;
 @Data
 @NoArgsConstructor
 public class ReqRegisterDto {
-    @Email
-    @NotBlank(message = "email is not empty")
+    @Email(message = "Email không đúng định dạng.")
+    @NotBlank(message = "Vui lòng nhập email.")
     private String email;
 
-    @NotBlank(message = "password is not empty")
+    @NotBlank(message = "Vui lòng nhập mật khẩu.")
+    @jakarta.validation.constraints.Size(min = 6, message = "Mật khẩu phải có ít nhất 6 ký tự.")
     private String password;
 
-    @NotBlank(message = "username is not empty")
+    @NotBlank(message = "Vui lòng nhập tên người dùng.")
     private String username;
 
     private String phone;

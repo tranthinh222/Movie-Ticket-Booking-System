@@ -8,10 +8,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class ReqLoginDto {
-    @NotBlank(message = "email is not empty")
-    @Email
+    @NotBlank(message = "Vui lòng nhập email.")
+    @Email(message = "Email không đúng định dạng.")
     private String email;
 
-    @NotBlank(message = "password is not empty")
+    @NotBlank(message = "Vui lòng nhập mật khẩu.")
     private String password;
 }

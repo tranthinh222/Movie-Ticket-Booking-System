@@ -90,13 +90,13 @@ public class AuthService {
     public ResUserDto register(ReqRegisterDto reqRegisterDto) {
         String email = reqRegisterDto.getEmail().trim();
         if (userService.existsByEmail(email)) {
-            throw new DuplicateEmailException("Email existed in system");
+            throw new DuplicateEmailException("Email này đã được đăng ký. Vui lòng đăng nhập hoặc dùng email khác.");
         }
 
         String hashPassword = passwordEncoder.encode(reqRegisterDto.getPassword());
         User registerUser = User.builder()
                 .username(reqRegisterDto.getUsername())
-                .email(reqRegisterDto.getEmail())
+                .email(email)
                 .password(hashPassword)
                 .role(reqRegisterDto.getRole())
                 .phone(reqRegisterDto.getPhone())

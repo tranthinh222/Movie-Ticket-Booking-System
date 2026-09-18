@@ -9,6 +9,9 @@ import java.time.Instant;
 @Getter
 @Setter
 public class ResCreateBookingDto {
+    private String discountCode;
+    private Double subtotal;
+    private Double discountAmount;
     private Long userId;
     private String username;
     private Double price;

@@ -8,4 +8,6 @@ import lombok.Data;
 public class ReqCreateBookingDto {
     @NotNull(message = "Payment method is required")
     private PaymentMethodEnum paymentMethod;
+    @jakarta.validation.constraints.Size(max = 40)
+    private String discountCode;
 }

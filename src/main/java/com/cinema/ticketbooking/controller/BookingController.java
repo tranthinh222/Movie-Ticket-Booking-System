@@ -64,7 +64,7 @@ public class BookingController {
         String ipAddress = getClientIp(httpRequest);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(this.bookingService.createBooking(user.getId(), request.getPaymentMethod(), ipAddress));
+                .body(this.bookingService.createBooking(user.getId(), request.getPaymentMethod(), ipAddress, request.getDiscountCode()));
     }
 
     private String getClientIp(HttpServletRequest request) {
