@@ -64,6 +64,7 @@ public class SecurityConfiguration {
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(
                         authz -> authz
+                                .requestMatchers(org.springframework.http.HttpMethod.POST, "/api/v1/assistant/recommendations", "/api/v1/assistant/seat-recommendations").permitAll()
                                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/discounts").permitAll()
                                 .requestMatchers("/", "/api/v1/auth/login", "/api/v1/auth/register",
                                         "/api/v1/auth/forgot-password", "/api/v1/auth/verify-otp",

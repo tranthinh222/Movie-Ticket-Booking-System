@@ -5,5 +5,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface ShowTimeRepository extends JpaRepository<ShowTime, Long>, JpaSpecificationExecutor<ShowTime> {
+    @org.springframework.data.jpa.repository.Query("select s from ShowTime s join fetch s.film where s.date = :date and s.startTime is not null and (:date > :today or s.startTime > :time) order by s.startTime, s.id")
+    java.util.List<ShowTime> findRecommendationCandidates(
+            @org.springframework.data.repository.query.Param("date") java.time.LocalDate date,
+            @org.springframework.data.repository.query.Param("today") java.time.LocalDate today,
+            @org.springframework.data.repository.query.Param("time") java.time.LocalTime time);
+
     java.util.List<ShowTime> findAllByDateBetween(java.time.LocalDate from, java.time.LocalDate to);
 }
