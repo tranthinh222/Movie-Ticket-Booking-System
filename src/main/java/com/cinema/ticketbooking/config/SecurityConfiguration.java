@@ -71,7 +71,7 @@ public class SecurityConfiguration {
                                         "/api/v1/addresses/**",
                                         "/api/v1/theaters/**",
                                         "/api/v1/auth/refresh", "/h2-console/**",
-                                        "/api/v1/films", "/api/v1/films/**")
+                                        "/api/v1/films", "/api/v1/films/**", "/api/v1/news", "/api/v1/news/**")
                                 .permitAll()
                                 .anyRequest().authenticated()
 

@@ -1,0 +1,72 @@
+[
+  {
+    "pexelsId": 8263322,
+    "source": "https://www.pexels.com/photo/friends-at-a-movie-theater-8263322/",
+    "photographer": "cottonbro studio",
+    "cloudinaryUrl": "https://res.cloudinary.com/djmcluh5n/image/upload/v1789716439/uploads/news-demo/pexels-8263322-3c737d39.jpg",
+    "publicId": "uploads/news-demo/pexels-8263322-3c737d39"
+  },
+  {
+    "pexelsId": 7234296,
+    "source": "https://www.pexels.com/photo/woman-in-a-white-shirt-holding-a-bucket-of-popcorn-in-a-movie-theater-7234296/",
+    "photographer": "Pavel Danilyuk",
+    "cloudinaryUrl": "https://res.cloudinary.com/djmcluh5n/image/upload/v1789716440/uploads/news-demo/pexels-7234296-bd2f5162.jpg",
+    "publicId": "uploads/news-demo/pexels-7234296-bd2f5162"
+  },
+  {
+    "pexelsId": 7991323,
+    "source": "https://www.pexels.com/photo/a-woman-eating-popcorn-in-a-movie-theater-7991323/",
+    "photographer": "Tima Miroshnichenko",
+    "cloudinaryUrl": "https://res.cloudinary.com/djmcluh5n/image/upload/v1789716440/uploads/news-demo/pexels-7991323-6b2197c7.jpg",
+    "publicId": "uploads/news-demo/pexels-7991323-6b2197c7"
+  },
+  {
+    "pexelsId": 7234261,
+    "source": "https://www.pexels.com/photo/people-watching-a-movie-in-a-cinema-7234261/",
+    "photographer": "Pavel Danilyuk",
+    "cloudinaryUrl": "https://res.cloudinary.com/djmcluh5n/image/upload/v1789716442/uploads/news-demo/pexels-7234261-2c1bb10c.jpg",
+    "publicId": "uploads/news-demo/pexels-7234261-2c1bb10c"
+  },
+  {
+    "pexelsId": 7991486,
+    "source": "https://www.pexels.com/photo/an-empty-cinema-7991486/",
+    "photographer": "Tima Miroshnichenko",
+    "cloudinaryUrl": "https://res.cloudinary.com/djmcluh5n/image/upload/v1789716443/uploads/news-demo/pexels-7991486-430f6b6d.jpg",
+    "publicId": "uploads/news-demo/pexels-7991486-430f6b6d"
+  },
+  {
+    "pexelsId": 7234322,
+    "source": "https://www.pexels.com/photo/couple-watching-movie-in-a-cinema-theater-eating-popcorn-7234322/",
+    "photographer": "Pavel Danilyuk",
+    "cloudinaryUrl": "https://res.cloudinary.com/djmcluh5n/image/upload/v1789716443/uploads/news-demo/pexels-7234322-08609b8c.jpg",
+    "publicId": "uploads/news-demo/pexels-7234322-08609b8c"
+  },
+  {
+    "pexelsId": 19224454,
+    "source": "https://www.pexels.com/photo/hands-holding-clapperboard-19224454/",
+    "photographer": "Erik Uruci",
+    "cloudinaryUrl": "https://res.cloudinary.com/djmcluh5n/image/upload/v1789716445/uploads/news-demo/pexels-19224454-bcaf43e9.jpg",
+    "publicId": "uploads/news-demo/pexels-19224454-bcaf43e9"
+  },
+  {
+    "pexelsId": 17145242,
+    "source": "https://www.pexels.com/photo/modern-movie-camera-17145242/",
+    "photographer": "Genie Music",
+    "cloudinaryUrl": "https://res.cloudinary.com/djmcluh5n/image/upload/v1789716445/uploads/news-demo/pexels-17145242-61744a10.jpg",
+    "publicId": "uploads/news-demo/pexels-17145242-61744a10"
+  },
+  {
+    "pexelsId": 9811669,
+    "source": "https://www.pexels.com/photo/clapperboard-on-a-movie-plan-9811669/",
+    "photographer": "Ron Lach",
+    "cloudinaryUrl": "https://res.cloudinary.com/djmcluh5n/image/upload/v1789716446/uploads/news-demo/pexels-9811669-11cf30b5.jpg",
+    "publicId": "uploads/news-demo/pexels-9811669-11cf30b5"
+  },
+  {
+    "pexelsId": 7991320,
+    "source": "https://www.pexels.com/photo/a-moviegoer-eating-popcorn-inside-a-cinema-7991320/",
+    "photographer": "Tima Miroshnichenko",
+    "cloudinaryUrl": "https://res.cloudinary.com/djmcluh5n/image/upload/v1789716517/uploads/news-demo/pexels-7991320-b2b1643b.jpg",
+    "publicId": "uploads/news-demo/pexels-7991320-b2b1643b"
+  }
+]
