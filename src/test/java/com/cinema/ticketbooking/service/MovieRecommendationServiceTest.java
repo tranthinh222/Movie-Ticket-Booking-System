@@ -19,10 +19,13 @@ class MovieRecommendationServiceTest {
     TestEntityManager em;
     @Autowired
     ShowTimeRepository repository;
+    final DiscountService discounts=org.mockito.Mockito.mock(DiscountService.class);
+    final com.cinema.ticketbooking.repository.BookingItemRepository bookings=org.mockito.Mockito.mock(com.cinema.ticketbooking.repository.BookingItemRepository.class);
+    final com.cinema.ticketbooking.repository.SeatHoldRepository holds=org.mockito.Mockito.mock(com.cinema.ticketbooking.repository.SeatHoldRepository.class);
     final LocalDate today = LocalDate.of(2026, 9, 18);
 
     MovieRecommendationService service() {
-        return new MovieRecommendationService(repository, org.mockito.Mockito.mock(com.cinema.ticketbooking.repository.SeatRepository.class),
+        return new MovieRecommendationService(repository, org.mockito.Mockito.mock(com.cinema.ticketbooking.repository.SeatRepository.class), discounts, bookings, holds,
                 Clock.fixed(Instant.parse("2026-09-18T07:00:00Z"), ZoneId.of("Asia/Ho_Chi_Minh")));
     }
 
@@ -99,10 +102,15 @@ class MovieRecommendationServiceTest {
   var seatRepo=org.mockito.Mockito.mock(com.cinema.ticketbooking.repository.SeatRepository.class);
   var seat=new Seat();var variant=new SeatVariant();variant.setBasePrice(20000);variant.setBonus(10000);seat.setSeatVariant(variant);
   org.mockito.Mockito.when(seatRepo.findByAuditoriumId(room.getId())).thenReturn(java.util.List.of(seat));
-  var service=new MovieRecommendationService(repository,seatRepo,Clock.fixed(Instant.parse("2026-09-18T07:00:00Z"),ZoneId.of("Asia/Ho_Chi_Minh")));
+  var service=new MovieRecommendationService(repository,seatRepo,discounts,bookings,holds,Clock.fixed(Instant.parse("2026-09-18T07:00:00Z"),ZoneId.of("Asia/Ho_Chi_Minh")));
   var req=new ReqMovieRecommendationDto();req.setBudget(new java.math.BigDecimal("100000"));
   assertEquals(new java.math.BigDecimal("100000.0"),service.recommend(req).get(0).minTicketPrice());
   req.setBudget(new java.math.BigDecimal("99999"));assertTrue(service.recommend(req).isEmpty());
+  var offer=new Discount();offer.setCode("SAVE");offer.setMinOrder(new java.math.BigDecimal("100000"));
+  org.mockito.Mockito.when(discounts.list(false)).thenReturn(java.util.List.of(offer));
+  org.mockito.Mockito.when(discounts.calculate("SAVE",new java.math.BigDecimal("100000.0"))).thenReturn(new DiscountService.Quote("SAVE",new java.math.BigDecimal("100000.0"),new java.math.BigDecimal("20000"),new java.math.BigDecimal("80000")));
+  req.setBudget(new java.math.BigDecimal("80000"));var result=service.recommend(req).get(0);assertEquals("SAVE",result.discountCode());assertEquals(new java.math.BigDecimal("80000"),result.finalTicketPrice());
+  req.setBudget(new java.math.BigDecimal("79999"));assertTrue(service.recommend(req).isEmpty());
   org.mockito.Mockito.when(seatRepo.findByAuditoriumId(room.getId())).thenReturn(java.util.List.of());assertTrue(service.recommend(req).isEmpty());
  }
 }
