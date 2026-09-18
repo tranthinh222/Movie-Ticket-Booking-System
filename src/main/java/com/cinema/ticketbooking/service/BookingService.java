@@ -42,6 +42,7 @@ public class BookingService {
         this.vnPayService = vnPayService;
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public ResCreateBookingDto createBooking(Long id, PaymentMethodEnum paymentMethod, String ipAddress) {
         Booking booking = new Booking();
         User user = this.userService.getUserById(id);
