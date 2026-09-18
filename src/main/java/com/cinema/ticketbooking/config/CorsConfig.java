@@ -16,7 +16,8 @@ public class CorsConfig {
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
                 "http://127.0.0.1:5173",
-                "http://127.0.0.2:5173"));
+                "http://127.0.0.2:5173",
+                "https://movie-ticket-booking-frontend-gamma.vercel.app/"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept"));
         configuration.setAllowedMethods(Arrays.asList("POST", "GET", "PUT", "DELETE"));
         configuration.setAllowCredentials(true);
