@@ -33,6 +33,7 @@ class LocalShowTimeSeederTest {
         var stored = new ArrayList<ShowTime>(List.of(original));
         when(films.findAll()).thenReturn(List.of(film));
         when(rooms.findAll()).thenReturn(List.of(room));
+        when(schedules.findExpiredWithoutBookings(any())).thenReturn(List.of());
         when(schedules.findAllByDateBetween(any(), any()))
                 .thenAnswer(invocation -> new ArrayList<>(stored));
         when(schedules.save(any())).thenAnswer(invocation -> {
@@ -61,5 +62,22 @@ class LocalShowTimeSeederTest {
         assertEquals(count, stored.size());
         assertEquals(LocalTime.of(9, 0), original.getStartTime());
         assertEquals(LocalTime.of(12, 0), original.getEndTime());
+    }
+
+    @Test
+    void removesOnlyExpiredShowtimesReturnedAsSafeByRepository() {
+        var films = mock(FilmRepository.class);
+        var rooms = mock(AuditoriumRepository.class);
+        var schedules = mock(ShowTimeRepository.class);
+        var expired = new ShowTime();
+        expired.setId(10L);
+        expired.setDate(LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")).minusDays(1));
+        when(schedules.findExpiredWithoutBookings(any())).thenReturn(List.of(expired));
+        when(films.findAll()).thenReturn(List.of());
+
+        new LocalShowTimeSeeder(films, rooms, schedules).refreshWeeklySchedule();
+
+        verify(schedules).deleteAll(List.of(expired));
+        verify(schedules, never()).save(any());
     }
 }

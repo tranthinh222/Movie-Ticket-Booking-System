@@ -6,8 +6,8 @@ import com.cinema.ticketbooking.repository.FilmRepository;
 import com.cinema.ticketbooking.repository.ShowTimeRepository;
 import com.cinema.ticketbooking.util.constant.FilmStatusEnum;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,9 +16,8 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Comparator;
 
-/** Adds current demo schedules without moving existing bookings or showtimes. */
+/** Keeps a rolling seven-day schedule without deleting showtimes used by bookings. */
 @Component
-@Profile("local")
 @Order(6)
 public class LocalShowTimeSeeder implements CommandLineRunner {
     private final FilmRepository films;
@@ -35,6 +34,20 @@ public class LocalShowTimeSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
+        refreshWeeklySchedule();
+    }
+
+    // Refresh every Wednesday at 02:05 and on application startup.
+    @Scheduled(cron = "0 5 2 * * WED", zone = "Asia/Ho_Chi_Minh")
+    @Transactional
+    public void refreshWeeklySchedule() {
+        var zone = ZoneId.of("Asia/Ho_Chi_Minh");
+        var today = LocalDate.now(zone);
+
+        // Booking items reference showtimes, so only expired, unused rows are safe to remove.
+        var expired = showtimes.findExpiredWithoutBookings(today);
+        showtimes.deleteAll(expired);
+
         var availableFilms = films.findAll().stream()
                 .filter(f -> f.getStatus() == FilmStatusEnum.NOW_SHOWING)
                 .filter(f -> f.getDuration() != null && f.getDuration() > 0)
@@ -44,8 +57,6 @@ public class LocalShowTimeSeeder implements CommandLineRunner {
         if (availableFilms.isEmpty() || availableRooms.isEmpty()) {
             return;
         }
-        var zone = ZoneId.of("Asia/Ho_Chi_Minh");
-        var today = LocalDate.now(zone);
         var existing = showtimes.findAllByDateBetween(today, today.plusDays(6));
         int created = 0;
         for (int day = 0; day < 7; day++) {
@@ -81,6 +92,7 @@ public class LocalShowTimeSeeder implements CommandLineRunner {
                 }
             }
         }
-        System.out.println("Local demo: added " + created + " showtimes for " + today + " to " + today.plusDays(6));
+        System.out.println("Weekly schedule: removed " + expired.size() + " expired unused showtimes; added "
+                + created + " showtimes for " + today + " to " + today.plusDays(6));
     }
 }

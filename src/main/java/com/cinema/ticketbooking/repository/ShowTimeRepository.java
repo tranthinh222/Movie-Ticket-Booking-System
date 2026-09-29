@@ -12,4 +12,14 @@ public interface ShowTimeRepository extends JpaRepository<ShowTime, Long>, JpaSp
             @org.springframework.data.repository.query.Param("time") java.time.LocalTime time);
 
     java.util.List<ShowTime> findAllByDateBetween(java.time.LocalDate from, java.time.LocalDate to);
+
+    @org.springframework.data.jpa.repository.Query("""
+            select s from ShowTime s
+            where s.date < :date
+              and not exists (
+                  select bi.id from BookingItem bi where bi.showTime = s
+              )
+            """)
+    java.util.List<ShowTime> findExpiredWithoutBookings(
+            @org.springframework.data.repository.query.Param("date") java.time.LocalDate date);
 }
