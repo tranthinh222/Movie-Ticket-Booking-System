@@ -21,4 +21,7 @@ public class ResCreateBookingDto {
 
     private Long paymentId;
     private String paymentUrl; // VNPay/Momo payment URL (null for CASH)
+    private String paymentCode; // Bank transfer content
+    private String qrUrl; // VietQR image URL
+    private Long bookingId;
 }

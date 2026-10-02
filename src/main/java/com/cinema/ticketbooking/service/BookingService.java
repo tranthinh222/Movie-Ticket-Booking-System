@@ -32,16 +32,18 @@ public class BookingService {
     private final BookingItemService bookingItemService;
     private final PaymentService paymentService;
     private final VNPayService vnPayService;
+    private final VietQrService vietQrService;
 
     BookingService(BookingRepository bookingRepo, UserService userService,
             BookingItemService bookingItemService, PaymentService paymentService,
-            @Lazy VNPayService vnPayService, DiscountService discountService) {
+            @Lazy VNPayService vnPayService, DiscountService discountService, VietQrService vietQrService) {
         this.bookingRepo = bookingRepo;
         this.userService = userService;
         this.bookingItemService = bookingItemService;
         this.paymentService = paymentService;
         this.vnPayService = vnPayService;
         this.discountService = discountService;
+        this.vietQrService = vietQrService;
     }
 
     @org.springframework.transaction.annotation.Transactional
@@ -51,6 +53,10 @@ public class BookingService {
 
     @org.springframework.transaction.annotation.Transactional
     public ResCreateBookingDto createBooking(Long id, PaymentMethodEnum paymentMethod, String ipAddress, String discountCode) {
+        if (paymentMethod == PaymentMethodEnum.VNPAY) {
+            throw new com.cinema.ticketbooking.util.error.BadRequestException(
+                    "VNPay không còn được hỗ trợ. Vui lòng chọn tiền mặt hoặc chuyển khoản ngân hàng.");
+        }
         Booking booking = new Booking();
         User user = this.userService.getUserById(id);
 
@@ -68,7 +74,8 @@ public class BookingService {
             savedBooking.setDiscountAmount(quote.discountAmount().doubleValue());
             total_price = quote.total().doubleValue();
         }
-        if (paymentMethod == PaymentMethodEnum.VNPAY && total_price <= 0) {
+        if ((paymentMethod == PaymentMethodEnum.VNPAY || paymentMethod == PaymentMethodEnum.BANK_TRANSFER)
+                && total_price <= 0) {
             throw new com.cinema.ticketbooking.util.error.BadRequestException(
                     "VNPay yêu cầu tổng thanh toán lớn hơn 0đ. Vui lòng bỏ mã hoặc chọn thanh toán tại quầy.");
         }
@@ -88,6 +95,7 @@ public class BookingService {
         response.setDiscountCode(finalBooking.getDiscountCode());
         response.setCreatedAt(finalBooking.getCreatedAt());
         response.setPaymentId(payment.getId());
+        response.setBookingId(finalBooking.getId());
 
         // If not CASH, automatically create payment URL
         if (paymentMethod != PaymentMethodEnum.CASH) {
@@ -97,6 +105,19 @@ public class BookingService {
 
                 if (paymentMethod == PaymentMethodEnum.VNPAY) {
                     paymentUrl = vnPayService.createPaymentUrl(payment.getId(), total_price, orderInfo, ipAddress);
+                } else if (paymentMethod == PaymentMethodEnum.BANK_TRANSFER) {
+                    long amountInVnd;
+                    try {
+                        amountInVnd = java.math.BigDecimal.valueOf(total_price).longValueExact();
+                    } catch (ArithmeticException error) {
+                        throw new com.cinema.ticketbooking.util.error.BadRequestException(
+                                "Số tiền thanh toán phải là số nguyên VND");
+                    }
+                    String paymentCode = "MOVIE" + payment.getId();
+                    payment.setTransactionRef(paymentCode);
+                    paymentService.savePayment(payment);
+                    response.setPaymentCode(paymentCode);
+                    response.setQrUrl(vietQrService.generateQrUrl(amountInVnd, paymentCode));
                 }
 
                 response.setPaymentUrl(paymentUrl);

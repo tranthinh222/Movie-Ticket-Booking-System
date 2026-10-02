@@ -10,7 +10,6 @@ import com.cinema.ticketbooking.util.constant.PaymentMethodEnum;
 import com.cinema.ticketbooking.util.constant.PaymentStatusEnum;
 import org.junit.jupiter.api.Test;
 
-import java.io.UnsupportedEncodingException;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -24,7 +23,7 @@ class BookingServiceTest {
     @Mock private DiscountService discountService;
 
     @Test
-    void discountedBookingStoresSnapshotAndUsesReducedAmountForVNPay() throws Exception {
+    void discountedBookingStoresSnapshotAndUsesReducedAmountForBankTransfer() throws Exception {
         User user = new User(); user.setId(1L); user.setUsername("Test");
         when(userService.getUserById(1L)).thenReturn(user);
         when(bookingRepository.save(any())).thenAnswer(invocation -> {
@@ -34,16 +33,17 @@ class BookingServiceTest {
         when(discountService.calculate(eq("CINE10"), any())).thenReturn(new DiscountService.Quote(
                 "CINE10", new java.math.BigDecimal("130000"), new java.math.BigDecimal("13000"), new java.math.BigDecimal("117000")));
         Payment payment = new Payment(); payment.setId(55L);
-        when(paymentService.createPayment(any(), eq(PaymentMethodEnum.VNPAY))).thenReturn(payment);
-        when(vnPayService.createPaymentUrl(eq(55L), eq(117000.0), anyString(), anyString())).thenReturn("https://payment.example/test");
-        var response = bookingService.createBooking(1L, PaymentMethodEnum.VNPAY, "127.0.0.1", "CINE10");
+        when(paymentService.createPayment(any(), eq(PaymentMethodEnum.BANK_TRANSFER))).thenReturn(payment);
+        when(vietQrService.generateQrUrl(117000L, "MOVIE55")).thenReturn("https://qr.example/55");
+        var response = bookingService.createBooking(1L, PaymentMethodEnum.BANK_TRANSFER, "127.0.0.1", "CINE10");
         assertEquals(117000.0, response.getPrice());
         assertEquals(130000.0, response.getSubtotal());
         assertEquals(13000.0, response.getDiscountAmount());
         assertEquals("CINE10", response.getDiscountCode());
         verify(paymentService).createPayment(argThat(b -> b.getTotal_price() == 117000.0
-                && b.getDiscountAmount() == 13000.0), eq(PaymentMethodEnum.VNPAY));
-        verify(vnPayService).createPaymentUrl(eq(55L), eq(117000.0), anyString(), anyString());
+                && b.getDiscountAmount() == 13000.0), eq(PaymentMethodEnum.BANK_TRANSFER));
+        verify(paymentService).savePayment(payment);
+        verify(vietQrService).generateQrUrl(117000L, "MOVIE55");
     }
 
     @Mock
@@ -60,6 +60,9 @@ class BookingServiceTest {
 
     @Mock
     private VNPayService vnPayService;
+
+    @Mock
+    private VietQrService vietQrService;
 
     @InjectMocks
     private BookingService bookingService;
@@ -106,43 +109,38 @@ class BookingServiceTest {
     }
 
     @Test
-    void createBooking_shouldCreateBookingWithVNPayUrl_whenValidRequest_VNPay() throws UnsupportedEncodingException {
-        // Arrange
-        Long userId = 1L;
-        PaymentMethodEnum paymentMethod = PaymentMethodEnum.VNPAY;
-        String ipAddress = "127.0.0.1";
+    void createBooking_shouldRejectNewVNPayPayments() {
+        var error = assertThrows(com.cinema.ticketbooking.util.error.BadRequestException.class,
+                () -> bookingService.createBooking(1L, PaymentMethodEnum.VNPAY, "127.0.0.1"));
 
+        assertTrue(error.getMessage().contains("VNPay không còn được hỗ trợ"));
+        verifyNoInteractions(userService, bookingRepository, bookingItemService, paymentService);
+    }
+
+    @Test
+    void createBooking_shouldReturnVietQrDetails_whenBankTransferIsSelected() {
         User user = new User();
-        user.setId(userId);
+        user.setId(1L);
         user.setUsername("TestUser");
-
-        Booking savedBooking = new Booking();
-        savedBooking.setId(10L);
-        savedBooking.setStatus(BookingStatusEnum.PENDING);
-        savedBooking.setUser(user);
-
+        Booking booking = new Booking();
+        booking.setId(10L);
+        booking.setUser(user);
         Payment payment = new Payment();
         payment.setId(100L);
 
-        when(userService.getUserById(userId)).thenReturn(user);
-        when(bookingRepository.save(any(Booking.class))).thenReturn(savedBooking);
-        when(bookingItemService.createListItem(userId, savedBooking)).thenReturn(200000.0);
-        when(paymentService.createPayment(any(Booking.class), eq(paymentMethod))).thenReturn(payment);
-        when(vnPayService.createPaymentUrl(eq(100L), eq(200000.0), anyString(), eq(ipAddress)))
-                .thenReturn("http://vnpay.test/payment");
+        when(userService.getUserById(1L)).thenReturn(user);
+        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
+        when(bookingItemService.createListItem(eq(1L), any(Booking.class))).thenReturn(200000.0);
+        when(paymentService.createPayment(any(Booking.class), eq(PaymentMethodEnum.BANK_TRANSFER))).thenReturn(payment);
+        when(vietQrService.generateQrUrl(200000L, "MOVIE100")).thenReturn("https://qr.example/100");
 
-        // Act
-        ResCreateBookingDto result = bookingService.createBooking(userId, paymentMethod, ipAddress);
+        ResCreateBookingDto result = bookingService.createBooking(1L, PaymentMethodEnum.BANK_TRANSFER, "127.0.0.1");
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(userId, result.getUserId());
-        assertEquals("TestUser", result.getUsername());
-        assertEquals(200000.0, result.getPrice());
-        assertEquals(100L, result.getPaymentId());
-        assertEquals("http://vnpay.test/payment", result.getPaymentUrl());
-
-        verify(vnPayService).createPaymentUrl(eq(100L), eq(200000.0), anyString(), eq(ipAddress));
+        assertEquals(10L, result.getBookingId());
+        assertEquals("MOVIE100", result.getPaymentCode());
+        assertEquals("https://qr.example/100", result.getQrUrl());
+        assertNull(result.getPaymentUrl());
+        verify(paymentService).savePayment(payment);
     }
 
     @Test
