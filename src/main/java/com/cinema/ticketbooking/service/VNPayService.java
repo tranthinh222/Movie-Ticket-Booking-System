@@ -87,7 +87,7 @@ public class VNPayService {
         vnpParams.put("vnp_ReturnUrl", vnpReturnUrl);
         vnpParams.put("vnp_IpAddr", ipAddress);
 
-        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Etc/GMT+7"));
+        Calendar cld = Calendar.getInstance(TimeZone.getTimeZone("Asia/Ho_Chi_Minh"));
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddHHmmss");
         String vnpCreateDate = formatter.format(cld.getTime());
         vnpParams.put("vnp_CreateDate", vnpCreateDate);
@@ -188,16 +188,25 @@ public class VNPayService {
         String responseCode = params.get("vnp_ResponseCode");
         String transactionRef = params.get("vnp_TxnRef"); // UUID instead of payment ID
 
-        // Get payment by transaction reference
-        Payment payment = paymentService.getPaymentByTransactionRef(transactionRef);
+        Payment payment;
+        try {
+            payment = paymentService.getPaymentByTransactionRef(transactionRef);
+        } catch (BadRequestException missingPayment) {
+            return directUrlError + "?message=Payment+not+found&transactionRef="
+                    + URLEncoder.encode(String.valueOf(transactionRef), StandardCharsets.UTF_8);
+        }
 
         if ("00".equals(responseCode)) {
-            // Payment successful
-            paymentService.updatePaymentStatus(payment.getId(), PaymentStatusEnum.PAID);
-
-            // Generate QR code for booking
             Booking booking = payment.getBooking();
-            if (booking != null) {
+            if (booking == null) {
+                return directUrlError + "?message=Booking+not+found&transactionRef="
+                        + URLEncoder.encode(String.valueOf(transactionRef), StandardCharsets.UTF_8);
+            }
+
+            // VNPay may retry callbacks. Only perform side effects once.
+            if (payment.getStatus() != PaymentStatusEnum.PAID) {
+                paymentService.updatePaymentStatus(payment.getId(), PaymentStatusEnum.PAID);
+
                 // Update booking status to CONFIRMED
                 booking.setStatus(BookingStatusEnum.CONFIRMED);
 
@@ -217,13 +226,16 @@ public class VNPayService {
             }
             return directUrlSuccess + "?paymentId=" + payment.getId() + "&bookingId=" + booking.getId();
         } else {
+            Long paymentId = payment.getId();
             // Payment failed - delete booking, booking items and payment
-            if (payment != null && payment.getBooking() != null) {
+            if (payment.getBooking() != null) {
                 Long bookingId = payment.getBooking().getId();
                 // Delete booking (cascade will delete booking items and payment)
                 bookingService.deleteBooking(bookingId);
             }
-            return directUrlError + "?paymentId=" + payment.getId() + "&responseCode=" + responseCode;
+            return directUrlError + "?paymentId=" + paymentId
+                    + "&transactionRef=" + URLEncoder.encode(String.valueOf(transactionRef), StandardCharsets.UTF_8)
+                    + "&responseCode=" + URLEncoder.encode(String.valueOf(responseCode), StandardCharsets.UTF_8);
         }
     }
 

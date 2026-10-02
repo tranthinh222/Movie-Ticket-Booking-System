@@ -23,6 +23,16 @@ public class FilmService {
     }
 
     public ResultPaginationDto getAllFilms(Specification<Film> spec, Pageable pageable) {
+        return getAllFilms(spec, null, pageable);
+    }
+
+    public ResultPaginationDto getAllFilms(Specification<Film> spec, String search, Pageable pageable) {
+        if (search != null && !search.isBlank()) {
+            String keyword = "%" + search.trim().toLowerCase(java.util.Locale.ROOT) + "%";
+            Specification<Film> nameContains = (root, query, builder) ->
+                    builder.like(builder.lower(root.get("name")), keyword);
+            spec = spec == null ? nameContains : spec.and(nameContains);
+        }
         Page<Film> pageFilm = this.filmRepository.findAll(spec, pageable);
         ResultPaginationDto resultPaginationDto = new ResultPaginationDto();
         ResultPaginationDto.Meta mt = new ResultPaginationDto.Meta();

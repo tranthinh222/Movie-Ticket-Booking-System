@@ -36,17 +36,21 @@ class FilmControllerTest {
         // Arrange
         ResultPaginationDto mockResult = new ResultPaginationDto();
         when(filmService.getAllFilms(
-                ArgumentMatchers.<Specification<Film>>any(),
+                ArgumentMatchers.<Specification<Film>>isNull(),
+                ArgumentMatchers.<String>isNull(),
                 any(Pageable.class)
         )).thenReturn(mockResult);
 
         // Act
-        ResponseEntity<ResultPaginationDto> response = filmController.getAllFilms(null, PageRequest.of(0, 10));
+        ResponseEntity<ResultPaginationDto> response = filmController.getAllFilms(null, null, PageRequest.of(0, 10));
 
         // Assert
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(mockResult, response.getBody());
-        verify(filmService).getAllFilms(ArgumentMatchers.<Specification<Film>>any(), any(Pageable.class));
+        verify(filmService).getAllFilms(
+                ArgumentMatchers.<Specification<Film>>isNull(),
+                ArgumentMatchers.<String>isNull(),
+                any(Pageable.class));
     }
 
     @Test

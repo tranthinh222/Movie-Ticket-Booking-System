@@ -29,9 +29,11 @@ public class FilmController {
     @GetMapping("/films")
     @ApiMessage("fetch all films")
     public ResponseEntity<ResultPaginationDto> getAllFilms(
-            @Filter Specification<Film> spec, Pageable pageable) {
+            @Filter Specification<Film> spec,
+            @RequestParam(required = false) String search,
+            Pageable pageable) {
 
-        return ResponseEntity.status(HttpStatus.OK).body(this.filmService.getAllFilms(spec, pageable));
+        return ResponseEntity.status(HttpStatus.OK).body(this.filmService.getAllFilms(spec, search, pageable));
     }
 
     @GetMapping("/films/{id}")

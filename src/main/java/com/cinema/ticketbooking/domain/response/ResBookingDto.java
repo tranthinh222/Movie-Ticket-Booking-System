@@ -2,6 +2,7 @@ package com.cinema.ticketbooking.domain.response;
 
 import com.cinema.ticketbooking.util.constant.BookingStatusEnum;
 import com.cinema.ticketbooking.util.constant.FilmStatusEnum;
+import com.cinema.ticketbooking.util.constant.PaymentMethodEnum;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,6 +30,7 @@ public class ResBookingDto {
     private FilmInfo film;
     private TheaterInfo theater;
     private Long paymentId;
+    private PaymentMethodEnum paymentMethod;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss a", timezone = "GMT+7")
     private Instant createdAt;

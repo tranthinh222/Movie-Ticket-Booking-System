@@ -222,7 +222,9 @@ public class BookingService {
 
         // Map payment ID (get first payment if exists)
         if (booking.getPayments() != null && !booking.getPayments().isEmpty()) {
-            dto.setPaymentId(booking.getPayments().get(0).getId());
+            Payment payment = booking.getPayments().get(0);
+            dto.setPaymentId(payment.getId());
+            dto.setPaymentMethod(payment.getMethod());
         }
 
         return dto;

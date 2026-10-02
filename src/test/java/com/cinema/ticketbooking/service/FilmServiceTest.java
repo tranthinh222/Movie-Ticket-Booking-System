@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.domain.Page;
@@ -58,6 +59,23 @@ class FilmServiceTest {
                 List<?> data = (List<?>) result.getData();
                 assertEquals(1, data.size());
                 verify(filmRepository).findAll(ArgumentMatchers.<Specification<Film>>any(), eq(pageable));
+        }
+
+        @Test
+        void getAllFilms_shouldApplyNameSpecification_whenSearchIsProvided() {
+                Page<Film> page = Page.empty();
+                Pageable pageable = PageRequest.of(0, 10);
+                ArgumentCaptor<Specification<Film>> specificationCaptor =
+                                ArgumentCaptor.forClass(Specification.class);
+
+                when(filmRepository.findAll(
+                                ArgumentMatchers.<Specification<Film>>any(),
+                                eq(pageable))).thenReturn(page);
+
+                filmService.getAllFilms(null, "thiên đường máu", pageable);
+
+                verify(filmRepository).findAll(specificationCaptor.capture(), eq(pageable));
+                assertNotNull(specificationCaptor.getValue());
         }
 
         // createFilm
