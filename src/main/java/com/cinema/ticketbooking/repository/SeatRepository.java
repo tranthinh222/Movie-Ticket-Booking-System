@@ -21,4 +21,7 @@ public interface SeatRepository extends JpaRepository<Seat, Long>, JpaSpecificat
 
     @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "seatVariant")
     List<Seat> findByAuditoriumId(Long auditoriumId);
+
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = "seatVariant")
+    List<Seat> findByAuditoriumIdOrderBySeatRowAscNumberAsc(Long auditoriumId);
 }

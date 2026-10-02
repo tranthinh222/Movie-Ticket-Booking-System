@@ -6,6 +6,7 @@ import com.cinema.ticketbooking.domain.SeatVariant;
 import com.cinema.ticketbooking.domain.request.ReqCreateSeatDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateSeatDto;
 import com.cinema.ticketbooking.domain.response.ResAuditoriumDto;
+import com.cinema.ticketbooking.domain.response.ResSeatDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.service.AuditoriumService;
 import com.cinema.ticketbooking.service.SeatService;
@@ -54,6 +55,13 @@ public class SeatController {
             throw new IdInvalidException("Seat with id " + id + " not found");
         }
         return ResponseEntity.status(HttpStatus.OK).body(seat);
+    }
+
+    @GetMapping("/seats/auditorium/{auditoriumId}")
+    @ApiMessage("fetch seats by auditorium")
+    public ResponseEntity<List<ResSeatDto>> getSeatsByAuditorium(@PathVariable Long auditoriumId) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(this.seatService.findSeatsByAuditoriumId(auditoriumId));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

@@ -7,6 +7,7 @@ import com.cinema.ticketbooking.domain.Auditorium;
 import com.cinema.ticketbooking.domain.request.ReqCreateSeatDto;
 import com.cinema.ticketbooking.domain.request.ReqUpdateSeatDto;
 import com.cinema.ticketbooking.domain.response.ResSeatAvailabilityDto;
+import com.cinema.ticketbooking.domain.response.ResSeatDto;
 import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AuditoriumRepository;
 import com.cinema.ticketbooking.repository.BookingItemRepository;
@@ -21,8 +22,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.time.Instant;
 
 @Service
 public class SeatService {
@@ -62,6 +65,25 @@ public class SeatService {
 
     public Seat findSeatById(Long id) {
         return this.seatRepository.findById(id).orElse(null);
+    }
+
+    public List<ResSeatDto> findSeatsByAuditoriumId(Long auditoriumId) {
+        if (!auditoriumRepository.existsById(auditoriumId)) {
+            throw new com.cinema.ticketbooking.util.error.IdInvalidException(
+                    "Auditorium with id " + auditoriumId + " not found");
+        }
+        return seatRepository.findByAuditoriumIdOrderBySeatRowAscNumberAsc(auditoriumId).stream()
+                .map(seat -> {
+                    ResSeatDto dto = new ResSeatDto();
+                    dto.setId(seat.getId());
+                    dto.setSeatRow(seat.getSeatRow());
+                    dto.setNumber(seat.getNumber());
+                    dto.setSeatVariantName(seat.getSeatVariant() == null
+                            ? null
+                            : seat.getSeatVariant().getSeatType().name());
+                    return dto;
+                })
+                .toList();
     }
 
     public void deleteSeat(Long id) {
@@ -130,7 +152,14 @@ public class SeatService {
         ShowTime showTime = showTimeRepository.findById(showTimeId)
                 .orElseThrow(() -> new RuntimeException("ShowTime not found"));
 
-        List<Seat> seats = seatRepository.findByAuditoriumId(showTime.getAuditorium().getId());
+        if (showTime.getAuditorium() == null) {
+            throw new IllegalStateException("ShowTime " + showTimeId + " has no auditorium");
+        }
+
+        List<Seat> seats = seatRepository
+                .findByAuditoriumIdOrderBySeatRowAscNumberAsc(showTime.getAuditorium().getId());
+        var bookedSeatIds = new HashSet<>(bookingItemRepository.findUnavailableSeatIds(showTimeId));
+        var heldSeatIds = new HashSet<>(seatHoldRepository.findUnavailableSeatIds(showTimeId, Instant.now()));
         List<ResSeatAvailabilityDto> result = new ArrayList<>();
 
         for (Seat seat : seats) {
@@ -143,18 +172,18 @@ public class SeatService {
             if (seat.getSeatVariant() != null) {
                 dto.setSeatVariantId(seat.getSeatVariant().getId());
                 dto.setSeatVariantName(seat.getSeatVariant().getSeatType().name());
-                dto.setBasePrice(seat.getSeatVariant().getBasePrice());
-                dto.setBonus(seat.getSeatVariant().getBonus());
-                dto.setTotalPrice(seat.getSeatVariant().getBasePrice() + seat.getSeatVariant().getBonus());
+                double basePrice = Optional.ofNullable(seat.getSeatVariant().getBasePrice()).orElse(0D);
+                double bonus = Optional.ofNullable(seat.getSeatVariant().getBonus()).orElse(0D);
+                dto.setBasePrice(basePrice);
+                dto.setBonus(bonus);
+                dto.setTotalPrice(basePrice + bonus);
             }
 
             // Check status theo showtime
-            boolean isBooked = bookingItemRepository.existsBySeatIdAndShowTimeId(seat.getId(), showTimeId);
-            if (isBooked) {
+            if (bookedSeatIds.contains(seat.getId())) {
                 dto.setStatus(SeatStatusEnum.BOOKED);
             } else {
-                boolean isHeld = seatHoldRepository.existsBySeatIdAndShowTimeId(seat.getId(), showTimeId);
-                dto.setStatus(isHeld ? SeatStatusEnum.HOLD : SeatStatusEnum.AVAILABLE);
+                dto.setStatus(heldSeatIds.contains(seat.getId()) ? SeatStatusEnum.HOLD : SeatStatusEnum.AVAILABLE);
             }
 
             result.add(dto);

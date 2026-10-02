@@ -9,6 +9,11 @@ import com.cinema.ticketbooking.domain.response.ResultPaginationDto;
 import com.cinema.ticketbooking.repository.AuditoriumRepository;
 import com.cinema.ticketbooking.repository.SeatRepository;
 import com.cinema.ticketbooking.repository.SeatVariantRepository;
+import com.cinema.ticketbooking.repository.BookingItemRepository;
+import com.cinema.ticketbooking.repository.SeatHoldRepository;
+import com.cinema.ticketbooking.repository.ShowTimeRepository;
+import com.cinema.ticketbooking.domain.ShowTime;
+import com.cinema.ticketbooking.util.constant.SeatStatusEnum;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +36,9 @@ class SeatServiceTest {
     @Mock private SeatRepository seatRepository;
     @Mock private AuditoriumRepository auditoriumRepository;
     @Mock private SeatVariantRepository seatVariantRepository;
+    @Mock private SeatHoldRepository seatHoldRepository;
+    @Mock private BookingItemRepository bookingItemRepository;
+    @Mock private ShowTimeRepository showTimeRepository;
 
     @InjectMocks private SeatService seatService;
 
@@ -220,5 +228,36 @@ class SeatServiceTest {
 
         // Note: Seat entity no longer has status field
         verify(seatRepository).save(existing);
+    }
+
+    @Test
+    void getSeatAvailability_shouldHandleNullPricesAndLoadStatusesInBulk() {
+        Auditorium auditorium = new Auditorium();
+        auditorium.setId(3L);
+        ShowTime showTime = new ShowTime();
+        showTime.setAuditorium(auditorium);
+
+        SeatVariant variant = new SeatVariant();
+        variant.setSeatType(com.cinema.ticketbooking.util.constant.SeatTypeEnum.REG);
+        Seat seat = new Seat();
+        seat.setId(7L);
+        seat.setSeatRow("A");
+        seat.setNumber(1);
+        seat.setSeatVariant(variant);
+
+        when(showTimeRepository.findById(10L)).thenReturn(Optional.of(showTime));
+        when(seatRepository.findByAuditoriumIdOrderBySeatRowAscNumberAsc(3L))
+                .thenReturn(List.of(seat));
+        when(bookingItemRepository.findUnavailableSeatIds(10L)).thenReturn(List.of());
+        when(seatHoldRepository.findUnavailableSeatIds(eq(10L), any())).thenReturn(List.of());
+
+        var result = seatService.getSeatAvailabilityByShowTime(10L);
+
+        assertEquals(1, result.size());
+        assertEquals(0D, result.get(0).getTotalPrice());
+        assertEquals(SeatStatusEnum.AVAILABLE, result.get(0).getStatus());
+        verify(bookingItemRepository).findUnavailableSeatIds(10L);
+        verify(seatHoldRepository).findUnavailableSeatIds(eq(10L), any());
+        verify(bookingItemRepository, never()).existsBySeatIdAndShowTimeId(anyLong(), anyLong());
     }
 }
