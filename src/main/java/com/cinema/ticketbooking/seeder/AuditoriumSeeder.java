@@ -12,9 +12,12 @@ import com.cinema.ticketbooking.util.constant.SeatTypeEnum;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Order(4)
@@ -35,14 +38,19 @@ public class AuditoriumSeeder implements CommandLineRunner {
     }
 
     @Override
+    @Transactional
     public void run(String... args) throws Exception {
-        if (auditoriumRepository.count() == 0) {
-            // Lấy SeatVariant REG và VIP
-            SeatVariant regularVariant = seatVariantRepository.findBySeatType(SeatTypeEnum.REG)
-                    .orElseThrow(() -> new RuntimeException("REG seat variant not found"));
-            SeatVariant vipVariant = seatVariantRepository.findBySeatType(SeatTypeEnum.VIP)
-                    .orElseThrow(() -> new RuntimeException("VIP seat variant not found"));
+        refreshAuditoriumsAndSeats();
+    }
 
+    @Transactional
+    public void refreshAuditoriumsAndSeats() {
+        SeatVariant regularVariant = seatVariantRepository.findBySeatType(SeatTypeEnum.REG)
+                .orElseThrow(() -> new RuntimeException("REG seat variant not found"));
+        SeatVariant vipVariant = seatVariantRepository.findBySeatType(SeatTypeEnum.VIP)
+                .orElseThrow(() -> new RuntimeException("VIP seat variant not found"));
+
+        if (auditoriumRepository.count() == 0) {
             List<Theater> theaters = theaterRepository.findAll();
 
             for (Theater theater : theaters) {
@@ -50,38 +58,54 @@ public class AuditoriumSeeder implements CommandLineRunner {
                     Auditorium auditorium = new Auditorium();
                     auditorium.setTheater(theater);
                     auditorium.setNumber((long) i);
-                    auditorium.setTotalSeats(48L);
+                    auditorium.setTotalSeats(0L);
                     auditoriumRepository.save(auditorium);
+                }
+            }
+        }
 
-                    // Tạo seats cho auditorium (6 hàng x 8 ghế = 48 ghế)
-                    List<Seat> seats = new ArrayList<>();
-                    char[] rows = { 'A', 'B', 'C', 'D', 'E', 'F' };
+        int updatedAuditoriums = 0;
+        int createdSeats = 0;
+        for (Auditorium auditorium : auditoriumRepository.findAll()) {
+            List<Seat> existingSeats = seatRepository.findByAuditoriumId(auditorium.getId());
+            Map<String, Seat> seatsByPosition = new HashMap<>();
+            for (Seat seat : existingSeats) {
+                seatsByPosition.putIfAbsent(seat.getSeatRow() + "-" + seat.getNumber(), seat);
+            }
 
-                    for (char row : rows) {
-                        for (int seatNum = 1; seatNum <= 8; seatNum++) {
-                            Seat seat = new Seat();
-                            seat.setAuditorium(auditorium);
-                            seat.setSeatRow(String.valueOf(row));
-                            seat.setNumber(seatNum);
-
-                            // Hàng F là VIP, các hàng khác là REG
-                            if (row == 'F') {
-                                seat.setSeatVariant(vipVariant);
-                            } else {
-                                seat.setSeatVariant(regularVariant);
-                            }
-
-                            seats.add(seat);
-                        }
+            List<Seat> seatsToSave = new ArrayList<>();
+            int newSeatsForAuditorium = 0;
+            char[] rows = { 'A', 'B', 'C', 'D', 'E', 'F' };
+            for (char row : rows) {
+                for (int seatNum = 1; seatNum <= 8; seatNum++) {
+                    String position = row + "-" + seatNum;
+                    Seat seat = seatsByPosition.get(position);
+                    SeatVariant expectedVariant = row == 'F' ? vipVariant : regularVariant;
+                    if (seat == null) {
+                        seat = new Seat();
+                        seat.setAuditorium(auditorium);
+                        seat.setSeatRow(String.valueOf(row));
+                        seat.setNumber(seatNum);
+                        seat.setSeatVariant(expectedVariant);
+                        seatsToSave.add(seat);
+                        createdSeats++;
+                        newSeatsForAuditorium++;
+                    } else if (seat.getSeatVariant() == null) {
+                        seat.setSeatVariant(expectedVariant);
+                        seatsToSave.add(seat);
                     }
-
-                    seatRepository.saveAll(seats);
                 }
             }
 
-            System.out.println("Seeded Auditoriums and Seats");
-        } else {
-            System.out.println("Auditorium already exists");
+            if (!seatsToSave.isEmpty()) {
+                seatRepository.saveAll(seatsToSave);
+                auditorium.setTotalSeats((long) existingSeats.size() + newSeatsForAuditorium);
+                auditoriumRepository.save(auditorium);
+                updatedAuditoriums++;
+            }
         }
+
+        System.out.println("Refreshed seats: added " + createdSeats + " seats across "
+                + updatedAuditoriums + " auditoriums");
     }
 }

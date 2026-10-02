@@ -7,7 +7,6 @@ import com.cinema.ticketbooking.repository.ShowTimeRepository;
 import com.cinema.ticketbooking.util.constant.FilmStatusEnum;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,8 +36,6 @@ public class LocalShowTimeSeeder implements CommandLineRunner {
         refreshWeeklySchedule();
     }
 
-    // Refresh every Wednesday at 02:05 and on application startup.
-    @Scheduled(cron = "0 5 2 * * WED", zone = "Asia/Ho_Chi_Minh")
     @Transactional
     public void refreshWeeklySchedule() {
         var zone = ZoneId.of("Asia/Ho_Chi_Minh");

@@ -6,6 +6,7 @@ import com.cinema.ticketbooking.util.constant.SeatTypeEnum;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -20,22 +21,24 @@ public class SeatVariantSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (seatVariantRepository.count() == 0) {
-            SeatVariant regularSeat = new SeatVariant();
-            regularSeat.setSeatType(SeatTypeEnum.REG);
-            regularSeat.setBasePrice(70000);
-            regularSeat.setBonus(0);
+        refreshDefaultSeatVariants();
+    }
 
-            SeatVariant vipSeat = new SeatVariant();
-            vipSeat.setSeatType(SeatTypeEnum.VIP);
-            vipSeat.setBasePrice(70000);
-            vipSeat.setBonus(10000);
+    @Transactional
+    public void refreshDefaultSeatVariants() {
+        SeatVariant regularSeat = seatVariantRepository.findBySeatType(SeatTypeEnum.REG)
+                .orElseGet(SeatVariant::new);
+        regularSeat.setSeatType(SeatTypeEnum.REG);
+        regularSeat.setBasePrice(70000);
+        regularSeat.setBonus(0);
 
-            seatVariantRepository.saveAll(List.of(regularSeat, vipSeat));
+        SeatVariant vipSeat = seatVariantRepository.findBySeatType(SeatTypeEnum.VIP)
+                .orElseGet(SeatVariant::new);
+        vipSeat.setSeatType(SeatTypeEnum.VIP);
+        vipSeat.setBasePrice(70000);
+        vipSeat.setBonus(10000);
 
-            System.out.println("Seeded Seat Variants");
-        } else {
-            System.out.println("Seat Variants already exist");
-        }
+        seatVariantRepository.saveAll(List.of(regularSeat, vipSeat));
+        System.out.println("Refreshed default seat variants");
     }
 }
