@@ -44,7 +44,7 @@ public class TheaterController {
 
 
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("permitAll()")
     @GetMapping("/theaters/{id}")
     @ApiMessage("fetch a theater")
     public ResponseEntity<Theater> getTheater(@PathVariable Long id)
