@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
-# One-time setup of a fresh Ubuntu VPS for the backend:
-#   - JRE 17, service user, /opt/cinema layout, systemd unit
+# One-time setup of the Ubuntu VPS for the backend:
+#   - service user "ticketbooking" (the app no longer runs as root), systemd unit, /opt/ticket-booking layout
 #   - deploy user that GitHub Actions logs in as (may only restart the service via sudo)
 #   - SSH hardening (key-only, no root login), ufw, fail2ban
+#
+# Adopts an existing install (ticket-booking.service running as root from /opt/ticket-booking):
+# reuses its .env and JAR and backs up the old unit. It does NOT restart the running app;
+# the switch to the new unit happens on the next `systemctl restart ticket-booking`.
 #
 # Usage (from a sudo-capable admin account that already logs in with an SSH key):
 #   sudo DEPLOY_PUBKEY="ssh-ed25519 AAAA... github-actions" bash setup-vps.sh
@@ -10,8 +14,14 @@ set -euo pipefail
 
 DEPLOY_USER="${DEPLOY_USER:-deploy}"
 DEPLOY_PUBKEY="${DEPLOY_PUBKEY:?set DEPLOY_PUBKEY to the public key matching the VPS_SSH_KEY secret}"
+APP_USER=ticketbooking
+APP_DIR=/opt/ticket-booking
+ENV_DIR=/etc/ticket-booking
+SERVICE=ticket-booking
 # Port sshd already listens on (this script does not change it)
 SSH_PORT="${SSH_PORT:-22}"
+# nginx proxies to the app, so 8081 stays closed unless OPEN_APP_PORT=1
+OPEN_APP_PORT="${OPEN_APP_PORT:-0}"
 APP_PORT="${APP_PORT:-8081}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
@@ -30,8 +40,8 @@ echo ">> Installing packages"
 apt-get update
 apt-get install -y --no-install-recommends openjdk-17-jre-headless curl ufw fail2ban
 
-echo ">> Creating users and directories"
-id cinema >/dev/null 2>&1 || useradd --system --home-dir /opt/cinema --shell /usr/sbin/nologin cinema
+echo ">> Creating users"
+id "$APP_USER" >/dev/null 2>&1 || useradd --system --home-dir "$APP_DIR" --shell /usr/sbin/nologin "$APP_USER"
 id "$DEPLOY_USER" >/dev/null 2>&1 || useradd --create-home --shell /bin/bash "$DEPLOY_USER"
 # Lets deploy.sh print the service logs when a release fails
 usermod -aG systemd-journal "$DEPLOY_USER"
@@ -45,27 +55,48 @@ grep -qxF "$KEY_LINE" "$DEPLOY_HOME/.ssh/authorized_keys" 2>/dev/null \
 chown "$DEPLOY_USER:$DEPLOY_USER" "$DEPLOY_HOME/.ssh/authorized_keys"
 chmod 600 "$DEPLOY_HOME/.ssh/authorized_keys"
 
+echo ">> Preparing $APP_DIR"
 # deploy owns the releases, the service user only reads them
-install -d -m 755 -o "$DEPLOY_USER" -g cinema /opt/cinema /opt/cinema/releases
-install -d -m 750 -o cinema -g cinema /opt/cinema/logs
+install -d "$APP_DIR" "$APP_DIR/releases"
+chown "$DEPLOY_USER:$APP_USER" "$APP_DIR" "$APP_DIR/releases"
+chmod 755 "$APP_DIR" "$APP_DIR/releases"
 
-install -d -m 750 -o root -g cinema /etc/cinema
-if [ ! -f /etc/cinema/cinema.env ]; then
-  install -m 640 -o root -g cinema "$SCRIPT_DIR/.env.example" /etc/cinema/cinema.env
-  echo ">> Fill in /etc/cinema/cinema.env before the first deploy"
+install -d -m 750 -o root -g "$APP_USER" "$ENV_DIR"
+if [ ! -f "$ENV_DIR/app.env" ]; then
+  if [ -f "$APP_DIR/.env" ]; then
+    install -m 640 -o root -g "$APP_USER" "$APP_DIR/.env" "$ENV_DIR/app.env"
+    echo ">> Copied $APP_DIR/.env to $ENV_DIR/app.env"
+  else
+    install -m 640 -o root -g "$APP_USER" "$SCRIPT_DIR/.env.example" "$ENV_DIR/app.env"
+    echo ">> Fill in $ENV_DIR/app.env before starting the service"
+  fi
+fi
+# The old copy stays for rollback, but only root may read it
+[ -f "$APP_DIR/.env" ] && chown root:root "$APP_DIR/.env" && chmod 600 "$APP_DIR/.env"
+
+# Start the release history with the JAR that is running now
+if [ ! -e "$APP_DIR/app.jar" ]; then
+  OLD_JAR="$(ls -1t "$APP_DIR"/*.jar 2>/dev/null | head -n 1 || true)"
+  if [ -n "$OLD_JAR" ]; then
+    install -m 644 -o "$DEPLOY_USER" -g "$APP_USER" "$OLD_JAR" "$APP_DIR/releases/app-initial.jar"
+    ln -sfn "$APP_DIR/releases/app-initial.jar" "$APP_DIR/app.jar"
+    chown -h "$DEPLOY_USER:$APP_USER" "$APP_DIR/app.jar"
+  fi
 fi
 
-echo ">> Installing systemd unit"
-install -m 644 "$SCRIPT_DIR/cinema-api.service" /etc/systemd/system/cinema-api.service
+echo ">> Installing systemd unit (not restarting)"
+UNIT=/etc/systemd/system/$SERVICE.service
+[ -f "$UNIT" ] && [ ! -f "/root/$SERVICE.service.bak" ] && cp "$UNIT" "/root/$SERVICE.service.bak"
+install -m 644 "$SCRIPT_DIR/$SERVICE.service" "$UNIT"
 systemctl daemon-reload
-systemctl enable cinema-api
+systemctl enable "$SERVICE"
 
 # The only root command the deploy user may run
-cat > /etc/sudoers.d/cinema-deploy <<EOF
-$DEPLOY_USER ALL=(root) NOPASSWD: /usr/bin/systemctl restart cinema-api
+cat > /etc/sudoers.d/ticket-booking-deploy <<EOF
+$DEPLOY_USER ALL=(root) NOPASSWD: /usr/bin/systemctl restart $SERVICE
 EOF
-chmod 440 /etc/sudoers.d/cinema-deploy
-visudo -cf /etc/sudoers.d/cinema-deploy
+chmod 440 /etc/sudoers.d/ticket-booking-deploy
+visudo -cf /etc/sudoers.d/ticket-booking-deploy
 
 echo ">> Hardening SSH"
 cat > /etc/ssh/sshd_config.d/10-hardening.conf <<EOF
@@ -82,7 +113,9 @@ echo ">> Configuring ufw"
 ufw default deny incoming
 ufw default allow outgoing
 ufw allow "$SSH_PORT/tcp"
-ufw allow "$APP_PORT/tcp"
+ufw allow 80/tcp
+ufw allow 443/tcp
+[ "$OPEN_APP_PORT" = 1 ] && ufw allow "$APP_PORT/tcp"
 ufw --force enable
 
 echo ">> Configuring fail2ban"
@@ -98,5 +131,7 @@ EOF
 systemctl enable --now fail2ban
 systemctl restart fail2ban
 
-echo ">> Done. Add these GitHub secrets: VPS_HOST, VPS_USER=$DEPLOY_USER, VPS_SSH_KEY, VPS_KNOWN_HOSTS"
-echo "   VPS_KNOWN_HOSTS: run 'ssh-keyscan -p $SSH_PORT <host>' from your machine"
+echo
+echo ">> Done. The app is still running under the old unit (as root)."
+echo "   Switch:    sudo systemctl restart $SERVICE && curl -fsS http://127.0.0.1:$APP_PORT/actuator/health"
+echo "   Roll back: sudo cp /root/$SERVICE.service.bak $UNIT && sudo systemctl daemon-reload && sudo systemctl restart $SERVICE"

@@ -1,0 +1,29 @@
+# Installed to /etc/systemd/system/ticket-booking.service by setup-vps.sh
+[Unit]
+Description=Ticket Booking Spring Boot Application
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ticketbooking
+Group=ticketbooking
+WorkingDirectory=/opt/ticket-booking
+# Secrets (DB credentials, JWT secret, API keys) live only on the VPS, never in the repo
+EnvironmentFile=/etc/ticket-booking/app.env
+# app.jar is a symlink to the current release, switched by deploy.sh
+ExecStart=/usr/bin/java -jar /opt/ticket-booking/app.jar
+# JVM exits with 143 on SIGTERM
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+# Sandboxing: the app only reads its JAR and writes nothing outside /tmp
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

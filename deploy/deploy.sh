@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Runs on the VPS as the deploy user (GitHub Actions pipes it over SSH).
-# Points /opt/cinema/app.jar at the new release, restarts the systemd service,
+# Points /opt/ticket-booking/app.jar at the new release, restarts the systemd service,
 # and rolls back to the previous JAR if the new one never becomes healthy.
-# Usage: deploy.sh /opt/cinema/releases/app-<sha>.jar
+# Usage: deploy.sh /opt/ticket-booking/releases/app-<sha>.jar
 set -euo pipefail
 
 NEW_JAR="${1:?usage: deploy.sh <path-to-jar>}"
-APP_DIR=/opt/cinema
+APP_DIR=/opt/ticket-booking
 CURRENT="$APP_DIR/app.jar"
-SERVICE=cinema-api
+SERVICE=ticket-booking
 HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:8081/actuator/health/readiness}"
 KEEP_RELEASES=5
 

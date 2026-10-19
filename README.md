@@ -90,7 +90,7 @@ open build/reports/tests/test/index.html
 Pipeline: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)
 
 - **Mọi push và pull request:** build bằng JDK 17 và chạy toàn bộ test suite (`./gradlew build`).
-- **Merge vào `main`:** upload executable JAR lên VPS qua SSH (`scp`), chạy [`deploy/deploy.sh`](deploy/deploy.sh) để trỏ `/opt/cinema/app.jar` sang bản mới, `systemctl restart cinema-api`, chờ `/actuator/health/readiness` và tự rollback về JAR cũ nếu bản mới không healthy.
+- **Merge vào `main`:** upload executable JAR lên VPS qua SSH (`scp`), chạy [`deploy/deploy.sh`](deploy/deploy.sh) để trỏ `/opt/ticket-booking/app.jar` sang bản mới, `systemctl restart ticket-booking`, chờ `/actuator/health/readiness` và tự rollback về JAR cũ nếu bản mới không healthy.
 
 ### Chuẩn bị VPS (Ubuntu, chạy một lần)
 
@@ -98,15 +98,25 @@ Pipeline: [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)
 # Tạo SSH key riêng cho GitHub Actions (trên máy cá nhân)
 ssh-keygen -t ed25519 -f gha_deploy -C github-actions -N ""
 
-# Trên VPS, từ tài khoản admin đã đăng nhập bằng SSH key
+# Trên VPS, từ tài khoản admin (không phải root) đã đăng nhập bằng SSH key
 scp -r deploy/ gha_deploy.pub admin@<vps>:~/
 ssh -t admin@<vps> 'sudo DEPLOY_PUBKEY="$(cat ~/gha_deploy.pub)" bash ~/deploy/setup-vps.sh'
-sudo nano /etc/cinema/cinema.env   # điền DB, JWT_SECRET, API keys
 ```
 
-[`deploy/setup-vps.sh`](deploy/setup-vps.sh) cài JRE 17, tạo user `cinema` (chạy app) và `deploy` (CI đăng nhập, chỉ được `sudo systemctl restart cinema-api`), cài systemd unit [`deploy/cinema-api.service`](deploy/cinema-api.service), và hardening server: SSH chỉ dùng key + tắt root login, `ufw` chỉ mở SSH và cổng 8081, `fail2ban` chặn brute-force SSH.
+[`deploy/setup-vps.sh`](deploy/setup-vps.sh) cài JRE 17, tạo user `ticketbooking` (chạy app thay cho root) và `deploy` (CI đăng nhập, chỉ được `sudo systemctl restart ticket-booking`), cài systemd unit [`deploy/ticket-booking.service`](deploy/ticket-booking.service), và hardening server: SSH chỉ dùng key + tắt root login, `ufw` chỉ mở SSH, 80 và 443 (nginx đứng trước app), `fail2ban` chặn brute-force SSH.
 
-Secrets (DB, JWT, API keys) chỉ nằm trong `/etc/cinema/cinema.env` trên VPS và được systemd nạp làm biến môi trường — không có trong repo hay image.
+Nếu VPS đã có `ticket-booking.service` chạy bằng root, script dùng lại `/opt/ticket-booking/.env` và JAR đang chạy, sao lưu unit cũ vào `/root/ticket-booking.service.bak` và **không restart app**. Chuyển sang unit mới:
+
+```bash
+sudo systemctl restart ticket-booking
+curl -fsS http://127.0.0.1:8081/actuator/health   # {"status":"UP"}
+
+# Nếu lỗi, quay về unit cũ:
+sudo cp /root/ticket-booking.service.bak /etc/systemd/system/ticket-booking.service
+sudo systemctl daemon-reload && sudo systemctl restart ticket-booking
+```
+
+Secrets (DB, JWT, API keys) chỉ nằm trong `/etc/ticket-booking/app.env` trên VPS và được systemd nạp làm biến môi trường — không có trong repo hay image.
 
 ### GitHub secrets (Settings → Environments → `production`)
 

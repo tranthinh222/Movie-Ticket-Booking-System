@@ -128,7 +128,7 @@ jobs:
         run: |
           JAR="$(ls dist/*.jar)"
           scp -i ~/.ssh/id_deploy -P "$VPS_PORT" -o StrictHostKeyChecking=yes -o BatchMode=yes \
-            "$JAR" "$VPS_USER@$VPS_HOST:/opt/cinema/releases/app-${GITHUB_SHA}.jar"
+            "$JAR" "$VPS_USER@$VPS_HOST:/opt/ticket-booking/releases/app-${GITHUB_SHA}.jar"
 
       # deploy.sh swaps the JAR, restarts the systemd service, waits for the health check
       # and rolls back to the previous JAR if the new one never becomes healthy.
@@ -139,7 +139,7 @@ jobs:
           VPS_USER: ${{ secrets.VPS_USER }}
         run: |
           ssh -i ~/.ssh/id_deploy -p "$VPS_PORT" -o StrictHostKeyChecking=yes -o BatchMode=yes \
-            "$VPS_USER@$VPS_HOST" "bash -s -- '/opt/cinema/releases/app-${GITHUB_SHA}.jar'" < deploy/deploy.sh
+            "$VPS_USER@$VPS_HOST" "bash -s -- '/opt/ticket-booking/releases/app-${GITHUB_SHA}.jar'" < deploy/deploy.sh
 
       - name: Remove SSH key
         if: always()

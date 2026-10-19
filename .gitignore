@@ -42,3 +42,6 @@ out/
 
 # Private local configuration
 /src/main/resources/application-local.properties
+
+# Personal interview notes
+/INTERVIEW_NOTES.md
