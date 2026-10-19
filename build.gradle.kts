@@ -61,6 +61,11 @@ dependencies {
 
 }
 
+// Chỉ build executable JAR (bootJar) để CI có đúng một file JAR để deploy
+tasks.named<Jar>("jar") {
+    enabled = false
+}
+
 tasks.withType<Test>().configureEach {
     useJUnitPlatform()
 
